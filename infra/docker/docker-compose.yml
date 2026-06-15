@@ -1,0 +1,51 @@
+# Local development environment for LifyGo.
+# Spins up PostgreSQL and Redis only. The Go API runs directly on the
+# host machine during development (go run ./cmd/server) for fast
+# iteration — it does not run inside Docker here.
+#
+# Usage:
+#   docker compose -f infra/docker/docker-compose.yml up -d
+#   docker compose -f infra/docker/docker-compose.yml down
+#
+# To wipe all data and start fresh:
+#   docker compose -f infra/docker/docker-compose.yml down -v
+
+name: lifygo
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: lifygo-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-lifygo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lifygo}
+      POSTGRES_DB: ${POSTGRES_DB:-lifygo}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - lifygo_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-lifygo}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: lifygo-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - lifygo_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  lifygo_postgres_data:
+  lifygo_redis_data:
