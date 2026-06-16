@@ -10,25 +10,166 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/go-chi/chi/v5"
+	chiMiddleware "github.com/go-chi/chi/v5/middleware"
+
 	"github.com/lifygo/lifygo/apps/api/internal/config"
+	"github.com/lifygo/lifygo/apps/api/internal/database"
+	"github.com/lifygo/lifygo/apps/api/internal/handler"
+	"github.com/lifygo/lifygo/apps/api/internal/middleware"
+	redisClient "github.com/lifygo/lifygo/apps/api/internal/redis"
+	"github.com/lifygo/lifygo/apps/api/internal/repository"
+	"github.com/lifygo/lifygo/apps/api/internal/service"
+	"github.com/lifygo/lifygo/apps/api/pkg/crypto"
 )
 
 func main() {
-	// Load all environment variables and validate them on startup.
-	// The application will refuse to start if any required variable is missing.
+	// -----------------------------------------------------------------------
+	// Config
+	// Load and validate all environment variables on startup.
+	// The server will not start if any required variable is missing.
+	// -----------------------------------------------------------------------
 	cfg, err := config.Load()
 	if err != nil {
 		log.Fatalf("failed to load config: %v", err)
 	}
 
+	// -----------------------------------------------------------------------
+	// Database
+	// Open a PostgreSQL connection pool.
+	// -----------------------------------------------------------------------
+	ctx := context.Background()
+
+	db, err := database.Connect(ctx, database.DefaultConfig(cfg.DatabaseURL))
+	if err != nil {
+		log.Fatalf("failed to connect to database: %v", err)
+	}
+	defer db.Close()
+
+	log.Println("connected to postgresql")
+
+	// -----------------------------------------------------------------------
+	// Redis
+	// Open a Redis connection.
+	// -----------------------------------------------------------------------
+	redis, err := redisClient.Connect(ctx, redisClient.DefaultConfig(cfg.RedisURL))
+	if err != nil {
+		log.Fatalf("failed to connect to redis: %v", err)
+	}
+	defer redis.Close()
+
+	log.Println("connected to redis")
+
+	// -----------------------------------------------------------------------
+	// Crypto
+	// Initialize the AES-256 encryption instance used to encrypt and
+	// decrypt SMTP passwords at rest.
+	// -----------------------------------------------------------------------
+	cryptoClient, err := crypto.New(cfg.EncryptionKey)
+	if err != nil {
+		log.Fatalf("failed to initialize crypto: %v", err)
+	}
+
+	// -----------------------------------------------------------------------
+	// Repositories
+	// Each repository receives the database pool and talks only to the DB.
+	// -----------------------------------------------------------------------
+	userRepo := repository.NewUserRepository(db)
+	apiKeyRepo := repository.NewAPIKeyRepository(db)
+	smtpRepo := repository.NewSMTPConfigRepository(db)
+	emailLogRepo := repository.NewEmailLogRepository(db)
+
+	// -----------------------------------------------------------------------
+	// Services
+	// Each service receives its repository and contains all business logic.
+	// -----------------------------------------------------------------------
+	userSvc := service.NewUserService(userRepo)
+	apiKeySvc := service.NewAPIKeyService(apiKeyRepo)
+	smtpSvc := service.NewSMTPConfigService(smtpRepo, cryptoClient)
+	emailSvc := service.NewEmailService(
+		emailLogRepo,
+		redis,
+		smtpSvc.GetMailer,
+	)
+
+	// -----------------------------------------------------------------------
+	// Handlers
+	// Each handler receives its service and translates HTTP to service calls.
+	// -----------------------------------------------------------------------
+	healthHandler := handler.NewHealthHandler(db, redis)
+	userHandler := handler.NewUserHandler(userSvc)
+	apiKeyHandler := handler.NewAPIKeyHandler(apiKeySvc)
+	smtpConfigHandler := handler.NewSMTPConfigHandler(smtpSvc)
+	emailHandler := handler.NewEmailHandler(emailSvc)
+
+	// -----------------------------------------------------------------------
+	// Router
+	// Build the chi router and register all routes.
+	// -----------------------------------------------------------------------
+	r := chi.NewRouter()
+
+	// Global middleware — runs on every request in this order:
+	// 1. Recovery    — catches panics, returns 500 instead of crashing
+	// 2. RequestID   — assigns a unique ID to every request
+	// 3. Logger      — logs method, path, status, duration as JSON
+	// 4. chi Timeout — cancels requests that take longer than 30 seconds
+	r.Use(middleware.Recovery())
+	r.Use(middleware.RequestID())
+	r.Use(middleware.Logger())
+	r.Use(chiMiddleware.Timeout(30 * time.Second))
+
+	// -----------------------------------------------------------------------
+	// Public routes — no authentication required.
+	// -----------------------------------------------------------------------
+	r.Get("/health", healthHandler.Health)
+
+	// Clerk webhook — called by Clerk when a user signs up.
+	// Not behind API key auth because Clerk is the caller, not a user.
+	r.Post("/webhooks/clerk", userHandler.ClerkWebhook)
+
+	// -----------------------------------------------------------------------
+	// Protected routes — require a valid X-API-Key header.
+	// -----------------------------------------------------------------------
+	r.Group(func(r chi.Router) {
+		// Auth middleware — validates X-API-Key and stores user ID in context.
+		r.Use(middleware.APIKeyAuth(apiKeySvc))
+
+		// Rate limit — 100 requests per hour per API key.
+		r.Use(middleware.RateLimit(redis, 100))
+
+		// Account
+		r.Delete("/account", userHandler.DeleteAccount)
+
+		// API Keys
+		r.Post("/api-keys", apiKeyHandler.Create)
+		r.Get("/api-keys", apiKeyHandler.List)
+		r.Delete("/api-keys/{id}", apiKeyHandler.Delete)
+
+		// SMTP Config
+		r.Post("/smtp-config", smtpConfigHandler.Upsert)
+		r.Get("/smtp-config", smtpConfigHandler.Get)
+		r.Delete("/smtp-config", smtpConfigHandler.Delete)
+
+		// Email
+		r.Post("/send", emailHandler.Send)
+		r.Post("/send/otp", emailHandler.SendOTP)
+		r.Post("/verify/otp", emailHandler.VerifyOTP)
+		r.Get("/logs", emailHandler.Logs)
+	})
+
+	// -----------------------------------------------------------------------
+	// Server
+	// Configure and start the HTTP server with graceful shutdown.
+	// -----------------------------------------------------------------------
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%s", cfg.Port),
+		Handler:      r,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  120 * time.Second,
 	}
 
-	// Graceful shutdown: wait for SIGINT or SIGTERM before stopping.
+	// Start the server in a goroutine so we can listen for shutdown signals.
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
@@ -39,16 +180,17 @@ func main() {
 		}
 	}()
 
+	// Block until we receive SIGINT or SIGTERM (Ctrl+C or docker stop).
 	<-quit
 	log.Println("shutting down server...")
 
-	// Allow up to 30 seconds for in-flight requests to complete.
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	// Give in-flight requests up to 30 seconds to finish.
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	if err := srv.Shutdown(ctx); err != nil {
+	if err := srv.Shutdown(shutdownCtx); err != nil {
 		log.Fatalf("forced shutdown: %v", err)
 	}
 
-	log.Println("server stopped")
+	log.Println("server stopped cleanly")
 }

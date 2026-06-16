@@ -117,3 +117,31 @@ func insertTestAPIKey(t *testing.T, tx pgx.Tx, userID string) *model.APIKey {
 
 	return key
 }
+
+// insertTestSMTPConfig creates an smtp_config row for the given user
+// and returns the created config. Used by tests that need an existing
+// SMTP config to work with.
+func insertTestSMTPConfig(t *testing.T, tx pgx.Tx, userID string) *model.SMTPConfig {
+	t.Helper()
+
+	repo := repository.NewSMTPConfigRepository(tx)
+
+	input := model.CreateSMTPConfigInput{
+		UserID:      userID,
+		Host:        "smtp.example.com",
+		Port:        587,
+		Username:    "user@example.com",
+		Password:    "plainpassword",
+		FromAddress: "hello@example.com",
+	}
+
+	// We pass a fake encrypted password here — the real encryption
+	// happens in the service layer, not the repository layer.
+	// Repository tests only care about correct SQL behavior.
+	cfg, err := repo.Upsert(context.Background(), input, "encrypted_"+randomSuffix())
+	if err != nil {
+		t.Fatalf("failed to insert test smtp config: %v", err)
+	}
+
+	return cfg
+}
