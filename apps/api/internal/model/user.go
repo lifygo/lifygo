@@ -49,3 +49,9 @@ func (i *CreateUserInput) Validate() error {
 	}
 	return nil
 }
+
+// GetID returns the user's internal ID.
+// Satisfies middleware.UserLike for FlexibleAuth.
+func (u *User) GetID() string {
+	return u.ID
+}

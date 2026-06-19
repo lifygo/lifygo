@@ -21,6 +21,9 @@ import (
 	"github.com/lifygo/lifygo/apps/api/internal/repository"
 	"github.com/lifygo/lifygo/apps/api/internal/service"
 	"github.com/lifygo/lifygo/apps/api/pkg/crypto"
+
+	"github.com/clerk/clerk-sdk-go/v2"
+	"github.com/go-chi/cors"
 )
 
 func main() {
@@ -33,6 +36,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to load config: %v", err)
 	}
+
+	clerk.SetKey(cfg.ClerkSecretKey)
 
 	// -----------------------------------------------------------------------
 	// Database
@@ -118,6 +123,16 @@ func main() {
 	r.Use(middleware.Logger())
 	r.Use(chiMiddleware.Timeout(30 * time.Second))
 
+	// CORS — allows the Next.js dashboard (running on a different port)
+	// to call this API from the browser. In production this should be
+	// restricted to the real dashboard domain only.
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:3000"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Content-Type", "X-API-Key", "Authorization"},
+		AllowCredentials: true,
+	}))
+
 	// -----------------------------------------------------------------------
 	// Public routes — no authentication required.
 	// -----------------------------------------------------------------------
@@ -132,7 +147,7 @@ func main() {
 	// -----------------------------------------------------------------------
 	r.Group(func(r chi.Router) {
 		// Auth middleware — validates X-API-Key and stores user ID in context.
-		r.Use(middleware.APIKeyAuth(apiKeySvc))
+		r.Use(middleware.FlexibleAuth(apiKeySvc, userSvc))
 
 		// Rate limit — 100 requests per hour per API key.
 		r.Use(middleware.RateLimit(redis, 100))
