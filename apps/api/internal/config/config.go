@@ -22,7 +22,8 @@ type Config struct {
 	RedisURL string
 
 	// Clerk
-	ClerkSecretKey string
+	ClerkSecretKey     string
+	ClerkWebhookSecret string
 
 	// Encryption
 	// AES-256 key used to encrypt SMTP passwords at rest.
@@ -39,12 +40,13 @@ func Load() (*Config, error) {
 	_ = godotenv.Load()
 
 	cfg := &Config{
-		Port:           getEnv("PORT", "8080"),
-		Environment:    getEnv("ENVIRONMENT", "development"),
-		DatabaseURL:    os.Getenv("DATABASE_URL"),
-		RedisURL:       os.Getenv("REDIS_URL"),
-		ClerkSecretKey: os.Getenv("CLERK_SECRET_KEY"),
-		EncryptionKey:  os.Getenv("ENCRYPTION_KEY"),
+		Port:               getEnv("PORT", "8080"),
+		Environment:        getEnv("ENVIRONMENT", "development"),
+		DatabaseURL:        os.Getenv("DATABASE_URL"),
+		RedisURL:           os.Getenv("REDIS_URL"),
+		ClerkSecretKey:     os.Getenv("CLERK_SECRET_KEY"),
+		ClerkWebhookSecret: os.Getenv("CLERK_WEBHOOK_SECRET"),
+		EncryptionKey:      os.Getenv("ENCRYPTION_KEY"),
 	}
 
 	if err := cfg.validate(); err != nil {
@@ -65,6 +67,9 @@ func (c *Config) validate() error {
 	}
 	if c.ClerkSecretKey == "" {
 		return errors.New("CLERK_SECRET_KEY is required")
+	}
+	if c.ClerkWebhookSecret == "" {
+		return errors.New("CLERK_WEBHOOK_SECRET is required")
 	}
 	if c.EncryptionKey == "" {
 		return errors.New("ENCRYPTION_KEY is required")

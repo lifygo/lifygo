@@ -2,7 +2,11 @@ package handler
 
 import (
 	"context"
+	"encoding/json"
+	"io"
 	"net/http"
+
+	svix "github.com/svix/svix-webhooks/go"
 
 	"github.com/lifygo/lifygo/apps/api/internal/middleware"
 	"github.com/lifygo/lifygo/apps/api/internal/model"
@@ -16,12 +20,15 @@ type UserServicer interface {
 
 // UserHandler handles HTTP requests related to users.
 type UserHandler struct {
-	users UserServicer
+	users         UserServicer
+	webhookSecret string
 }
 
 // NewUserHandler creates a new UserHandler.
-func NewUserHandler(users UserServicer) *UserHandler {
-	return &UserHandler{users: users}
+// webhookSecret is the Clerk webhook signing secret (starts with whsec_),
+// used to verify that incoming webhook requests genuinely came from Clerk.
+func NewUserHandler(users UserServicer, webhookSecret string) *UserHandler {
+	return &UserHandler{users: users, webhookSecret: webhookSecret}
 }
 
 // clerkWebhookPayload is the shape of the Clerk "user.created" webhook body.
@@ -47,8 +54,33 @@ type clerkWebhookPayload struct {
 // by a separate Clerk middleware (to be added in Phase 4 when we harden
 // the webhook endpoint before going live).
 func (h *UserHandler) ClerkWebhook(w http.ResponseWriter, r *http.Request) {
+	// Read the raw request body. We need the exact raw bytes (not a
+	// decoded struct) because signature verification checks the bytes
+	// exactly as Clerk sent them.
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "failed to read request body")
+		return
+	}
+
+	// Verify this request genuinely came from Clerk using the svix
+	// signing headers Clerk attaches to every webhook delivery.
+	// This stops anyone else from POSTing fake user data to this endpoint.
+	wh, err := svix.NewWebhook(h.webhookSecret)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "webhook not configured correctly")
+		return
+	}
+
+	if err := wh.Verify(body, r.Header); err != nil {
+		respondError(w, http.StatusUnauthorized, "invalid webhook signature")
+		return
+	}
+
+	// Now that the signature is verified, it is safe to parse the payload.
 	var payload clerkWebhookPayload
-	if !decodeJSON(w, r, &payload) {
+	if err := json.Unmarshal(body, &payload); err != nil {
+		respondError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
 
@@ -67,7 +99,7 @@ func (h *UserHandler) ClerkWebhook(w http.ResponseWriter, r *http.Request) {
 	name := payload.Data.FirstName + " " + payload.Data.LastName
 	email := payload.Data.EmailAddresses[0].EmailAddress
 
-	_, err := h.users.CreateFromClerk(r.Context(), model.CreateUserInput{
+	_, err = h.users.CreateFromClerk(r.Context(), model.CreateUserInput{
 		ClerkUserID: payload.Data.ID,
 		Name:        name,
 		Email:       email,

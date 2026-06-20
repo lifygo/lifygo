@@ -102,7 +102,7 @@ func main() {
 	// Each handler receives its service and translates HTTP to service calls.
 	// -----------------------------------------------------------------------
 	healthHandler := handler.NewHealthHandler(db, redis)
-	userHandler := handler.NewUserHandler(userSvc)
+	userHandler := handler.NewUserHandler(userSvc, cfg.ClerkWebhookSecret)
 	apiKeyHandler := handler.NewAPIKeyHandler(apiKeySvc)
 	smtpConfigHandler := handler.NewSMTPConfigHandler(smtpSvc)
 	emailHandler := handler.NewEmailHandler(emailSvc)
