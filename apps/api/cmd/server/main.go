@@ -149,8 +149,7 @@ func main() {
 		// Auth middleware — validates X-API-Key and stores user ID in context.
 		r.Use(middleware.FlexibleAuth(apiKeySvc, userSvc))
 
-		// Rate limit — 100 requests per hour per API key.
-		r.Use(middleware.RateLimit(redis, 100))
+		r.Use(middleware.RateLimit(redis, 10000))
 
 		// Account
 		r.Delete("/account", userHandler.DeleteAccount)

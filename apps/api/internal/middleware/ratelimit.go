@@ -40,10 +40,18 @@ func RateLimit(store RateLimitStore, maxRequests int64) func(http.Handler) http.
 				return
 			}
 
+			// Only rate limit write operations.
+			// Read requests (GET) are cheap and do not need throttling.
+			if r.Method == http.MethodGet {
+				next.ServeHTTP(w, r)
+				return
+			}
+
 			key := rateLimitKey(userID)
 
 			// Increment the counter for this user in this hour.
 			count, err := store.Increment(r.Context(), key)
+
 			if err != nil {
 				// If Redis is unavailable, fail open — let the request through.
 				// We prefer availability over strict rate limiting when Redis is down.
