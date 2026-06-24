@@ -26,4 +26,12 @@ export const ENDPOINTS = {
   },
 
   HEALTH: "/health",
+
+  JOBS: {
+    CREATE: "/jobs",
+    LIST: "/jobs",
+    GET: (id: string) => `/jobs/${id}`,
+    DELETE: (id: string) => `/jobs/${id}`,
+    EXECUTIONS: (id: string) => `/jobs/${id}/executions`,
+  },
 } as const;

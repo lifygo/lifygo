@@ -7,6 +7,7 @@ const links = [
   { href: "/dashboard/api-keys", label: "API Keys" },
   { href: "/dashboard/send", label: "Send Test" },
   { href: "/dashboard/logs", label: "Logs" },
+  { href: "/dashboard/jobs", label: "Jobs" },
 ];
 
 export default function DashboardLayout({
