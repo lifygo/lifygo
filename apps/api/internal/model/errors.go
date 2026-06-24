@@ -43,4 +43,16 @@ var (
 
 	// Rate Limit
 	ErrRateLimitExceeded = errors.New("rate limit exceeded")
+
+	// Job
+	ErrJobNameRequired           = errors.New("job name is required")
+	ErrJobTypeInvalid            = errors.New("job type must be webhook or email")
+	ErrJobScheduleTypeInvalid    = errors.New("schedule type must be cron or one_time")
+	ErrJobCronExpressionRequired = errors.New("cron expression is required for cron jobs")
+	ErrJobRunAtRequired          = errors.New("run_at is required for one-time jobs")
+	ErrJobWebhookURLRequired     = errors.New("webhook url is required for webhook jobs")
+	ErrJobEmailToRequired        = errors.New("email to is required for email jobs")
+	ErrJobEmailSubjectRequired   = errors.New("email subject is required for email jobs")
+	ErrJobEmailBodyRequired      = errors.New("email body is required for email jobs")
+	ErrJobLimitReached           = errors.New("job limit reached — upgrade to add more jobs")
 )

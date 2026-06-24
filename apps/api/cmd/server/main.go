@@ -83,6 +83,7 @@ func main() {
 	apiKeyRepo := repository.NewAPIKeyRepository(db)
 	smtpRepo := repository.NewSMTPConfigRepository(db)
 	emailLogRepo := repository.NewEmailLogRepository(db)
+	jobRepo := repository.NewJobRepository(db)
 
 	// -----------------------------------------------------------------------
 	// Services
@@ -96,6 +97,8 @@ func main() {
 		redis,
 		smtpSvc.GetMailer,
 	)
+	jobSvc := service.NewJobService(jobRepo)
+	scheduler := service.NewScheduler(jobRepo, smtpSvc)
 
 	// -----------------------------------------------------------------------
 	// Handlers
@@ -106,6 +109,7 @@ func main() {
 	apiKeyHandler := handler.NewAPIKeyHandler(apiKeySvc)
 	smtpConfigHandler := handler.NewSMTPConfigHandler(smtpSvc)
 	emailHandler := handler.NewEmailHandler(emailSvc)
+	jobHandler := handler.NewJobHandler(jobSvc)
 
 	// -----------------------------------------------------------------------
 	// Router
@@ -169,6 +173,13 @@ func main() {
 		r.Post("/send/otp", emailHandler.SendOTP)
 		r.Post("/verify/otp", emailHandler.VerifyOTP)
 		r.Get("/logs", emailHandler.Logs)
+
+		// Jobs
+		r.Post("/jobs", jobHandler.Create)
+		r.Get("/jobs", jobHandler.List)
+		r.Get("/jobs/{id}", jobHandler.Get)
+		r.Delete("/jobs/{id}", jobHandler.Delete)
+		r.Get("/jobs/{id}/executions", jobHandler.ListExecutions)
 	})
 
 	// -----------------------------------------------------------------------
@@ -193,6 +204,10 @@ func main() {
 			log.Fatalf("server error: %v", err)
 		}
 	}()
+
+	// Start the background scheduler.
+	scheduler.Start()
+	defer scheduler.Stop()
 
 	// Block until we receive SIGINT or SIGTERM (Ctrl+C or docker stop).
 	<-quit

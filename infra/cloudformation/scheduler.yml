@@ -1,0 +1,123 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: LifyGo Scheduler Infrastructure — SQS + EventBridge + Lambda IAM Role
+
+Parameters:
+  Environment:
+    Type: String
+    Default: production
+    AllowedValues: [production, staging]
+
+Resources:
+
+  # -----------------------------------------------------------------------
+  # SQS Queue — receives messages from EventBridge when jobs are due
+  # -----------------------------------------------------------------------
+  JobQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub lifygo-jobs-${Environment}
+      VisibilityTimeout: 60
+      MessageRetentionPeriod: 86400
+      ReceiveMessageWaitTimeSeconds: 20
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt JobDLQ.Arn
+        maxReceiveCount: 3
+
+  # Dead Letter Queue — catches jobs that fail after 3 attempts
+  JobDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub lifygo-jobs-dlq-${Environment}
+      MessageRetentionPeriod: 1209600
+
+  # Allow EventBridge Scheduler to send messages to SQS
+  JobQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref JobQueue
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: scheduler.amazonaws.com
+            Action: sqs:SendMessage
+            Resource: !GetAtt JobQueue.Arn
+
+  # -----------------------------------------------------------------------
+  # IAM Role — EventBridge Scheduler uses this to send to SQS
+  # -----------------------------------------------------------------------
+  SchedulerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub lifygo-scheduler-role-${Environment}
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: scheduler.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: SendToSQS
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: sqs:SendMessage
+                Resource: !GetAtt JobQueue.Arn
+
+  # -----------------------------------------------------------------------
+  # IAM Role — Lambda uses this to read from SQS and write logs
+  # -----------------------------------------------------------------------
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub lifygo-lambda-role-${Environment}
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: ReadFromSQS
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sqs:ReceiveMessage
+                  - sqs:DeleteMessage
+                  - sqs:GetQueueAttributes
+                Resource: !GetAtt JobQueue.Arn
+
+Outputs:
+  JobQueueURL:
+    Value: !Ref JobQueue
+    Export:
+      Name: !Sub lifygo-job-queue-url-${Environment}
+
+  JobQueueARN:
+    Value: !GetAtt JobQueue.Arn
+    Export:
+      Name: !Sub lifygo-job-queue-arn-${Environment}
+
+  JobDLQURL:
+    Value: !Ref JobDLQ
+    Export:
+      Name: !Sub lifygo-job-dlq-url-${Environment}
+
+  SchedulerRoleARN:
+    Value: !GetAtt SchedulerRole.Arn
+    Export:
+      Name: !Sub lifygo-scheduler-role-arn-${Environment}
+
+  LambdaRoleARN:
+    Value: !GetAtt LambdaRole.Arn
+    Export:
+      Name: !Sub lifygo-lambda-role-arn-${Environment}

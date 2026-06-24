@@ -145,3 +145,28 @@ func insertTestSMTPConfig(t *testing.T, tx pgx.Tx, userID string) *model.SMTPCon
 
 	return cfg
 }
+
+// insertTestJob creates a webhook job row for the given user.
+// Used by tests that need an existing job to work with.
+func insertTestJob(t *testing.T, tx pgx.Tx, userID string) *model.Job {
+	t.Helper()
+
+	repo := repository.NewJobRepository(tx)
+
+	webhookURL := "https://example.com/webhook"
+	cronExpr := "0 9 * * 1"
+
+	job, err := repo.Create(context.Background(), model.CreateJobInput{
+		UserID:         userID,
+		Name:           "test-job-" + randomSuffix(),
+		Type:           model.JobTypeWebhook,
+		ScheduleType:   model.JobScheduleTypeCron,
+		CronExpression: &cronExpr,
+		WebhookURL:     &webhookURL,
+	})
+	if err != nil {
+		t.Fatalf("failed to insert test job: %v", err)
+	}
+
+	return job
+}
