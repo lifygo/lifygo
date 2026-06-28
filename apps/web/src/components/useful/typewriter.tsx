@@ -62,3 +62,5 @@ export function Typewriter({ prefix, phrases, className }: TypewriterProps) {
     </span>
   )
 }
+
+
