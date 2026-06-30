@@ -77,25 +77,28 @@ export default function JobsPage() {
     setSuccess("")
     setLoading(true)
     try {
-      const input: CreateJobInput = {
-        name: form.name,
-        type: jobType,
-        schedule_type: scheduleType,
-        ...(scheduleType === "cron"
-          ? { cron_expression: form.cron_expression }
-          : { run_at: new Date(form.run_at).toISOString() }),
-        ...(jobType === "webhook"
+      const scheduleFields =
+        scheduleType === "cron"
+          ? { schedule_type: "cron" as const, cron_expression: form.cron_expression }
+          : { schedule_type: "one_time" as const, run_at: new Date(form.run_at).toISOString() };
+
+      const input: CreateJobInput =
+        jobType === "webhook"
           ? {
+              name: form.name,
+              type: "webhook",
+              ...scheduleFields,
               webhook_url: form.webhook_url,
               ...(form.webhook_payload ? { webhook_payload: form.webhook_payload } : {}),
             }
           : {
+              name: form.name,
+              type: "email",
+              ...scheduleFields,
               email_to: form.email_to,
               email_subject: form.email_subject,
               email_body: form.email_body,
-            }),
-      }
-
+            };
       const created = await call<Job>(ENDPOINTS.JOBS.CREATE, {
         method: "POST",
         body: JSON.stringify(input),

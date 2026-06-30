@@ -34,4 +34,7 @@ export const ENDPOINTS = {
     DELETE: (id: string) => `/jobs/${id}`,
     EXECUTIONS: (id: string) => `/jobs/${id}/executions`,
   },
+  DASHBOARD: {
+    STATS: "/dashboard/stats",
+  },
 } as const;

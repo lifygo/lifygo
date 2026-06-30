@@ -99,6 +99,7 @@ func main() {
 	)
 	jobSvc := service.NewJobService(jobRepo)
 	scheduler := service.NewScheduler(jobRepo, smtpSvc)
+	dashboardSvc := service.NewDashboardService(emailLogRepo, jobRepo, apiKeyRepo, smtpRepo)
 
 	// -----------------------------------------------------------------------
 	// Handlers
@@ -110,6 +111,7 @@ func main() {
 	smtpConfigHandler := handler.NewSMTPConfigHandler(smtpSvc)
 	emailHandler := handler.NewEmailHandler(emailSvc)
 	jobHandler := handler.NewJobHandler(jobSvc)
+	dashboardHandler := handler.NewDashboardHandler(dashboardSvc)
 
 	// -----------------------------------------------------------------------
 	// Router
@@ -180,6 +182,10 @@ func main() {
 		r.Get("/jobs/{id}", jobHandler.Get)
 		r.Delete("/jobs/{id}", jobHandler.Delete)
 		r.Get("/jobs/{id}/executions", jobHandler.ListExecutions)
+
+		// dashboard
+		// Dashboard
+		r.Get("/dashboard/stats", dashboardHandler.Stats)
 	})
 
 	// -----------------------------------------------------------------------
