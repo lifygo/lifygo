@@ -115,6 +115,23 @@ func (s *DashboardService) GetDashboardStats(ctx context.Context, userID string)
 		}
 	}
 
+	// Get the 5 most recent email logs for the activity feed.
+	recentLogs, err := s.emailLogs.List(ctx, model.ListEmailLogsInput{
+		UserID: userID,
+		Limit:  5,
+		Offset: 0,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get recent email logs: %w", err)
+	}
+
+	// Get the 5 most recently created jobs for the activity feed.
+	// jobs is already fetched above (ordered newest first by the repository).
+	recentJobs := jobs
+	if len(recentJobs) > 5 {
+		recentJobs = recentJobs[:5]
+	}
+
 	return &model.DashboardStats{
 		TotalEmailsSent:   sentCount,
 		TotalEmailsFailed: failedCount,
@@ -122,5 +139,7 @@ func (s *DashboardService) GetDashboardStats(ctx context.Context, userID string)
 		ActiveJobs:        activeJobs,
 		TotalAPIKeys:      apiKeyCount,
 		HasSMTPConfig:     hasSMTP,
+		RecentEmailLogs:   recentLogs,
+		RecentJobs:        recentJobs,
 	}, nil
 }

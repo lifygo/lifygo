@@ -1,262 +1,177 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
-import { Check, Terminal, Copy, Mail, CalendarDays } from "lucide-react"
+import { ArrowRight, Check, Copy, Mail, Clock3 } from "lucide-react"
+import { cn } from "@/lib/utils"
+
+type Tab = "email" | "cron"
+
+const SNIPPETS: Record<
+  Tab,
+  { lines: { tokens: { text: string; cls?: string }[] }[] }
+> = {
+  email: {
+    lines: [
+      { tokens: [{ text: "curl ", cls: "text-neutral-500" }, { text: "https://api.lifygo.com/v1/send", cls: "text-neutral-800" }] },
+      { tokens: [{ text: "  -H ", cls: "text-neutral-500" }, { text: '"X-API-Key: lfy_live_••••••••"', cls: "text-emerald-600" }] },
+      { tokens: [{ text: "  -d ", cls: "text-neutral-500" }, { text: "'{", cls: "text-sky-600" }] },
+      { tokens: [{ text: '    "to": "user@example.com",', cls: "text-sky-600" }] },
+      { tokens: [{ text: '    "subject": "Welcome to Acme",', cls: "text-sky-600" }] },
+      { tokens: [{ text: '    "body": "Thanks for signing up."', cls: "text-sky-600" }] },
+      { tokens: [{ text: "  }'", cls: "text-sky-600" }] },
+    ],
+  },
+  cron: {
+    lines: [
+      { tokens: [{ text: "curl ", cls: "text-neutral-500" }, { text: "https://api.lifygo.com/v1/jobs", cls: "text-neutral-800" }] },
+      { tokens: [{ text: "  -H ", cls: "text-neutral-500" }, { text: '"X-API-Key: lfy_live_••••••••"', cls: "text-emerald-600" }] },
+      { tokens: [{ text: "  -d ", cls: "text-neutral-500" }, { text: "'{", cls: "text-sky-600" }] },
+      { tokens: [{ text: '    "name": "sync-inventory",', cls: "text-sky-600" }] },
+      { tokens: [{ text: '    "schedule": "*/5 * * * *",', cls: "text-sky-600" }] },
+      { tokens: [{ text: '    "endpoint": "https://acme.io/jobs/sync"', cls: "text-sky-600" }] },
+      { tokens: [{ text: "  }'", cls: "text-sky-600" }] },
+    ],
+  },
+}
 
 export function Hero() {
-    const codeSnippet = `curl -X POST https://api.lifygo.com/send \\
-        -H "X-API-Key: lfy_your_key_here" \\
-        -H "Content-Type: application/json" \\
-        -d '{"to":"user@example.com","subject":"Welcome","body":"Thanks for signing up."}'`
+  const [tab, setTab] = useState<Tab>("email")
+  const active = SNIPPETS[tab]
+
+  const handleCopy = () => {
+    const text = active.lines.map((l) => l.tokens.map((t) => t.text).join("")).join("\n")
+    navigator.clipboard.writeText(text)
+  }
 
   return (
-    <section className="relative w-full border-b border-neutral-200 bg-neutral-50 px-4 py-20 sm:px-6 md:py-32 overflow-hidden">
-      {/* Full section ambient brand gradient background layer */}
-      <div className="absolute inset-0 z-0 bg-gradient-to-tr from-blue-600/[0.3] via-transparent to-blue-600/[0.2]" />
-      
-      {/* Concentrated radial gradient backdrop flare */}
-      <div className="absolute top-0 left-1/2 -z-10 h-[600px] w-[1200px] -translate-x-1/2 bg-[radial-gradient(circle_at_top,rgba(255,87,34,0.12),transparent_50%)]" />
-
-      <div className="relative z-10 mx-auto max-w-6xl">
-        <div className="grid gap-12 lg:grid-cols-12 lg:items-center relative">
-          
-          {/* Left Block */}
-          <div className="flex flex-col items-start text-left lg:col-span-5">
-            <div className="flex items-center gap-3 border border-neutral-200 bg-white pl-2.5 pr-3.5 py-1.5 rounded-md text-xs font-mono text-neutral-800 shadow-xs mb-6">
-              <span className="flex items-center gap-1.5 text-neutral-500 font-medium">
-                <Mail className="h-3.5 w-3.5 text-brand" />
-                Notify
-              </span>
-              <div className="h-3 w-px bg-neutral-300" />
-              <span className="flex items-center gap-1.5 font-medium text-neutral-900 animate-pulse">
-                <CalendarDays className="h-3.5 w-3.5 text-sky-500" />
-                Cron active: <code className="bg-neutral-100 px-1 rounded text-[11px] text-neutral-700">*/5 * * * *</code>
-              </span>
-            </div>
-
-            <h1 className="w-full tracking-tighter">
-              <span className="block font-heading text-6xl md:text-8xl font-black text-neutral-950 uppercase leading-none">
-                Simple
-              </span>
-              <span className="block font-mono text-2xl md:text-3xl font-bold tracking-tight text-brand mt-4 space-y-3">
-                <span className="relative inline-block pb-1">
-                  EMAIL NOTIF.
-                  <span 
-                    className="absolute bottom-0 left-0 h-1 bg-blue-500 rounded-full"
-                    style={{ animation: "periodicLineOne 8s ease-in-out infinite" }}
-                  />
-                </span>
-                <br />
-                <span className="relative inline-block pb-1">
-                  BACKGROUND JOBS.
-                  <span 
-                    className="absolute bottom-0 left-0 h-1 bg-blue-500 rounded-full"
-                    style={{ animation: "periodicLineTwo 8s ease-in-out infinite" }}
-                  />
-                </span>
-              </span>
-            </h1>
-
-            <p className="mt-6 max-w-xl text-pretty text-base leading-relaxed text-neutral-600 md:text-lg">
-              One unified API key. Access direct transactional emails via your own SMTP server for free, or execute accurate scheduled recurring tasks via simple cron syntax. No internal queues. No infrastructure friction.
-            </p>
-
-            <div className="mt-8 flex w-full flex-col gap-3 sm:flex-row sm:w-auto">
-              <Link
-                href="/sign-up"
-                className="rounded-md bg-brand px-6 py-3 text-center text-sm font-medium text-white transition-colors hover:bg-brand/90 shadow-md"
-              >
-                Get Started Free
-              </Link>
-              <Link
-                href="/docs"
-                className="rounded-md border border-neutral-300 bg-white px-6 py-3 text-center text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
-              >
-                Read the Docs
-              </Link>
-            </div>
-
-            <div className="mt-10 flex flex-wrap items-center gap-y-2 gap-x-6 text-xs font-medium text-neutral-500">
-              <span className="flex items-center gap-1.5">
-                <Check className="h-4 w-4 text-brand" />
-                Free tier forever
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Check className="h-4 w-4 text-brand" />
-                No credit card required
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Check className="h-4 w-4 text-brand" />
-                5 minutes to deployment
-              </span>
-            </div>
-          </div>
-
-          {/* Right Block - Perfect Level Stepped Stack Loop */}
-          <div className="hidden lg:flex lg:col-span-7 relative h-[480px] items-center pl-16">
-            
-            {/* Animated Structural Timeline Line Indicator */}
-            <div 
-              className="absolute inset-y-0 pointer-events-none z-40 flex flex-col items-center"
-              style={{
-                animation: 'sideToSideAssemble 6s ease-in-out infinite alternate',
-                width: '1px'
-              }}
-            >
-              <div 
-                style={{ borderRadius: '4px 0px 4px 0px' }}
-                className="bg-neutral-900 px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider text-white border border-neutral-800 shadow-md whitespace-nowrap"
-              >
-                Cron job active
-              </div>
-              <div className="w-px bg-brand flex-1 opacity-70" />
-            </div>
-
-            {/* CARD 1 */}
-            <div 
-              style={{ animation: "stackCardLevelOne 9s cubic-bezier(0.25, 1, 0.5, 1) infinite" }}
-              className="absolute w-[calc(100%-6rem)] rounded-xl border border-neutral-800 bg-neutral-950 p-5 shadow-2xl transition-all"
-            >
-              <div className="absolute top-4 left-4 flex gap-1.5">
-                <span className="h-3 w-3 rounded-full bg-[#FF5F56] border border-[#E0443E]" />
-                <span className="h-3 w-3 rounded-full bg-[#FFBD2E] border border-[#DEA123]" />
-                <span className="h-3 w-3 rounded-full bg-[#27C93F] border border-[#1AAA2C]" />
-              </div>
-              <div className="flex items-center justify-end gap-2 border-b border-neutral-800 pb-3 mb-4 text-neutral-500">
-                <Terminal className="h-3.5 w-3.5" />
-                <span className="font-mono text-[10px] uppercase tracking-wider">cURL Request // Instance 01</span>
-              </div>
-              <pre className="overflow-x-auto font-mono text-xs leading-6 text-neutral-300">
-                <code>
-                  <span className="text-neutral-200">https://api.lifygo.com/send</span> {"\\"}
-                        {"\n    "}<span className="text-neutral-500">-H</span> <span className="text-emerald-400">"X-API-Key: lfy_your_key_here"</span> {"\\"}
-                        {"\n    "}<span className="text-neutral-500">-H</span> <span className="text-emerald-400">"Content-Type: application/json"</span> {"\\"}
-                        {"\n    "}<span className="text-neutral-500">-d</span> <span className="text-sky-400">{"'{"}</span>
-                        {"\n      "}<span className="text-sky-400">"to": "user@example.com",</span>
-                        {"\n      "}<span className="text-sky-400">"subject": "Welcome",</span>
-                        {"\n      "}<span className="text-sky-400">"body": "Thanks for signing up."</span>
-                        {"\n    "}<span className="text-sky-400">{"}'"}</span>
-                </code>
-              </pre>
-              <button onClick={() => navigator.clipboard.writeText(codeSnippet)} className="absolute bottom-4 right-4 text-neutral-500 transition-colors hover:text-neutral-300 pointer-events-auto" aria-label="Copy source layout text">
-                <Copy className="h-4 w-4" />
-              </button>
-            </div>
-
-            {/* CARD 2 */}
-            <div 
-              style={{ animation: "stackCardLevelTwo 9s cubic-bezier(0.25, 1, 0.5, 1) infinite" }}
-              className="absolute w-[calc(100%-6rem)] rounded-xl border border-neutral-800 bg-neutral-950 p-5 shadow-2xl transition-all"
-            >
-              <div className="absolute top-4 left-4 flex gap-1.5">
-                <span className="h-3 w-3 rounded-full bg-[#FF5F56] border border-[#E0443E]" />
-                <span className="h-3 w-3 rounded-full bg-[#FFBD2E] border border-[#DEA123]" />
-                <span className="h-3 w-3 rounded-full bg-[#27C93F] border border-[#1AAA2C]" />
-              </div>
-              <div className="flex items-center justify-end gap-2 border-b border-neutral-800 pb-3 mb-4 text-neutral-500">
-                <Terminal className="h-3.5 w-3.5" />
-                <span className="font-mono text-[10px] uppercase tracking-wider">cURL Request // Instance 02</span>
-              </div>
-              <pre className="overflow-x-auto font-mono text-xs leading-6 text-neutral-300">
-                <code>
-                  <span className="text-neutral-500">curl</span> <span className="text-neutral-500">-X</span> <span className="text-brand font-medium">POST</span> {"\\"}
-                  {"\n    "}<span className="text-neutral-200">https://api.lifygo.com/v1/send</span> {"\\"}
-                  {"\n    "}<span className="text-neutral-500">-H</span> <span className="text-emerald-400">"Authorization: Bearer lify_sk_..."</span> {"\\"}
-                  {"\n    "}<span className="text-neutral-500">-H</span> <span className="text-emerald-400">"Content-Type: application/json"</span> {"\\"}
-                  {"\n    "}<span className="text-neutral-500">-d</span> <span className="text-sky-400">{"'{"}</span>
-                  {"\n      "}<span className="text-sky-400">"to": "user@example.com",</span>
-                  {"\n      "}<span className="text-sky-400">"subject": "System Auth",</span>
-                  {"\n      "}<span className="text-sky-400">"cron": "*/5 * * * *"</span>
-                  {"\n    "}<span className="text-sky-400">{"}'"}</span>
-                </code>
-              </pre>
-              <button onClick={() => navigator.clipboard.writeText(codeSnippet)} className="absolute bottom-4 right-4 text-neutral-500 transition-colors hover:text-neutral-300 pointer-events-auto" aria-label="Copy source layout text">
-                <Copy className="h-4 w-4" />
-              </button>
-            </div>
-
-            {/* CARD 3 */}
-            <div 
-              style={{ animation: "stackCardLevelThree 9s cubic-bezier(0.25, 1, 0.5, 1) infinite" }}
-              className="absolute w-[calc(100%-6rem)] rounded-xl border border-neutral-800 bg-neutral-950 p-5 shadow-2xl transition-all"
-            >
-              <div className="absolute top-4 left-4 flex gap-1.5">
-                <span className="h-3 w-3 rounded-full bg-[#FF5F56] border border-[#E0443E]" />
-                <span className="h-3 w-3 rounded-full bg-[#FFBD2E] border border-[#DEA123]" />
-                <span className="h-3 w-3 rounded-full bg-[#27C93F] border border-[#1AAA2C]" />
-              </div>
-              <div className="flex items-center justify-end gap-2 border-b border-neutral-800 pb-3 mb-4 text-neutral-500">
-                <Terminal className="h-3.5 w-3.5" />
-                <span className="font-mono text-[10px] uppercase tracking-wider">cURL Request // Instance 03</span>
-              </div>
-              <pre className="overflow-x-auto font-mono text-xs leading-6 text-neutral-300">
-                <code>
-                  <span className="text-neutral-500">curl</span> <span className="text-neutral-500">-X</span> <span className="text-brand font-medium">POST</span> {"\\"}
-                  {"\n    "}<span className="text-neutral-200">https://api.lifygo.com/v1/send</span> {"\\"}
-                  {"\n    "}<span className="text-neutral-500">-H</span> <span className="text-emerald-400">"Authorization: Bearer lify_sk_..."</span> {"\\"}
-                  {"\n    "}<span className="text-neutral-500">-H</span> <span className="text-emerald-400">"Content-Type: application/json"</span> {"\\"}
-                  {"\n    "}<span className="text-neutral-500">-d</span> <span className="text-sky-400">{"'{"}</span>
-                  {"\n      "}<span className="text-sky-400">"to": "user@example.com",</span>
-                  {"\n      "}<span className="text-sky-400">"subject": "System Auth",</span>
-                  {"\n      "}<span className="text-sky-400">"cron": "*/5 * * * *"</span>
-                  {"\n    "}<span className="text-sky-400">{"}'"}</span>
-                </code>
-              </pre>
-              <button onClick={() => navigator.clipboard.writeText(codeSnippet)} className="absolute bottom-4 right-4 text-neutral-500 transition-colors hover:text-neutral-300 pointer-events-auto" aria-label="Copy source layout text">
-                <Copy className="h-4 w-4" />
-              </button>
-            </div>
-
-          </div>
-
-          {/* Mobile Fallback */}
-          <div className="block lg:hidden w-full">
-            <div className="relative rounded-xl border border-neutral-800 bg-neutral-950 p-5 shadow-2xl">
-              <pre className="overflow-x-auto font-mono text-xs leading-6 text-neutral-300">
-                <code>
-                  <span className="text-neutral-500">curl</span> <span className="text-neutral-500">-X</span> <span className="text-brand font-medium">POST</span> https://api.lifygo.com/v1/send
-                </code>
-              </pre>
-            </div>
-          </div>
-
-        </div>
+    <section className="relative w-full overflow-hidden bg-neutral-50 font-sans [font-feature-settings:'cv11','ss01']">
+      {/* Background image: a faint, faded code editor screenshot — replace src with your own asset */}
+      <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+        <div
+          className="absolute inset-0 bg-cover bg-top opacity-[0.16] grayscale"
+          style={{
+            backgroundImage:
+              "url('https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=2000&q=80')",
+          }}
+        />
+        {/* Fades the image into the page background so text stays readable */}
+        <div className="absolute inset-0 bg-gradient-to-b from-neutral-50/40 via-neutral-50/85 to-neutral-50" />
+        <div className="absolute inset-0 bg-gradient-to-r from-neutral-50 via-transparent to-neutral-50" />
       </div>
 
-      <style jsx global>{`
-        @keyframes sideToSideAssemble {
-          0% { left: 4%; }
-          100% { left: 78%; }
-        }
-        @keyframes periodicLineOne {
-          0%, 40%, 100% { width: 0%; opacity: 0; }
-          5%, 35% { width: 100%; opacity: 1; }
-        }
-        @keyframes periodicLineTwo {
-          0%, 45%, 90%, 100% { width: 0%; opacity: 0; }
-          50%, 85% { width: 100%; opacity: 1; }
-        }
-        
-        /* Level Stepped Loop - Each card moves from top layer downward proportionally */
-        @keyframes stackCardLevelOne {
-          0%, 28% { transform: translate(0px, 0px); z-index: 30; opacity: 1; filter: blur(0px); }
-          33%, 61% { transform: translate(24px, 24px); z-index: 20; opacity: 0.7; filter: blur(0.5px); }
-          66%, 95% { transform: translate(48px, 48px); z-index: 10; opacity: 0.35; filter: blur(1px); }
-          100% { transform: translate(0px, 0px); z-index: 30; opacity: 1; filter: blur(0px); }
-        }
-        @keyframes stackCardLevelTwo {
-          0%, 28% { transform: translate(48px, 48px); z-index: 10; opacity: 0.35; filter: blur(1px); }
-          33%, 61% { transform: translate(0px, 0px); z-index: 30; opacity: 1; filter: blur(0px); }
-          66%, 95% { transform: translate(24px, 24px); z-index: 20; opacity: 0.7; filter: blur(0.5px); }
-          100% { transform: translate(48px, 48px); z-index: 10; opacity: 0.35; filter: blur(1px); }
-        }
-        @keyframes stackCardLevelThree {
-          0%, 28% { transform: translate(24px, 24px); z-index: 20; opacity: 0.7; filter: blur(0.5px); }
-          33%, 61% { transform: translate(48px, 48px); z-index: 10; opacity: 0.35; filter: blur(1px); }
-          66%, 95% { transform: translate(0px, 0px); z-index: 30; opacity: 1; filter: blur(0px); }
-          100% { transform: translate(24px, 24px); z-index: 20; opacity: 0.7; filter: blur(0.5px); }
-        }
-      `}</style>
+      <div className="relative mx-auto max-w-4xl px-6 pb-20 pt-24 text-center md:pt-32">
+        {/* Eyebrow */}
+        <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-3.5 py-1.5 text-xs font-medium text-neutral-500 shadow-sm">
+          <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
+          One API key for email and jobs
+        </div>
+
+        <h1 className="mx-auto max-w-3xl text-balance text-4xl font-semibold leading-[1.1] tracking-tight text-neutral-900 sm:text-5xl lg:text-6xl">
+          Email and background jobs,
+          <br className="hidden sm:block" />
+          <span className="text-neutral-400">without the infrastructure.</span>
+        </h1>
+
+        <p className="mx-auto mt-6 max-w-xl text-balance text-base leading-relaxed text-neutral-500 sm:text-lg">
+          Transactional email over your own SMTP, and reliable cron-scheduled
+          jobs — both on a single API key, with no queues to manage.
+        </p>
+
+        <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <Link
+            href="/sign-up"
+            className="group inline-flex h-11 items-center justify-center gap-1.5 rounded-md bg-brand px-6 text-sm font-medium text-white shadow-sm transition-colors duration-200 hover:bg-brand/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+          >
+            Get started free
+            <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden="true" />
+          </Link>
+          <Link
+            href="/docs"
+            className="inline-flex h-11 items-center justify-center rounded-md border border-neutral-200 bg-white px-6 text-sm font-medium text-neutral-700 transition-colors duration-200 hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2"
+          >
+            Read the docs
+          </Link>
+        </div>
+
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+          {["Free tier forever", "No credit card required", "Live in under 5 minutes"].map((item) => (
+            <div key={item} className="flex items-center gap-1.5 text-sm text-neutral-500">
+              <Check className="h-4 w-4 shrink-0 text-brand" aria-hidden="true" />
+              <span>{item}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Code panel */}
+        <div className="mx-auto mt-16 max-w-2xl text-left">
+          <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-xl shadow-black/[0.06]">
+            <div className="flex items-center gap-1 border-b border-neutral-200 bg-neutral-50 px-2 pt-2">
+              <TabButton
+                label="Email"
+                icon={<Mail className="h-3.5 w-3.5" aria-hidden="true" />}
+                active={tab === "email"}
+                onClick={() => setTab("email")}
+              />
+              <TabButton
+                label="Cron job"
+                icon={<Clock3 className="h-3.5 w-3.5" aria-hidden="true" />}
+                active={tab === "cron"}
+                onClick={() => setTab("cron")}
+              />
+              <button
+                onClick={handleCopy}
+                className="ml-auto mb-1 mr-1 rounded-md p-1.5 text-neutral-400 transition-colors duration-200 hover:bg-neutral-100 hover:text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300"
+                aria-label="Copy code to clipboard"
+              >
+                <Copy className="h-3.5 w-3.5" aria-hidden="true" />
+              </button>
+            </div>
+
+            <pre className="overflow-x-auto px-5 py-5 font-mono text-[13px] leading-7 text-neutral-700">
+              <code>
+                {active.lines.map((line, i) => (
+                  <div key={i}>
+                    {line.tokens.map((t, j) => (
+                      <span key={j} className={t.cls}>
+                        {t.text}
+                      </span>
+                    ))}
+                  </div>
+                ))}
+              </code>
+            </pre>
+          </div>
+        </div>
+      </div>
     </section>
+  )
+}
+
+function TabButton({
+  label,
+  icon,
+  active,
+  onClick,
+}: {
+  label: string
+  icon: React.ReactNode
+  active: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      onClick={onClick}
+      aria-pressed={active}
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-t-md px-3 py-2 text-xs font-medium transition-colors duration-200",
+        active
+          ? "border-x border-t border-neutral-200 bg-white text-neutral-900"
+          : "text-neutral-400 hover:text-neutral-700"
+      )}
+    >
+      {icon}
+      {label}
+    </button>
   )
 }
