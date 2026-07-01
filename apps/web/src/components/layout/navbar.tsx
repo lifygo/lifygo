@@ -9,55 +9,94 @@ import {
   NavigationMenuTrigger,
   NavigationMenuContent,
 } from "@/components/ui/navigation-menu"
+import { Mail, Webhook } from "lucide-react"
 
 export function Navbar() {
   return (
-    <div className="w-full bg-neutral-950">
-      {/* Status strip */}
-      <div className="border-b border-white/[0.06] px-2 py-1.5 text-center text-xs font-mono text-neutral-500">
-        LifyGo Core Engine v1.0.0 — Production ready API delivery
+    <div className="w-full">
+      {/* Brand-colored status bar layout */}
+      <div className="bg-brand px-4 py-2 text-center text-[11px] font-mono tracking-wide text-white font-medium shadow-sm">
+        <span>LifyGo</span>
+        {" "}Core Engine v1.0.0 —{" "}
+        <span className="text-white/90">Production ready API delivery</span>
       </div>
 
-      <header className="sticky top-0 z-50 w-full border-b border-white/[0.06] bg-neutral-950/80 backdrop-blur-md">
+      {/* Primary Navigation Layer */}
+      <header className="sticky top-0 z-40 w-full border-b border-neutral-800 bg-neutral-950/80 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
+          
+          {/* Logo Brand Mark */}
           <Link
             href="/"
-            className="text-lg font-semibold tracking-tight text-neutral-50 transition-colors duration-200 hover:text-white"
+            className="font-heading text-xl font-black tracking-tight text-white uppercase"
           >
             LifyGo
           </Link>
 
+          {/* Nav links */}
           <nav className="hidden items-center gap-1 md:flex">
             <NavigationMenu>
               <NavigationMenuList>
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="rounded-md bg-transparent px-3 py-2 text-sm font-medium text-neutral-400 transition-colors duration-200 hover:bg-white/[0.06] hover:text-neutral-50 data-[state=open]:bg-white/[0.06] data-[state=open]:text-neutral-50">
+                  <NavigationMenuTrigger className="rounded-md bg-transparent px-3 py-2 text-sm font-medium text-neutral-400 transition-colors duration-200 hover:bg-white/[0.06] hover:text-black data-[state=open]:bg-white/[0.06] data-[state=open]:text-black">
                     Solutions
                   </NavigationMenuTrigger>
-                  <NavigationMenuContent className="w-[420px] rounded-lg border border-white/[0.08] bg-neutral-900 p-2 shadow-2xl shadow-black/40">
-                    <div className="grid gap-1">
-                      <NavigationMenuLink asChild>
+
+                  <NavigationMenuContent>
+                    <div className="w-[520px] rounded-xl border border-neutral-800 bg-neutral-900 p-3 shadow-2xl shadow-black/80">
+                      <p className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-widest text-neutral-500">
+                        What LifyGo does
+                      </p>
+                      <div className="grid gap-1.5">
+                        <NavigationMenuLink asChild>
+                          <Link
+                            href="/solutions/notify"
+                            className="group flex items-start gap-4 rounded-lg p-3 transition-colors duration-200 hover:bg-neutral-800/60"
+                          >
+                            <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-neutral-800 border border-neutral-700/50 group-hover:border-neutral-600 transition-colors">
+                              <Mail className="h-4 w-4 text-brand" aria-hidden="true" />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="text-sm font-medium text-neutral-50">
+                                Email Notifications
+                              </div>
+                              <p className="mt-0.5 text-xs leading-relaxed text-neutral-400">
+                                Send transactional messages and OTPs through your own SMTP server — no shared infrastructure, full delivery control.
+                              </p>
+                            </div>
+                          </Link>
+                        </NavigationMenuLink>
+
+                        <NavigationMenuLink asChild>
+                          <Link
+                            href="/solutions/schedule"
+                            className="group flex items-start gap-4 rounded-lg p-3 transition-colors duration-200 hover:bg-neutral-800/60"
+                          >
+                            <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-neutral-800 border border-neutral-700/50 group-hover:border-neutral-600 transition-colors">
+                              <Webhook className="h-4 w-4 text-blue-400" aria-hidden="true" />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="text-sm font-medium text-neutral-50">
+                                Cron Jobs
+                              </div>
+                              <p className="mt-0.5 text-xs leading-relaxed text-neutral-400">
+                                Automate recurring webhooks and background tasks using standard cron syntax — no queue management required.
+                              </p>
+                            </div>
+                          </Link>
+                        </NavigationMenuLink>
+                      </div>
+
+                      {/* Content Dropdown Bottom Strip Footer */}
+                      <div className="mt-3 flex items-center justify-between border-t border-neutral-800 pt-3 px-2">
+                        <span className="text-[11px] text-neutral-500">One API key for both products.</span>
                         <Link
-                          href="/solutions/notify"
-                          className="block rounded-md p-2.5 transition-colors duration-200 hover:bg-white/[0.06]"
+                          href="/docs"
+                          className="text-[11px] font-medium text-brand transition-opacity hover:opacity-80"
                         >
-                          <div className="text-sm font-medium text-neutral-50">Email Notifications</div>
-                          <p className="mt-0.5 text-xs text-neutral-400">
-                            Send transactional messages and OTPs using your own SMTP server.
-                          </p>
+                          Read the docs →
                         </Link>
-                      </NavigationMenuLink>
-                      <NavigationMenuLink asChild>
-                        <Link
-                          href="/solutions/schedule"
-                          className="block rounded-md p-2.5 transition-colors duration-200 hover:bg-white/[0.06]"
-                        >
-                          <div className="text-sm font-medium text-neutral-50">Cron Jobs</div>
-                          <p className="mt-0.5 text-xs text-neutral-400">
-                            Automate recurring webhooks and tasks with native cron syntax.
-                          </p>
-                        </Link>
-                      </NavigationMenuLink>
+                      </div>
                     </div>
                   </NavigationMenuContent>
                 </NavigationMenuItem>
@@ -89,16 +128,17 @@ export function Navbar() {
             </a>
           </nav>
 
-          <div className="flex items-center gap-3">
+          {/* Auth Action Stack */}
+          <div className="flex items-center gap-2">
             <Link
               href="/sign-in"
-              className="hidden rounded-md px-3 py-2 text-sm font-medium text-neutral-400 transition-colors duration-200 hover:bg-white/[0.06] hover:text-neutral-50 sm:inline-flex"
+              className="hidden text-sm font-medium text-neutral-300 transition-colors duration-200 hover:text-white sm:inline-flex px-3 py-2"
             >
               Sign in
             </Link>
             <Link
               href="/sign-up"
-              className="inline-flex h-9 items-center justify-center rounded-md bg-brand px-4 text-sm font-medium text-white shadow-sm transition-colors duration-200 hover:bg-brand/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950"
+              className="inline-flex h-9 items-center justify-center rounded-md bg-white px-4 text-sm font-medium text-neutral-950 transition-colors duration-200 hover:bg-neutral-100 shadow-sm"
             >
               Get started free
             </Link>
