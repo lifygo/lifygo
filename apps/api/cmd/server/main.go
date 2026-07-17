@@ -97,7 +97,24 @@ func main() {
 		redis,
 		smtpSvc.GetMailer,
 	)
-	jobSvc := service.NewJobService(jobRepo)
+	// Initialize EventBridge service — optional.
+	// Returns nil if AWS credentials are not configured,
+	// in which case the self-hosted scheduler handles all job execution.
+	eventbridgeSvc := service.NewEventBridgeService(service.EventBridgeConfig{
+		Region:           cfg.AWSRegion,
+		AccessKeyID:      cfg.AWSAccessKeyID,
+		SecretAccessKey:  cfg.AWSSecretAccessKey,
+		SQSQueueARN:      cfg.SQSQueueARN,
+		SchedulerRoleARN: cfg.SchedulerRoleARN,
+	})
+
+	if eventbridgeSvc != nil {
+		log.Println("eventbridge scheduler enabled")
+	} else {
+		log.Println("eventbridge scheduler disabled — using self-hosted scheduler")
+	}
+
+	jobSvc := service.NewJobService(jobRepo, eventbridgeSvc)
 	scheduler := service.NewScheduler(jobRepo, smtpSvc)
 	dashboardSvc := service.NewDashboardService(emailLogRepo, jobRepo, apiKeyRepo, smtpRepo)
 

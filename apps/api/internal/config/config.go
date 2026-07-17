@@ -29,6 +29,14 @@ type Config struct {
 	// AES-256 key used to encrypt SMTP passwords at rest.
 	// Must be exactly 32 bytes when decoded.
 	EncryptionKey string
+	// AWS — optional, only required when using EventBridge for job scheduling.
+	// If not set, the self-hosted scheduler handles all job execution.
+	AWSRegion          string
+	AWSAccessKeyID     string
+	AWSSecretAccessKey string
+	SQSQueueURL        string
+	SchedulerRoleARN   string
+	SQSQueueARN        string
 }
 
 // Load reads environment variables from the .env file if present,
@@ -47,6 +55,12 @@ func Load() (*Config, error) {
 		ClerkSecretKey:     os.Getenv("CLERK_SECRET_KEY"),
 		ClerkWebhookSecret: os.Getenv("CLERK_WEBHOOK_SECRET"),
 		EncryptionKey:      os.Getenv("ENCRYPTION_KEY"),
+		AWSRegion:          getEnv("AWS_REGION", "ap-southeast-1"),
+		AWSAccessKeyID:     os.Getenv("AWS_ACCESS_KEY_ID"),
+		AWSSecretAccessKey: os.Getenv("AWS_SECRET_ACCESS_KEY"),
+		SQSQueueURL:        os.Getenv("SQS_QUEUE_URL"),
+		SchedulerRoleARN:   os.Getenv("SCHEDULER_ROLE_ARN"),
+		SQSQueueARN:        os.Getenv("SQS_QUEUE_ARN"),
 	}
 
 	if err := cfg.validate(); err != nil {

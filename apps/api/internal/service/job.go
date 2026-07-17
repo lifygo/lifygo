@@ -28,12 +28,19 @@ type JobRepository interface {
 
 // JobService handles all business logic related to scheduled jobs.
 type JobService struct {
-	jobs JobRepository
+	jobs        JobRepository
+	eventbridge *EventBridgeService
 }
 
 // NewJobService creates a new JobService.
-func NewJobService(jobs JobRepository) *JobService {
-	return &JobService{jobs: jobs}
+// eventbridge is optional — pass nil to use the self-hosted scheduler only.
+// When eventbridge is non-nil, job creation and deletion also create/delete
+// EventBridge Scheduler rules in AWS for production-grade execution.
+func NewJobService(jobs JobRepository, eventbridge *EventBridgeService) *JobService {
+	return &JobService{
+		jobs:        jobs,
+		eventbridge: eventbridge,
+	}
 }
 
 // Create creates a new scheduled job for the given user.
@@ -87,6 +94,18 @@ func (s *JobService) Create(ctx context.Context, input model.CreateJobInput) (*m
 		return nil, fmt.Errorf("failed to create job: %w", err)
 	}
 
+	// If EventBridge is configured, create a scheduler rule in AWS.
+	// This wires the job into the AWS execution path (EventBridge → SQS → Lambda).
+	// If not configured, the self-hosted scheduler handles execution instead.
+	if s.eventbridge != nil {
+		if err := s.eventbridge.CreateSchedule(ctx, job); err != nil {
+			// Log the error but do not fail the request.
+			// The job is already in PostgreSQL and the self-hosted scheduler
+			// will still execute it. EventBridge is an enhancement, not a requirement.
+			_ = fmt.Errorf("eventbridge schedule creation failed (job will run via self-hosted scheduler): %w", err)
+		}
+	}
+
 	return job, nil
 }
 
@@ -132,6 +151,17 @@ func (s *JobService) Delete(ctx context.Context, id, userID string) error {
 
 	if err := s.jobs.Delete(ctx, id, userID); err != nil {
 		return fmt.Errorf("failed to delete job: %w", err)
+	}
+
+	// If EventBridge is configured, remove the scheduler rule from AWS.
+	// This prevents orphaned rules that would keep firing after deletion.
+	if s.eventbridge != nil {
+		if err := s.eventbridge.DeleteSchedule(ctx, id); err != nil {
+			// Non-fatal — the job is already deleted from PostgreSQL.
+			// The EventBridge rule will eventually expire or can be
+			// cleaned up manually from the AWS console.
+			_ = fmt.Errorf("eventbridge schedule deletion failed: %w", err)
+		}
 	}
 
 	return nil

@@ -1,7 +1,9 @@
 "use client"
 
 import Link from "next/link"
-import { Terminal, ArrowUpRight, ShieldCheck } from "lucide-react"
+import Image from "next/image"
+import { ArrowUpRight, ShieldCheck } from "lucide-react"
+import lifygoLogo from "@/assets/logos/lifygo.png"
 
 function CustomGithubIcon({ className }: { className?: string }) {
   return (
@@ -26,8 +28,8 @@ export function Footer() {
     <footer className="relative w-full overflow-hidden bg-neutral-950 border-t border-neutral-900 px-6 pt-24 pb-12 font-sans antialiased z-30">
       
       {/* Massive Graphic Background Typography Watermark */}
-      <div className="absolute inset-x-0 bottom-0 pointer-events-none select-none overflow-hidden flex justify-center z-0 opacity-[0.02] translate-y-1/4">
-        <h1 className="font-heading font-black tracking-tighter uppercase text-[26vw] leading-none text-white">
+      <div className="absolute inset-x-0 bottom-0 pointer-events-none select-none overflow-hidden flex justify-center z-0 opacity-[0.1] translate-y-1/4">
+        <h1 className="font-heading font-black tracking-tighter uppercase text-[26vw] leading-none text-brand">
           LIFYGO
         </h1>
       </div>
@@ -39,14 +41,20 @@ export function Footer() {
           
           {/* Brand Column */}
           <div className="md:col-span-4 flex flex-col justify-between space-y-6">
-            <div className="space-y-4">
-              <Link href="/" className="inline-flex items-center gap-2.5 text-white font-bold tracking-tight">
-                <span className="flex h-8 w-8 items-center justify-center bg-brand text-white text-sm" style={{ borderRadius: '6px 0px 6px 0px' }}>
-                  <Terminal className="h-4 w-4" />
-                </span>
-                <span className="text-xl uppercase font-black font-heading tracking-tight" style={{ fontFamily: 'Inter, sans-serif' }}>
-                  LifyGo
-                </span>
+            <div className="space-y-2">
+              {/* Logo Brand Mark - Image implementation without backplate background */}
+              <Link 
+                href="/" 
+                className="inline-flex items-center transition-transform duration-200 active:scale-95"
+                aria-label="LifyGo Home"
+              >
+                <Image
+                  src={lifygoLogo}
+                  alt="LifyGo Brand Logo"
+                  width={190}
+                  height={35}
+                  className="w-[190px] h-auto object-contain"
+                />
               </Link>
               <p className="text-sm text-neutral-400 leading-relaxed max-w-xs" style={{ fontFamily: 'Inter, sans-serif' }}>
                 Transactional email and reliable micro background job execution via a single unified API endpoint.
@@ -136,7 +144,7 @@ export function Footer() {
           {/* Social Links via embedded customized inline SVGs */}
           <div className="flex items-center gap-4">
             <a 
-              href="https://github.com" 
+              href="https://github.com/lifygo" 
               target="_blank" 
               rel="noreferrer" 
               className="p-2 border border-neutral-900 bg-neutral-900/20 text-neutral-400 hover:text-white rounded transition-colors duration-150"
