@@ -1,0 +1,152 @@
+name: lifygo-prod
+
+# -----------------------------------------------------------------------
+# Production Docker Compose for LifyGo
+#
+# Usage on the server:
+#   docker compose -f infra/docker/docker-compose.prod.yml up -d
+#
+# Environment variables are read from the host environment.
+# Copy .env.example to /etc/lifygo.env on the server and source it,
+# or pass them directly when starting the containers.
+#
+# Before first run:
+#   1. Build the API image: docker build -f infra/docker/api.Dockerfile -t lifygo-api:latest .
+#   2. Set all required environment variables on the host
+#   3. Run: docker compose -f infra/docker/docker-compose.prod.yml up -d
+# -----------------------------------------------------------------------
+
+services:
+
+  # -----------------------------------------------------------------------
+  # migrate — runs database migrations on startup then exits.
+  # The API service depends on this completing successfully before starting.
+  # This ensures the schema is always up to date before the API accepts requests.
+  # -----------------------------------------------------------------------
+  migrate:
+    image: lifygo-api:latest
+    command: [
+      "/app/migrate",
+      "-path", "/app/migrations",
+      "-database", "${DATABASE_URL}",
+      "up"
+    ]
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - lifygo_network
+    restart: on-failure
+
+  # -----------------------------------------------------------------------
+  # api — the Go API server.
+  # Only port 8080 is exposed, and only to the internal Docker network.
+  # Nginx proxies external HTTPS traffic to this port.
+  # -----------------------------------------------------------------------
+  api:
+    image: lifygo-api:latest
+    container_name: lifygo-api
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      PORT:                ${PORT:-8080}
+      ENVIRONMENT:         production
+      DATABASE_URL:        ${DATABASE_URL}
+      REDIS_URL:           ${REDIS_URL}
+      CLERK_SECRET_KEY:    ${CLERK_SECRET_KEY}
+      CLERK_WEBHOOK_SECRET: ${CLERK_WEBHOOK_SECRET}
+      ENCRYPTION_KEY:      ${ENCRYPTION_KEY}
+      AWS_REGION:          ${AWS_REGION:-ap-southeast-1}
+      AWS_ACCESS_KEY_ID:   ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      SQS_QUEUE_URL:       ${SQS_QUEUE_URL}
+      SQS_QUEUE_ARN:       ${SQS_QUEUE_ARN}
+      SCHEDULER_ROLE_ARN:  ${SCHEDULER_ROLE_ARN}
+    ports:
+      - "127.0.0.1:8080:8080"
+    networks:
+      - lifygo_network
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  # -----------------------------------------------------------------------
+  # postgres — PostgreSQL database.
+  # Port 5432 is NOT exposed to the host machine.
+  # Only services on lifygo_network can reach it.
+  # -----------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: lifygo-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER:     ${POSTGRES_USER:-lifygo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB:       ${POSTGRES_DB:-lifygo}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - lifygo_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-lifygo}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  # -----------------------------------------------------------------------
+  # redis — Redis cache for rate limiting and OTP storage.
+  # Port 6379 is NOT exposed to the host machine.
+  # Only services on lifygo_network can reach it.
+  # -----------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: lifygo-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "64mb", "--maxmemory-policy", "allkeys-lru"]
+    volumes:
+      - redis_data:/data
+    networks:
+      - lifygo_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    deploy:
+      resources:
+        limits:
+          memory: 96M
+
+# -----------------------------------------------------------------------
+# Networks
+# lifygo_network is an internal bridge network.
+# All inter-service communication happens here.
+# Nothing outside Docker can reach services on this network
+# except through explicitly published ports.
+# -----------------------------------------------------------------------
+networks:
+  lifygo_network:
+    driver: bridge
+
+# -----------------------------------------------------------------------
+# Volumes
+# Named volumes persist data across container restarts and rebuilds.
+# docker compose down does NOT delete these volumes.
+# docker compose down -v DOES delete them — never run this in production.
+# -----------------------------------------------------------------------
+volumes:
+  postgres_data:
+  redis_data:
