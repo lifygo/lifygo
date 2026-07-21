@@ -13,23 +13,24 @@ const SNIPPETS: Record<
 > = {
   email: {
     lines: [
-      { tokens: [{ text: "curl ", cls: "text-neutral-500" }, { text: "https://api.lifygo.com/v1/send", cls: "text-neutral-200" }] },
-      { tokens: [{ text: "  -H ", cls: "text-neutral-500" }, { text: '"X-API-Key: lfy_live_••••••••"', cls: "text-emerald-400" }] },
+      { tokens: [{ text: "curl ", cls: "text-neutral-500" }, { text: "http://localhost:8080/send", cls: "text-neutral-200" }] },
+      { tokens: [{ text: "  -H ", cls: "text-neutral-500" }, { text: '"X-API-Key: lfy_your_key"', cls: "text-emerald-400" }] },
       { tokens: [{ text: "  -d ", cls: "text-neutral-500" }, { text: "'{", cls: "text-sky-400" }] },
-      { tokens: [{ text: '    "to": "user@example.com",', cls: "text-sky-400" }] },
-      { tokens: [{ text: '    "subject": "Welcome to Acme",', cls: "text-sky-400" }] },
+      { tokens: [{ text: '    "to": "hello@example.com",', cls: "text-sky-400" }] },
+      { tokens: [{ text: '    "subject": "Welcome",', cls: "text-sky-400" }] },
       { tokens: [{ text: '    "body": "Thanks for signing up."', cls: "text-sky-400" }] },
       { tokens: [{ text: "  }'", cls: "text-sky-400" }] },
     ],
   },
   cron: {
     lines: [
-      { tokens: [{ text: "curl ", cls: "text-neutral-500" }, { text: "https://api.lifygo.com/v1/jobs", cls: "text-neutral-200" }] },
-      { tokens: [{ text: "  -H ", cls: "text-neutral-500" }, { text: '"X-API-Key: lfy_live_••••••••"', cls: "text-emerald-400" }] },
+      { tokens: [{ text: "curl ", cls: "text-neutral-500" }, { text: "http://localhost:8080/jobs", cls: "text-neutral-200" }] },
+      { tokens: [{ text: "  -H ", cls: "text-neutral-500" }, { text: '"X-API-Key: lfy_your_key"', cls: "text-emerald-400" }] },
       { tokens: [{ text: "  -d ", cls: "text-neutral-500" }, { text: "'{", cls: "text-sky-400" }] },
-      { tokens: [{ text: '    "name": "sync-inventory",', cls: "text-sky-400" }] },
-      { tokens: [{ text: '    "schedule": "*/5 * * * *",', cls: "text-sky-400" }] },
-      { tokens: [{ text: '    "endpoint": "https://acme.io/jobs/sync"', cls: "text-sky-400" }] },
+      { tokens: [{ text: '    "name": "weekly-digest",', cls: "text-sky-400" }] },
+      { tokens: [{ text: '    "schedule_type": "cron",', cls: "text-sky-400" }] },
+      { tokens: [{ text: '    "cron_expression": "0 9 * * 1",', cls: "text-sky-400" }] },
+      { tokens: [{ text: '    "webhook_url": "https://yourapp.com/webhook"', cls: "text-sky-400" }] },
       { tokens: [{ text: "  }'", cls: "text-sky-400" }] },
     ],
   },
@@ -46,7 +47,6 @@ export function Hero() {
 
   return (
     <section className="relative w-full overflow-hidden bg-neutral-950 font-sans [font-feature-settings:'cv11','ss01']">
-      {/* Code screenshot sits directly on the dark base — swap URL for your own asset */}
       <div className="pointer-events-none absolute inset-0" aria-hidden="true">
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-[0.68]"
@@ -55,28 +55,21 @@ export function Hero() {
               "url('https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=2000&q=80')",
           }}
         />
-        {/* Vertical fade: image visible top half, dissolves to solid dark bottom */}
-        <div className="absolute inset-0 bg-gradient-to-b from-neutral-950/20 via-neutral-950/70 to-neutral-950" />
-        {/* Side vignette: keeps edges dark so text isn't competed with */}
+        <div className="absolute inset-0 bg-gradient-to-b from-neutral-950/40 via-neutral-950/70 to-neutral-950" />
         <div className="absolute inset-0 bg-gradient-to-r from-neutral-950/70 via-transparent to-neutral-950/70" />
       </div>
 
-      <div className="relative mx-auto max-w-4xl px-6 pb-20 pt-24 text-center md:pt-32">
-        {/* Eyebrow */}
-        <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.04] px-3.5 py-1.5 text-xs font-medium text-neutral-400 backdrop-blur-sm">
-          <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
-          One API key for email and jobs
-        </div>
-
-        <h1 className="mx-auto max-w-3xl text-balance text-4xl font-semibold leading-[1.1] tracking-tight text-neutral-50 sm:text-5xl lg:text-6xl">
-          Email and background jobs,
+      <div className="relative mx-auto max-w-6xl px-6 pb-20 pt-12 text-center md:pt-16">
+        <h1 className="mx-auto max-w-4xl text-balance text-4xl font-semibold leading-[1.1] tracking-tight text-neutral-50 sm:text-5xl lg:text-6xl">
+          The simplest API for email,
           <br className="hidden sm:block" />
-          <span className="text-neutral-500">without the infrastructure.</span>
+          <span className="text-neutral-500">OTP verification, and job scheduling.</span>
         </h1>
 
-        <p className="mx-auto mt-6 max-w-xl text-balance text-base leading-relaxed text-neutral-400 sm:text-lg">
-          Transactional email over your own SMTP, and reliable cron-scheduled
-          jobs both on a single API key, with no queues to manage.
+        <p className="mx-auto mt-6 max-w-3xl text-balance text-base leading-relaxed text-neutral-400 sm:text-lg">
+          Bring your own SMTP. One API key to send transactional emails,
+          verify users with OTP codes, and schedule recurring webhooks or emails.
+          Open source, self-hostable, and free no per-email fees, ever.
         </p>
 
         <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -84,19 +77,19 @@ export function Hero() {
             href="/sign-up"
             className="group inline-flex h-11 items-center justify-center gap-1.5 rounded-md bg-brand px-6 text-sm font-medium text-white shadow-sm transition-colors duration-200 hover:bg-brand/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950"
           >
-            Get started free
+            Try the demo
             <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden="true" />
           </Link>
           <Link
-            href="/docs"
+            href="https://github.com/lifygo/lifygo"
             className="inline-flex h-11 items-center justify-center rounded-md border border-white/[0.1] bg-white/[0.04] px-6 text-sm font-medium text-neutral-200 backdrop-blur-sm transition-colors duration-200 hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950"
           >
-            Read the docs
+            Star on GitHub
           </Link>
         </div>
 
         <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-          {["Free tier forever", "No credit card required", "Live in under 5 minutes"].map((item) => (
+          {["Self host or try our demo", "Runs on a $6 VPS", "No per-email fees, ever"].map((item) => (
             <div key={item} className="flex items-center gap-1.5 text-sm text-neutral-400">
               <Check className="h-4 w-4 shrink-0 text-brand" aria-hidden="true" />
               <span>{item}</span>
@@ -104,8 +97,7 @@ export function Hero() {
           ))}
         </div>
 
-        {/* Code panel */}
-        <div className="mx-auto mt-16 max-w-2xl text-left">
+        <div className="mx-auto mt-16 max-w-3xl text-left">
           <div className="overflow-hidden rounded-xl border border-white/[0.08] bg-neutral-900/95 shadow-2xl shadow-black/40 backdrop-blur-sm">
             <div className="flex items-center gap-1 border-b border-white/[0.06] bg-white/[0.02] px-2 pt-2">
               <TabButton

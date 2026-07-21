@@ -4,6 +4,36 @@ Thanks for contributing. This doc covers local setup, architecture conventions, 
 
 ---
 
+## Branch strategy
+
+```
+main          → production code, always stable, protected
+develop       → integration branch, features merge here first
+feat/*        → new features (feat/mcp-server)
+fix/*         → bug fixes (fix/otp-expiry)
+docs/*        → documentation only (docs/smtp-guide)
+chore/*       → CI, tooling, dependencies
+```
+
+### How it flows
+
+```
+Contributor:
+1. Forks the repo
+2. Creates a branch from develop
+3. Opens a PR → develop
+
+Maintainer:
+4. Reviews the PR
+5. Squash merges to develop
+6. When develop is stable → merge to main
+7. main = what's running in production
+```
+
+Never push directly to `main` or `develop`. Everything goes through a PR.
+
+---
+
 ## Local setup
 
 **You need:**
@@ -18,6 +48,7 @@ Thanks for contributing. This doc covers local setup, architecture conventions, 
 ```bash
 git clone https://github.com/lifygo/lifygo.git
 cd lifygo
+git checkout develop
 ```
 
 ### 2. Start Postgres and Redis
@@ -174,11 +205,12 @@ migrate -path apps/api/migrations \
 
 ## Pull requests
 
-1. Fork and branch off `main`: `git checkout -b feat/my-feature`
-2. Make your changes
-3. `go test ./... -race -count=1` passes
-4. Commit with a clear message: `feat: add natural language scheduling`
-5. Push and open a PR
+1. Fork and create a branch from `develop`
+2. Name it: `feat/description`, `fix/description`, `docs/description`, or `chore/description`
+3. Make your changes
+4. `go test ./... -race -count=1` passes
+5. Commit with a clear message: `feat: add natural language scheduling`
+6. Push and open a PR targeting `develop`
 
 ### PR checklist
 
@@ -187,6 +219,7 @@ migrate -path apps/api/migrations \
 - [ ] No secrets, keys, or tokens committed
 - [ ] Migrations have up and down files
 - [ ] New env vars are in `.env.example`
+- [ ] PR targets `develop`, not `main`
 
 ---
 

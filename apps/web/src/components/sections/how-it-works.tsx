@@ -23,185 +23,163 @@ function GoogleIcon({ className }: { className?: string }) {
 
 export function HowItWorks() {
   return (
-    <section className="relative w-full overflow-hidden bg-white px-6 py-24 font-sans antialiased md:py-32 rounded-t-[48px] md:rounded-t-[64px] text-neutral-900 shadow-[0_-12px_40px_rgba(0,0,0,0.03)] -mt-12 z-20">
-      
-      {/* Massive Graphic Background Typography Watermark */}
+    <section id="how-it-works" className="relative w-full overflow-hidden bg-white px-6 py-24 font-sans antialiased md:py-32 rounded-t-[48px] md:rounded-t-[64px] text-neutral-900 shadow-[0_-12px_40px_rgba(0,0,0,0.03)] -mt-12 z-20 scroll-mt-20">
+
       <div className="absolute inset-x-0 top-12 pointer-events-none select-none overflow-hidden flex justify-center z-0 opacity-[0.03]">
         <h1 className="font-heading font-black tracking-tighter uppercase text-[24vw] leading-none text-neutral-950">
-          OVERVIEW
+          HOW
         </h1>
       </div>
 
       <div className="relative mx-auto max-w-5xl z-10">
-        {/* Editorial Text Head */}
-        <div className="mb-24 md:mb-32 text-left max-w-2xl animate-fade-in-up">
-          <h2 className="text-4xl font-black tracking-tight text-neutral-950 sm:text-5xl uppercase font-heading" style={{ fontFamily: 'Inter, sans-serif' }}>
-            Up and running in <span className="text-brand">five minutes</span>
+        <div className="mb-24 md:mb-32 text-left max-w-2xl">
+          <h2 className="text-4xl font-black tracking-tight text-neutral-950 sm:text-5xl uppercase font-heading">
+            From zero to production in five minutes.
           </h2>
-          <p className="mt-4 text-base leading-relaxed text-neutral-600" style={{ fontFamily: 'Inter, sans-serif' }}>
-            From securely linking credentials to executing your very first payload — engineered entirely without extra infrastructure friction.
+          <p className="mt-4 text-base leading-relaxed text-neutral-500">
+            No new infrastructure. No vendor accounts. Just your SMTP, one API key, and a curl command.
           </p>
         </div>
 
-        {/* Steps Grid System */}
         <ol className="flex flex-col gap-24 relative">
-          
-          {/* Step 01 */}
-          <li className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12 items-center group animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+
+          <li className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12 items-center group">
             <div className="lg:col-span-5 flex flex-col justify-center order-1">
               <div className="flex items-center gap-3 mb-5">
-                {/* Asymmetrical Custom Corner Cut Badge */}
-                <span 
-                  className="font-mono text-xs font-bold tracking-widest bg-brand text-white px-3 py-1 border border-brand" 
-                  style={{ borderRadius: '4px 0px 4px 0px', fontFamily: 'Inter, sans-serif' }}
-                >
+                <span className="font-mono text-xs font-bold tracking-widest bg-brand text-white px-3 py-1" style={{ borderRadius: '4px 0px 4px 0px' }}>
                   01
                 </span>
                 <div className="h-px bg-neutral-200 flex-1" />
               </div>
-              <h3 className="text-2xl font-bold tracking-tight text-neutral-950 font-heading" style={{ fontFamily: 'Inter, sans-serif' }}>
-                Connect your mail server
+              <h3 className="text-2xl font-bold tracking-tight text-neutral-950">
+                Plug in your SMTP
               </h3>
-              <p className="mt-3 text-sm leading-relaxed text-neutral-600" style={{ fontFamily: 'Inter, sans-serif' }}>
-                Sign in with Google or GitHub, then link your custom external SMTP credentials once. Everything is encrypted securely at rest with AES-256 — plain text passwords are never stored.
+              <p className="mt-3 text-sm leading-relaxed text-neutral-500">
+                Sign in with Google or GitHub. Add the SMTP credentials you already have — Gmail, Zoho, Resend, anything. Your password is encrypted with AES-256 and never leaves your control.
               </p>
             </div>
 
-            {/* Panel Mockup 1 */}
             <div className="lg:col-span-7 order-2">
-              <div className="overflow-hidden rounded-xl border border-neutral-200 bg-neutral-50 shadow-md transition-all duration-300 group-hover:border-neutral-300 group-hover:shadow-lg">
-                <div className="border-b border-neutral-200 bg-white px-5 py-3 flex items-center justify-between">
-                  <span className="text-xs font-mono tracking-wide text-neutral-500">Sign in & Auth Gateway</span>
+              <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm transition-all duration-300 group-hover:shadow-md">
+                <div className="border-b border-neutral-100 bg-neutral-50 px-5 py-3 flex items-center justify-between">
+                  <span className="text-xs font-mono tracking-wide text-neutral-400">dashboard / smtp</span>
                   <span className="h-2 w-2 rounded-full bg-neutral-200" />
                 </div>
-                <div className="flex flex-col gap-3 p-5 bg-white">
+                <div className="flex flex-col gap-3 p-5">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <button className="flex items-center justify-center gap-2.5 rounded-lg border border-neutral-200 bg-white px-4 py-2.5 text-xs font-medium text-neutral-700 transition-colors hover:bg-neutral-50">
-                      <GoogleIcon className="h-4 w-4 text-neutral-500 group-hover:text-neutral-900" />
-                      Google Workspace
+                      <GoogleIcon className="h-4 w-4 text-neutral-400" />
+                      Continue with Google
                     </button>
                     <button className="flex items-center justify-center gap-2.5 rounded-lg border border-neutral-200 bg-white px-4 py-2.5 text-xs font-medium text-neutral-700 transition-colors hover:bg-neutral-50">
-                      <GithubIcon className="h-4 w-4 text-neutral-500 group-hover:text-neutral-900" />
-                      GitHub Account
+                      <GithubIcon className="h-4 w-4 text-neutral-400" />
+                      Continue with GitHub
                     </button>
                   </div>
-                  <div className="mt-1 flex items-center justify-between rounded-lg border border-neutral-200 bg-neutral-50/50 px-4 py-2.5">
+                  <div className="flex items-center justify-between rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-2.5">
                     <div className="flex items-center gap-2">
                       <span className="h-1.5 w-1.5 rounded-full bg-brand" />
-                      <span className="font-mono text-xs text-neutral-600">smtp.relay.service.net</span>
+                      <span className="font-mono text-xs text-neutral-600">smtp.gmail.com:587</span>
                     </div>
-                    <span className="relative flex items-center gap-1.5 text-xs font-medium text-neutral-700 font-mono">
-                      <Lock className="h-3 w-3 text-neutral-400" aria-hidden="true" />
+                    <div className="flex items-center gap-1.5 text-xs text-neutral-400 font-mono">
+                      <Lock className="h-3 w-3" />
                       AES-256
-                    </span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </li>
 
-          {/* Step 02 */}
-          <li className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12 items-center group animate-fade-in-up" style={{ animationDelay: '200ms' }}>
+          <li className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12 items-center group">
             <div className="lg:col-span-5 flex flex-col justify-center order-1 lg:order-2">
               <div className="flex items-center gap-3 mb-5">
-                {/* Asymmetrical Custom Corner Cut Badge */}
-                <span 
-                  className="font-mono text-xs font-bold tracking-widest bg-brand text-white px-3 py-1 border border-brand" 
-                  style={{ borderRadius: '4px 0px 4px 0px', fontFamily: 'Inter, sans-serif' }}
-                >
+                <span className="font-mono text-xs font-bold tracking-widest bg-brand text-white px-3 py-1" style={{ borderRadius: '4px 0px 4px 0px' }}>
                   02
                 </span>
                 <div className="h-px bg-neutral-200 flex-1" />
               </div>
-              <h3 className="text-2xl font-bold tracking-tight text-neutral-950 font-heading" style={{ fontFamily: 'Inter, sans-serif' }}>
-                Generate an API key
+              <h3 className="text-2xl font-bold tracking-tight text-neutral-950">
+                Get one key. Use it everywhere.
               </h3>
-              <p className="mt-3 text-sm leading-relaxed text-neutral-600" style={{ fontFamily: 'Inter, sans-serif' }}>
-                One key from the dashboard covers every single feature. Drop it into an environment variable and you're authenticated everywhere, instantly.
+              <p className="mt-3 text-sm leading-relaxed text-neutral-500">
+                A single API key unlocks email sending, OTP verification, and job scheduling. Add it to your environment and you are done. No SDK required.
               </p>
             </div>
 
-            {/* Panel Mockup 2 */}
             <div className="lg:col-span-7 order-2 lg:order-1">
-              <div className="overflow-hidden rounded-xl border border-neutral-200 bg-neutral-50 shadow-md transition-all duration-300 group-hover:border-neutral-300 group-hover:shadow-lg">
-                <div className="border-b border-neutral-200 bg-white px-5 py-3 flex items-center justify-between">
-                  <span className="text-xs font-mono tracking-wide text-neutral-500">API Key Manager</span>
-                  <span className="rounded-full bg-neutral-100 border border-neutral-200 px-2 py-0.5 text-[10px] font-mono text-neutral-600">Active</span>
+              <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm transition-all duration-300 group-hover:shadow-md">
+                <div className="border-b border-neutral-100 bg-neutral-50 px-5 py-3 flex items-center justify-between">
+                  <span className="text-xs font-mono tracking-wide text-neutral-400">dashboard / api-keys</span>
+                  <span className="rounded-full bg-neutral-100 border border-neutral-200 px-2 py-0.5 text-[10px] font-mono text-neutral-500">live</span>
                 </div>
-                <div className="p-5 bg-white">
-                  <div className="mb-2 flex items-center justify-between">
-                    <span className="text-xs font-medium text-neutral-400">Live Tokens</span>
-                  </div>
+                <div className="p-5">
+                  <div className="mb-3 text-xs text-neutral-400 font-mono">your key — shown once</div>
                   <div className="flex items-center justify-between rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3">
                     <div className="flex items-center gap-2.5 overflow-hidden">
-                      <KeyRound className="h-3.5 w-3.5 shrink-0 text-brand" aria-hidden="true" />
+                      <KeyRound className="h-3.5 w-3.5 shrink-0 text-brand" />
                       <span className="truncate font-mono text-xs text-neutral-700">
-                        lfy_live_4f9a721c810de08e21c
+                        lfy_4f9a721c810de08e21c3b...
                       </span>
                     </div>
-                    <Copy className="h-3.5 w-3.5 shrink-0 text-neutral-400 cursor-pointer hover:text-neutral-900 transition-colors" aria-hidden="true" />
+                    <Copy className="h-3.5 w-3.5 shrink-0 text-neutral-400 cursor-pointer hover:text-neutral-900 transition-colors" />
                   </div>
-                  <div className="mt-3 flex items-center gap-1.5 text-[11px] text-neutral-500">
-                    <ShieldCheck className="h-3.5 w-3.5 text-neutral-400" />
-                    Header requirement config: <code className="text-brand font-mono bg-brand/5 border border-brand/10 px-1 rounded">X-API-Key</code>
+                  <div className="mt-3 flex items-center gap-1.5 text-[11px] text-neutral-400 font-mono">
+                    <ShieldCheck className="h-3.5 w-3.5" />
+                    pass as <code className="text-brand bg-brand/5 border border-brand/10 px-1 rounded">X-API-Key</code> on every request
                   </div>
                 </div>
               </div>
             </div>
           </li>
 
-          {/* Step 03 */}
-          <li className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12 items-center group animate-fade-in-up" style={{ animationDelay: '300ms' }}>
+          <li className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12 items-center group">
             <div className="lg:col-span-5 flex flex-col justify-center order-1">
               <div className="flex items-center gap-3 mb-5">
-                {/* Asymmetrical Custom Corner Cut Badge */}
-                <span 
-                  className="font-mono text-xs font-bold tracking-widest bg-brand text-white px-3 py-1 border border-brand" 
-                  style={{ borderRadius: '4px 0px 4px 0px', fontFamily: 'Inter, sans-serif' }}
-                >
+                <span className="font-mono text-xs font-bold tracking-widest bg-brand text-white px-3 py-1" style={{ borderRadius: '4px 0px 4px 0px' }}>
                   03
                 </span>
                 <div className="h-px bg-neutral-200 flex-1" />
               </div>
-              <h3 className="text-2xl font-bold tracking-tight text-neutral-950 font-heading" style={{ fontFamily: 'Inter, sans-serif' }}>
-                Call the API
+              <h3 className="text-2xl font-bold tracking-tight text-neutral-950">
+                One call. Done.
               </h3>
-              <p className="mt-3 text-sm leading-relaxed text-neutral-600" style={{ fontFamily: 'Inter, sans-serif' }}>
-                One simple POST request. Execution delivered. Beautiful real-time operational delivery logs and metrics land straight back inside your interface cockpit.
+              <p className="mt-3 text-sm leading-relaxed text-neutral-500">
+                POST to send. POST to schedule. Every delivery and execution is logged automatically. Check your dashboard — no extra setup needed.
               </p>
             </div>
 
-            {/* Panel Mockup 3 */}
             <div className="lg:col-span-7 order-2">
-              <div className="overflow-hidden rounded-xl border border-neutral-200 bg-neutral-50 shadow-md transition-all duration-300 group-hover:border-neutral-300 group-hover:shadow-lg">
-                <div className="border-b border-neutral-200 bg-white px-5 py-3 flex items-center justify-between">
-                  <span className="text-xs font-mono tracking-wide text-neutral-400 flex items-center gap-1.5">
-                    <Terminal className="h-3.5 w-3.5 text-neutral-400" /> Terminal Runtime
+              <div className="overflow-hidden rounded-xl border border-neutral-200 shadow-sm transition-all duration-300 group-hover:shadow-md">
+                <div className="border-b border-neutral-800 bg-neutral-900 px-5 py-3 flex items-center justify-between">
+                  <span className="text-xs font-mono text-neutral-500 flex items-center gap-1.5">
+                    <Terminal className="h-3.5 w-3.5" /> terminal
                   </span>
-                  <span className="flex items-center gap-1.5 font-mono text-[11px] font-semibold text-neutral-800">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-neutral-800" aria-hidden="true" />
+                  <span className="flex items-center gap-1.5 font-mono text-[11px] font-medium text-emerald-400">
+                    <CheckCircle2 className="h-3.5 w-3.5" />
                     200 OK
                   </span>
                 </div>
-                <div className="bg-neutral-900 p-5">
+                <div className="bg-neutral-950 p-5">
                   <pre className="overflow-x-auto font-mono text-xs leading-6 text-neutral-300">
                     <code>
                       <span className="text-neutral-500">curl </span>
-                      <span className="text-neutral-200">https://api.lifygo.com/v1/send</span>{"\n"}
+                      <span className="text-neutral-300">https://api.lifygo.com/send</span>{"\n"}
                       <span className="text-neutral-500">  -H </span>
-                      <span className="text-neutral-400">"X-API-Key: lfy_live_••••"</span>{"\n"}
+                      <span className="text-emerald-400">"X-API-Key: lfy_your_key"</span>{"\n"}
                       <span className="text-neutral-500">  -d </span>
-                      <span className="text-brand">{"'{"}</span>{"\n"}
-                      <span className="text-neutral-300">{"     \"to\": \"user@example.com\","}</span>{"\n"}
-                      <span className="text-neutral-300">{"     \"subject\": \"Welcome\""}</span>{"\n"}
-                      <span className="text-brand">{"  }'"}</span>
+                      <span className="text-sky-400">{"'{"}</span>{"\n"}
+                      <span className="text-neutral-300">{"       \"to\": \"user@example.com\","}</span>{"\n"}
+                      <span className="text-neutral-300">{"       \"subject\": \"Welcome aboard\","}</span>{"\n"}
+                      <span className="text-neutral-300">{"       \"body\": \"You're in.\""}</span>{"\n"}
+                      <span className="text-sky-400">{"  }'"}</span>
                     </code>
                   </pre>
                 </div>
-                <div className="border-t border-neutral-200 bg-white px-5 py-3">
+                <div className="border-t border-neutral-800 bg-neutral-900 px-5 py-3">
                   <div className="flex items-center gap-2 text-[11px] text-neutral-500 font-mono">
-                    <span className="h-1.5 w-1.5 rounded-full bg-brand animate-pulse" aria-hidden="true" />
-                    Payload delivered · <span className="text-neutral-400">avg latency: 14ms</span>
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    delivered · 14ms · logged to dashboard
                   </div>
                 </div>
               </div>
@@ -210,22 +188,6 @@ export function HowItWorks() {
 
         </ol>
       </div>
-
-      <style jsx global>{`
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(28px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-fade-in-up {
-          animation: fadeInUp 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-      `}</style>
     </section>
   )
 }

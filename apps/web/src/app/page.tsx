@@ -7,14 +7,12 @@ import { PricingCards } from "@/components/sections/pricing-cards";
 
 export default function LandingPage() {
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-neutral-950">
       <Navbar />
-      {/* rest of sections */}
       <Hero />
       <HowItWorks />
       <PricingCards />
       <ServiceCarousel />
-
       <Footer />
     </main>
   );
