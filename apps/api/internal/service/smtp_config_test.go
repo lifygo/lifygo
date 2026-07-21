@@ -9,6 +9,7 @@ import (
 	"github.com/lifygo/lifygo/apps/api/internal/model"
 	"github.com/lifygo/lifygo/apps/api/internal/service"
 	"github.com/lifygo/lifygo/apps/api/pkg/crypto"
+	"github.com/lifygo/lifygo/apps/api/pkg/mailer"
 )
 
 // -----------------------------------------------------------------------
@@ -123,7 +124,10 @@ func TestSMTPConfigService_Upsert(t *testing.T) {
 	t.Run("creates a new smtp config successfully", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeSMTPConfigRepository()
-		svc := service.NewSMTPConfigService(repo, newTestCrypto(t))
+		c := newTestCrypto(t)
+		pool := mailer.NewPool(5 * time.Minute)
+		defer pool.Shutdown()
+		svc := service.NewSMTPConfigService(repo, c, pool)
 
 		resp, err := svc.Upsert(context.Background(), validSMTPInput("user_1"))
 		if err != nil {
@@ -145,7 +149,9 @@ func TestSMTPConfigService_Upsert(t *testing.T) {
 		t.Parallel()
 		repo := newFakeSMTPConfigRepository()
 		c := newTestCrypto(t)
-		svc := service.NewSMTPConfigService(repo, c)
+		pool := mailer.NewPool(5 * time.Minute)
+		defer pool.Shutdown()
+		svc := service.NewSMTPConfigService(repo, c, pool)
 
 		input := validSMTPInput("user_1")
 
@@ -178,7 +184,10 @@ func TestSMTPConfigService_Upsert(t *testing.T) {
 	t.Run("response never contains the encrypted password", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeSMTPConfigRepository()
-		svc := service.NewSMTPConfigService(repo, newTestCrypto(t))
+		c := newTestCrypto(t)
+		pool := mailer.NewPool(5 * time.Minute)
+		defer pool.Shutdown()
+		svc := service.NewSMTPConfigService(repo, c, pool)
 
 		// We cannot check resp.PasswordEncrypted directly because the
 		// field does not exist on SMTPConfigResponse — the struct simply
@@ -204,7 +213,10 @@ func TestSMTPConfigService_Upsert(t *testing.T) {
 	t.Run("replaces existing config on second upsert", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeSMTPConfigRepository()
-		svc := service.NewSMTPConfigService(repo, newTestCrypto(t))
+		c := newTestCrypto(t)
+		pool := mailer.NewPool(5 * time.Minute)
+		defer pool.Shutdown()
+		svc := service.NewSMTPConfigService(repo, c, pool)
 
 		_, err := svc.Upsert(context.Background(), validSMTPInput("user_1"))
 		if err != nil {
@@ -231,7 +243,10 @@ func TestSMTPConfigService_Upsert(t *testing.T) {
 	t.Run("returns error for missing user id", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeSMTPConfigRepository()
-		svc := service.NewSMTPConfigService(repo, newTestCrypto(t))
+		c := newTestCrypto(t)
+		pool := mailer.NewPool(5 * time.Minute)
+		defer pool.Shutdown()
+		svc := service.NewSMTPConfigService(repo, c, pool)
 
 		input := validSMTPInput("")
 		_, err := svc.Upsert(context.Background(), input)
@@ -243,7 +258,10 @@ func TestSMTPConfigService_Upsert(t *testing.T) {
 	t.Run("returns error for missing host", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeSMTPConfigRepository()
-		svc := service.NewSMTPConfigService(repo, newTestCrypto(t))
+		c := newTestCrypto(t)
+		pool := mailer.NewPool(5 * time.Minute)
+		defer pool.Shutdown()
+		svc := service.NewSMTPConfigService(repo, c, pool)
 
 		input := validSMTPInput("user_1")
 		input.Host = ""
@@ -256,7 +274,10 @@ func TestSMTPConfigService_Upsert(t *testing.T) {
 	t.Run("returns error for invalid host format", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeSMTPConfigRepository()
-		svc := service.NewSMTPConfigService(repo, newTestCrypto(t))
+		c := newTestCrypto(t)
+		pool := mailer.NewPool(5 * time.Minute)
+		defer pool.Shutdown()
+		svc := service.NewSMTPConfigService(repo, c, pool)
 
 		input := validSMTPInput("user_1")
 		input.Host = "https://smtp.gmail.com"
@@ -269,7 +290,10 @@ func TestSMTPConfigService_Upsert(t *testing.T) {
 	t.Run("returns error for invalid port", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeSMTPConfigRepository()
-		svc := service.NewSMTPConfigService(repo, newTestCrypto(t))
+		c := newTestCrypto(t)
+		pool := mailer.NewPool(5 * time.Minute)
+		defer pool.Shutdown()
+		svc := service.NewSMTPConfigService(repo, c, pool)
 
 		input := validSMTPInput("user_1")
 		input.Port = 0
@@ -282,7 +306,10 @@ func TestSMTPConfigService_Upsert(t *testing.T) {
 	t.Run("returns error for invalid from address", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeSMTPConfigRepository()
-		svc := service.NewSMTPConfigService(repo, newTestCrypto(t))
+		c := newTestCrypto(t)
+		pool := mailer.NewPool(5 * time.Minute)
+		defer pool.Shutdown()
+		svc := service.NewSMTPConfigService(repo, c, pool)
 
 		input := validSMTPInput("user_1")
 		input.FromAddress = "not-an-email"
@@ -295,7 +322,10 @@ func TestSMTPConfigService_Upsert(t *testing.T) {
 	t.Run("returns error for missing password", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeSMTPConfigRepository()
-		svc := service.NewSMTPConfigService(repo, newTestCrypto(t))
+		c := newTestCrypto(t)
+		pool := mailer.NewPool(5 * time.Minute)
+		defer pool.Shutdown()
+		svc := service.NewSMTPConfigService(repo, c, pool)
 
 		input := validSMTPInput("user_1")
 		input.Password = ""
@@ -316,7 +346,10 @@ func TestSMTPConfigService_Get(t *testing.T) {
 	t.Run("returns config for a user who has one", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeSMTPConfigRepository()
-		svc := service.NewSMTPConfigService(repo, newTestCrypto(t))
+		c := newTestCrypto(t)
+		pool := mailer.NewPool(5 * time.Minute)
+		defer pool.Shutdown()
+		svc := service.NewSMTPConfigService(repo, c, pool)
 
 		svc.Upsert(context.Background(), validSMTPInput("user_1"))
 
@@ -332,7 +365,10 @@ func TestSMTPConfigService_Get(t *testing.T) {
 	t.Run("returns ErrNotFound for a user with no config", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeSMTPConfigRepository()
-		svc := service.NewSMTPConfigService(repo, newTestCrypto(t))
+		c := newTestCrypto(t)
+		pool := mailer.NewPool(5 * time.Minute)
+		defer pool.Shutdown()
+		svc := service.NewSMTPConfigService(repo, c, pool)
 
 		_, err := svc.Get(context.Background(), "user_1")
 		if !errors.Is(err, model.ErrNotFound) {
@@ -343,7 +379,10 @@ func TestSMTPConfigService_Get(t *testing.T) {
 	t.Run("returns ErrUnauthorized for empty user id", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeSMTPConfigRepository()
-		svc := service.NewSMTPConfigService(repo, newTestCrypto(t))
+		c := newTestCrypto(t)
+		pool := mailer.NewPool(5 * time.Minute)
+		defer pool.Shutdown()
+		svc := service.NewSMTPConfigService(repo, c, pool)
 
 		_, err := svc.Get(context.Background(), "")
 		if !errors.Is(err, model.ErrUnauthorized) {
@@ -363,7 +402,9 @@ func TestSMTPConfigService_GetMailer(t *testing.T) {
 		t.Parallel()
 		repo := newFakeSMTPConfigRepository()
 		c := newTestCrypto(t)
-		svc := service.NewSMTPConfigService(repo, c)
+		pool := mailer.NewPool(5 * time.Minute)
+		defer pool.Shutdown()
+		svc := service.NewSMTPConfigService(repo, c, pool)
 
 		svc.Upsert(context.Background(), validSMTPInput("user_1"))
 
@@ -379,7 +420,10 @@ func TestSMTPConfigService_GetMailer(t *testing.T) {
 	t.Run("returns ErrNotFound when user has no smtp config", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeSMTPConfigRepository()
-		svc := service.NewSMTPConfigService(repo, newTestCrypto(t))
+		c := newTestCrypto(t)
+		pool := mailer.NewPool(5 * time.Minute)
+		defer pool.Shutdown()
+		svc := service.NewSMTPConfigService(repo, c, pool)
 
 		_, err := svc.GetMailer(context.Background(), "user_1")
 		if !errors.Is(err, model.ErrNotFound) {
@@ -390,7 +434,10 @@ func TestSMTPConfigService_GetMailer(t *testing.T) {
 	t.Run("fails when stored ciphertext is tampered with", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeSMTPConfigRepository()
-		svc := service.NewSMTPConfigService(repo, newTestCrypto(t))
+		c := newTestCrypto(t)
+		pool := mailer.NewPool(5 * time.Minute)
+		defer pool.Shutdown()
+		svc := service.NewSMTPConfigService(repo, c, pool)
 
 		svc.Upsert(context.Background(), validSMTPInput("user_1"))
 
@@ -406,7 +453,10 @@ func TestSMTPConfigService_GetMailer(t *testing.T) {
 	t.Run("returns ErrUnauthorized for empty user id", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeSMTPConfigRepository()
-		svc := service.NewSMTPConfigService(repo, newTestCrypto(t))
+		c := newTestCrypto(t)
+		pool := mailer.NewPool(5 * time.Minute)
+		defer pool.Shutdown()
+		svc := service.NewSMTPConfigService(repo, c, pool)
 
 		_, err := svc.GetMailer(context.Background(), "")
 		if !errors.Is(err, model.ErrUnauthorized) {
@@ -425,7 +475,10 @@ func TestSMTPConfigService_Delete(t *testing.T) {
 	t.Run("deletes an existing config", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeSMTPConfigRepository()
-		svc := service.NewSMTPConfigService(repo, newTestCrypto(t))
+		c := newTestCrypto(t)
+		pool := mailer.NewPool(5 * time.Minute)
+		defer pool.Shutdown()
+		svc := service.NewSMTPConfigService(repo, c, pool)
 
 		svc.Upsert(context.Background(), validSMTPInput("user_1"))
 
@@ -442,7 +495,10 @@ func TestSMTPConfigService_Delete(t *testing.T) {
 	t.Run("returns ErrNotFound for a user with no config", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeSMTPConfigRepository()
-		svc := service.NewSMTPConfigService(repo, newTestCrypto(t))
+		c := newTestCrypto(t)
+		pool := mailer.NewPool(5 * time.Minute)
+		defer pool.Shutdown()
+		svc := service.NewSMTPConfigService(repo, c, pool)
 
 		err := svc.Delete(context.Background(), "user_1")
 		if !errors.Is(err, model.ErrNotFound) {
@@ -453,7 +509,10 @@ func TestSMTPConfigService_Delete(t *testing.T) {
 	t.Run("returns ErrUnauthorized for empty user id", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeSMTPConfigRepository()
-		svc := service.NewSMTPConfigService(repo, newTestCrypto(t))
+		c := newTestCrypto(t)
+		pool := mailer.NewPool(5 * time.Minute)
+		defer pool.Shutdown()
+		svc := service.NewSMTPConfigService(repo, c, pool)
 
 		err := svc.Delete(context.Background(), "")
 		if !errors.Is(err, model.ErrUnauthorized) {

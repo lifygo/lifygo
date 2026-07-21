@@ -17,6 +17,7 @@ var (
 	ErrClerkUserIDRequired = errors.New("clerk user id is required")
 	ErrNameRequired        = errors.New("name is required")
 	ErrEmailRequired       = errors.New("email is required")
+	ErrAmbiguousAuth       = errors.New("cannot specify both clerk_user_id and password_hash")
 
 	// API Key
 	ErrAPIKeyRequired     = errors.New("api key is required")

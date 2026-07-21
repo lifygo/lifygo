@@ -7,30 +7,20 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// Config holds all environment variables required to run the API server.
-// Every field is validated on startup. The application will not start
-// if any required variable is missing or empty.
 type Config struct {
-	// Server
 	Port        string
 	Environment string
-
-	// PostgreSQL
 	DatabaseURL string
+	RedisURL    string
 
-	// Redis
-	RedisURL string
-
-	// Clerk
 	ClerkSecretKey     string
 	ClerkWebhookSecret string
 
-	// Encryption
-	// AES-256 key used to encrypt SMTP passwords at rest.
-	// Must be exactly 32 bytes when decoded.
+	AuthProvider string
+	JWTSecret    string
+
 	EncryptionKey string
-	// AWS — optional, only required when using EventBridge for job scheduling.
-	// If not set, the self-hosted scheduler handles all job execution.
+
 	AWSRegion          string
 	AWSAccessKeyID     string
 	AWSSecretAccessKey string
@@ -39,12 +29,7 @@ type Config struct {
 	SQSQueueARN        string
 }
 
-// Load reads environment variables from the .env file if present,
-// then validates that all required fields are set.
-// In production the .env file will not exist and variables are
-// expected to be injected directly into the environment.
 func Load() (*Config, error) {
-	// Ignore error — .env file is optional in production.
 	_ = godotenv.Load()
 
 	cfg := &Config{
@@ -54,6 +39,8 @@ func Load() (*Config, error) {
 		RedisURL:           os.Getenv("REDIS_URL"),
 		ClerkSecretKey:     os.Getenv("CLERK_SECRET_KEY"),
 		ClerkWebhookSecret: os.Getenv("CLERK_WEBHOOK_SECRET"),
+		AuthProvider:       getEnv("AUTH_PROVIDER", "clerk"),
+		JWTSecret:          os.Getenv("JWT_SECRET"),
 		EncryptionKey:      os.Getenv("ENCRYPTION_KEY"),
 		AWSRegion:          getEnv("AWS_REGION", "ap-southeast-1"),
 		AWSAccessKeyID:     os.Getenv("AWS_ACCESS_KEY_ID"),
@@ -70,8 +57,6 @@ func Load() (*Config, error) {
 	return cfg, nil
 }
 
-// validate checks that all required fields are present.
-// Add new required fields here as the application grows.
 func (c *Config) validate() error {
 	if c.DatabaseURL == "" {
 		return errors.New("DATABASE_URL is required")
@@ -79,20 +64,25 @@ func (c *Config) validate() error {
 	if c.RedisURL == "" {
 		return errors.New("REDIS_URL is required")
 	}
-	if c.ClerkSecretKey == "" {
-		return errors.New("CLERK_SECRET_KEY is required")
-	}
-	if c.ClerkWebhookSecret == "" {
-		return errors.New("CLERK_WEBHOOK_SECRET is required")
-	}
 	if c.EncryptionKey == "" {
 		return errors.New("ENCRYPTION_KEY is required")
+	}
+	if c.AuthProvider == "clerk" {
+		if c.ClerkSecretKey == "" {
+			return errors.New("CLERK_SECRET_KEY is required when AUTH_PROVIDER=clerk")
+		}
+		if c.ClerkWebhookSecret == "" {
+			return errors.New("CLERK_WEBHOOK_SECRET is required when AUTH_PROVIDER=clerk")
+		}
+	}
+	if c.AuthProvider == "local" {
+		if c.JWTSecret == "" {
+			return errors.New("JWT_SECRET is required when AUTH_PROVIDER=local")
+		}
 	}
 	return nil
 }
 
-// getEnv returns the value of the environment variable named by key.
-// If the variable is not set or empty, it returns the fallback value.
 func getEnv(key, fallback string) string {
 	if value := os.Getenv(key); value != "" {
 		return value

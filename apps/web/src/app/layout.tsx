@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "@/components/theme-provider";
+import { AuthProvider } from "@/components/auth-provider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -22,7 +23,7 @@ export const metadata: Metadata = {
       {
         url: "/favicon.png?v=1",
         type: "image/png",
-        sizes: "any", 
+        sizes: "any",
       }
     ],
     shortcut: ["/favicon.png?v=1"],
@@ -36,6 +37,8 @@ export const metadata: Metadata = {
   },
 };
 
+const AUTH_PROVIDER = process.env.NEXT_PUBLIC_AUTH_PROVIDER || "clerk";
+
 export default function RootLayout({
   children,
 }: {
@@ -48,11 +51,17 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable}`}
     >
       <body className="antialiased">
-        <ClerkProvider>
+        {AUTH_PROVIDER === "clerk" ? (
+          <ClerkProvider>
+            <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+              <AuthProvider>{children}</AuthProvider>
+            </ThemeProvider>
+          </ClerkProvider>
+        ) : (
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            {children}
+            <AuthProvider>{children}</AuthProvider>
           </ThemeProvider>
-        </ClerkProvider>
+        )}
       </body>
     </html>
   );

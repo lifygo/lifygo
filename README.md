@@ -1,81 +1,68 @@
 # LifyGo
 
-Self-hostable transactional email, OTP verification, and job scheduling API built in Go.
+Transactional email, OTP verification, and job scheduling — self-hosted, single binary, your own SMTP.
 
-One API key. Send emails via your own SMTP. Schedule recurring or one-time jobs. No per-email fees. No vendor lock-in.
-
----
-
-## Why LifyGo
-
-Every developer building a SaaS needs to:
-- Send transactional emails (welcome, receipts, alerts)
-- Verify users with OTP codes
-- Schedule recurring jobs (weekly digests, reminders, webhooks)
-
-Most solutions charge per email, require adopting an entire platform, or need complex infrastructure. LifyGo is a single self-hosted API that does all three — using your own SMTP server, so you pay nothing for email volume.
+No per-email fees. No vendor lock-in. Just an API that does what it says.
 
 ---
 
-## Quick Start
+## What it does
 
-### 1. Clone and start
+Three things every SaaS backend needs, in one place:
+
+- **Send transactional emails** through your own SMTP server
+- **Generate and verify OTP codes** with Redis-backed TTL
+- **Schedule recurring or one-shot jobs** that fire webhooks or emails
+
+---
+
+## Quick start
 
 ```bash
 git clone https://github.com/lifygo/lifygo.git
 cd lifygo
+
+# Copy and fill in the env file
 cp apps/api/.env.example apps/api/.env
-# Fill in your values in apps/api/.env
+
+# Start Postgres + Redis
 docker compose -f infra/docker/docker-compose.yml up -d
+
+# Run the API
 cd apps/api && go run ./cmd/server/main.go
 ```
 
-### 2. Sign in and set up
+Dashboard runs on `http://localhost:3000`. Sign in, add your SMTP credentials, generate an API key.
 
-```
-http://localhost:3000
-```
-
-- Sign in with Google or GitHub
-- Add your SMTP credentials
-- Generate an API key
-
-### 3. Send your first email
+### Send an email
 
 ```bash
 curl -X POST http://localhost:8080/send \
-  -H "X-API-Key: lfy_your_key_here" \
+  -H "X-API-Key: lfy_your_key" \
   -H "Content-Type: application/json" \
-  -d '{
-    "to": "user@example.com",
-    "subject": "Hello from LifyGo",
-    "body": "Your LifyGo instance is working."
-  }'
+  -d '{"to": "hello@example.com", "subject": "Test", "body": "It works."}'
 ```
 
-### 4. Send an OTP
+### Send and verify an OTP
 
 ```bash
-# Send
 curl -X POST http://localhost:8080/send/otp \
-  -H "X-API-Key: lfy_your_key_here" \
-  -d '{"to": "user@example.com"}'
+  -H "X-API-Key: lfy_your_key" \
+  -d '{"to": "hello@example.com"}'
 
-# Verify
 curl -X POST http://localhost:8080/verify/otp \
-  -H "X-API-Key: lfy_your_key_here" \
-  -d '{"email": "user@example.com", "code": "483920"}'
+  -H "X-API-Key: lfy_your_key" \
+  -d '{"email": "hello@example.com", "code": "483920"}'
 ```
 
-### 5. Schedule a job
+### Schedule a job
 
 ```bash
-# Hit a webhook every Monday at 9am
 curl -X POST http://localhost:8080/jobs \
-  -H "X-API-Key: lfy_your_key_here" \
+  -H "X-API-Key: lfy_your_key" \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "weekly-report",
+    "name": "weekly-digest",
     "type": "webhook",
     "schedule_type": "cron",
     "cron_expression": "0 9 * * 1",
@@ -85,37 +72,58 @@ curl -X POST http://localhost:8080/jobs \
 
 ---
 
-## Features
+## API
 
-### Notify — Free
+### Email
 
-| Feature | Description |
-|---|---|
-| `POST /send` | Send a transactional email |
-| `POST /send/otp` | Generate and send a 6-digit OTP |
-| `POST /verify/otp` | Verify an OTP code (single-use, 10 min TTL) |
-| `GET /logs` | Email send history with pagination and filters |
+| Method | Path | Description |
+|---|---|---|
+| `POST` | `/send` | Send a transactional email |
+| `POST` | `/send/otp` | Generate and send a 6-digit OTP |
+| `POST` | `/verify/otp` | Verify an OTP (single-use, 10 min TTL) |
+| `GET` | `/logs` | Email history with pagination and status filter |
 
-### Schedule — Paid (upgrade planned)
+### Jobs
 
-| Feature | Description |
-|---|---|
-| `POST /jobs` | Create a recurring or one-time scheduled job |
-| `GET /jobs` | List all jobs |
-| `DELETE /jobs/{id}` | Delete a job |
-| `GET /jobs/{id}/executions` | Execution history per job |
+| Method | Path | Description |
+|---|---|---|
+| `POST` | `/jobs` | Create a cron or one-time job |
+| `GET` | `/jobs` | List all jobs |
+| `GET` | `/jobs/{id}` | Get a single job |
+| `DELETE` | `/jobs/{id}` | Delete a job |
+| `GET` | `/jobs/{id}/executions` | Execution history for a job |
 
-Job types: `webhook` (HTTP POST to any URL) or `email` (send via your SMTP)  
-Schedule types: `cron` (recurring) or `one_time` (single execution)
+Job types: `webhook` (POST to a URL) or `email` (send via your SMTP).  
+Schedule types: `cron` (recurring) or `one_time` (runs once at `run_at`).
 
-### Security
+---
 
-- API keys hashed with SHA-256 — never stored in plain text
-- SMTP passwords encrypted with AES-256-GCM at rest
-- OTP generated with `crypto/rand` — never `math/rand`
-- Clerk webhook signature verified with svix
-- Dual auth: `X-API-Key` for API consumers, Clerk Bearer token for dashboard
-- Rate limiting via Redis (100 requests/hour per API key)
+## Authentication
+
+LifyGo supports two auth modes, controlled by `AUTH_PROVIDER`:
+
+| Mode | What it does | When to use |
+|---|---|---|
+| `clerk` | Google/GitHub OAuth via Clerk | Quick setup, don't want to manage passwords |
+| `local` | Email + password, JWT sessions | Full self-hosting, zero external dependencies |
+
+Set `AUTH_PROVIDER=local` and `JWT_SECRET=<32+ chars>` in your env to go fully standalone.
+
+API consumers authenticate with `X-API-Key`. The dashboard uses session tokens (Clerk JWTs or local JWTs depending on mode).
+
+---
+
+## How jobs execute
+
+LifyGo ships with two execution paths. They can run side by side.
+
+### Self-hosted scheduler (default)
+
+A goroutine inside the API process polls PostgreSQL every 60 seconds. Due jobs are picked up with `SELECT ... FOR UPDATE SKIP LOCKED` — safe across multiple API replicas. No AWS needed. Works on a $6 VPS.
+
+### AWS EventBridge (optional)
+
+When AWS credentials are present, job creation also registers an EventBridge Scheduler rule. EventBridge fires → SQS → Lambda → job executes. Survives API restarts. Scales to millions of jobs. The self-hosted scheduler keeps running as a fallback.
 
 ---
 
@@ -123,132 +131,86 @@ Schedule types: `cron` (recurring) or `one_time` (single execution)
 
 ```
 apps/
-├── api/          Go REST API (chi router, pgx, Redis)
-├── web/          Next.js 16 dashboard (shadcn/ui, Clerk auth)
-└── worker/       Go Lambda function (AWS execution path)
+├── api/          Go REST API (chi, pgx, Redis)
+├── web/          Next.js 16 dashboard (Tailwind CSS v4, shadcn/ui)
+└── worker/       Go Lambda (AWS execution path)
 
 infra/
-├── docker/       Docker Compose (local + production)
+├── docker/       Docker Compose for local dev and single-server prod
 ├── nginx/        Reverse proxy config
-└── cloudformation/ SQS + EventBridge + Lambda IAM roles
+└── cloudformation/ SQS, EventBridge, Lambda IAM
 ```
 
-### Execution Paths
+### Stack
 
-LifyGo has two job execution modes:
-
-**Self-hosted (default)**
-```
-Scheduler goroutine polls PostgreSQL every minute
-→ Executes due jobs directly
-→ Zero AWS dependency
-→ Works on any server with Docker
-```
-
-**AWS EventBridge (optional, production)**
-```
-POST /jobs → creates EventBridge Scheduler rule
-EventBridge fires → SQS → Lambda → executes job
-→ Survives API server restarts
-→ Scales to millions of jobs
-→ Requires AWS credentials in environment
-```
-
-Both paths run simultaneously when AWS is configured — EventBridge for reliability, self-hosted as fallback.
-
-### Tech Stack
-
-| Layer | Technology |
+| Layer | Choice |
 |---|---|
-| API | Go 1.26, chi router, pgx v5 |
+| API | Go, chi router, pgx v5 |
 | Database | PostgreSQL 16 |
 | Cache | Redis 7 |
-| Auth | Clerk (Google + GitHub OAuth) |
 | Frontend | Next.js 16, Tailwind CSS v4, shadcn/ui |
-| Scheduling | AWS EventBridge + SQS + Lambda (optional) |
+| Auth | Clerk (OAuth) or local (bcrypt + JWT) |
 | Encryption | AES-256-GCM (SMTP passwords), SHA-256 (API keys) |
-| Deployment | Docker Compose, nginx, Let's Encrypt |
+| Scheduler | PostgreSQL-backed goroutine, EventBridge (optional) |
 
 ---
 
-## Self-Hosting
+## Self-hosting
 
-### Prerequisites
+### You need
 
 - Docker and Docker Compose
-- Go 1.26+ (for local development)
-- A Clerk account (free) for dashboard auth
-- An SMTP account (Gmail, Resend, Brevo, or any provider)
+- Go 1.22+ (if running outside Docker)
+- An SMTP account (any provider — Gmail, Resend, Brevo, Mailgun)
+- 512 MB RAM, 1 vCPU minimum
 
-### Production Deployment
+### Required env vars
 
-See [scripts/server-setup.md](scripts/server-setup.md) for the complete guide to deploying on a $6/month VPS.
-
-### Environment Variables
-
-See [apps/api/.env.example](apps/api/.env.example) for all required and optional variables.
-
-Required:
 ```bash
-DATABASE_URL        # PostgreSQL connection string
-REDIS_URL           # Redis connection string
-CLERK_SECRET_KEY    # From Clerk dashboard
-CLERK_WEBHOOK_SECRET # From Clerk webhook settings
-ENCRYPTION_KEY      # 64-char hex string: openssl rand -hex 32
+DATABASE_URL=postgres://user:pass@host:5432/lifygo?sslmode=disable
+REDIS_URL=redis://host:6379
+ENCRYPTION_KEY=<64-char hex string>   # openssl rand -hex 32
+AUTH_PROVIDER=local                   # or clerk
+JWT_SECRET=<at-least-32-chars>        # only if AUTH_PROVIDER=local
 ```
 
-Optional (enables AWS execution path):
-```bash
-AWS_REGION
-AWS_ACCESS_KEY_ID
-AWS_SECRET_ACCESS_KEY
-SQS_QUEUE_URL
-SQS_QUEUE_ARN
-SCHEDULER_ROLE_ARN
-```
+If using Clerk, add `CLERK_SECRET_KEY` and `CLERK_WEBHOOK_SECRET` instead of `JWT_SECRET`.
+
+### Production deploy
+
+See [`scripts/server-setup.md`](scripts/server-setup.md) for a step-by-step VPS deploy guide — nginx, Let's Encrypt, systemd, the works.
 
 ---
 
-## Testing
+## Development
 
 ```bash
-# Unit tests
-cd apps/api
-go test ./... -race -count=1
+# Start everything
+make dev
 
-# Integration tests (requires PostgreSQL running)
-go test -tags=integration ./internal/repository/... -v -race -count=1
+# Run tests
+make test
+
+# Run migrations
+make migrate-up
 ```
+
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for local setup, testing conventions, and PR guidelines.
 
 ---
 
 ## Roadmap
 
-Community contributions welcome on these planned features:
-
-- [ ] MCP server — use LifyGo tools natively from Claude and other AI agents
-- [ ] Natural language scheduling — "every Monday at 9am" instead of cron syntax
-- [ ] Agent API keys — dedicated keys for AI agents with audit logging
-- [ ] `@lifygo/sdk` — JavaScript/TypeScript client SDK
-- [ ] Stripe integration — paid tier enforcement
-- [ ] Paystack integration — African market payments
-- [ ] Email campaign support — bulk sending with list management
-- [ ] Email templates — reusable templates with variables
+- [ ] MCP server for AI agent integration
+- [ ] Natural language scheduling ("every Monday at 9am")
+- [ ] Official client SDKs (`@lifygo/sdk`)
+- [ ] Email templates with variables
 - [ ] Webhook retry with exponential backoff
-- [ ] Multi-region Lambda deployment
-
----
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for how to set up your local environment, run tests, and submit pull requests.
+- [ ] Stripe + Paystack billing integration
+- [ ] Multi-region deployment guides
 
 ---
 
 ## License
 
-[AGPL-3.0](LICENSE)
-
----
-
-Built with Go and Next.js.
+AGPL-3.0. See [`LICENSE`](LICENSE).

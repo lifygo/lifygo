@@ -38,18 +38,34 @@ func (f *fakeUserRepository) Create(_ context.Context, input model.CreateUserInp
 		return nil, f.createErr
 	}
 	for _, u := range f.users {
-		if u.ClerkUserID == input.ClerkUserID || u.Email == input.Email {
+		if (input.ClerkUserID != "" && u.ClerkUserID != nil && *u.ClerkUserID == input.ClerkUserID) || u.Email == input.Email {
 			return nil, model.ErrAlreadyExists
 		}
 	}
+
+	var id string
+	if input.ClerkUserID != "" {
+		id = "user_" + input.ClerkUserID
+	} else {
+		id = "user_local_" + input.Email
+	}
+
+	var clerkID *string
+	if input.ClerkUserID != "" {
+		clerkID = &input.ClerkUserID
+	}
+
 	user := &model.User{
-		ID:          "user_" + input.ClerkUserID,
-		ClerkUserID: input.ClerkUserID,
-		Name:        input.Name,
-		Email:       input.Email,
+		ID:           id,
+		ClerkUserID:  clerkID,
+		Name:         input.Name,
+		Email:        input.Email,
+		PasswordHash: input.PasswordHash,
 	}
 	f.users[user.ID] = user
-	f.byClerkID[user.ClerkUserID] = user
+	if user.ClerkUserID != nil {
+		f.byClerkID[*user.ClerkUserID] = user
+	}
 	return user, nil
 }
 
@@ -83,7 +99,9 @@ func (f *fakeUserRepository) Delete(_ context.Context, id string) error {
 	if !ok {
 		return model.ErrNotFound
 	}
-	delete(f.byClerkID, user.ClerkUserID)
+	if user.ClerkUserID != nil {
+		delete(f.byClerkID, *user.ClerkUserID)
+	}
 	delete(f.users, id)
 	return nil
 }

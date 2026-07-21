@@ -1,0 +1,81 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  api:
+    name: API (Go)
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: lifygo
+          POSTGRES_PASSWORD: lifygo
+          POSTGRES_DB: lifygo_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Run migrations
+        working-directory: apps/api
+        run: |
+          go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+          migrate -path migrations -database "postgres://lifygo:lifygo@localhost:5432/lifygo_test?sslmode=disable" up
+        env:
+          DATABASE_URL: postgres://lifygo:lifygo@localhost:5432/lifygo_test?sslmode=disable
+
+      - name: Run tests
+        working-directory: apps/api
+        run: go test ./... -race -count=1
+        env:
+          DATABASE_URL: postgres://lifygo:lifygo@localhost:5432/lifygo_test?sslmode=disable
+          REDIS_URL: redis://localhost:6379
+          CLERK_SECRET_KEY: test_clerk_key
+          CLERK_WEBHOOK_SECRET: test_webhook_secret
+          ENCRYPTION_KEY: 0123456789abcdef0123456789abcdef
+
+  web:
+    name: Web (Next.js)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        working-directory: apps/web
+        run: npm ci
+
+      - name: Build
+        working-directory: apps/web
+        run: npm run build

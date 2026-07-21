@@ -1,226 +1,218 @@
 # Contributing to LifyGo
 
-Thank you for your interest in contributing. This document explains
-how to set up your local environment, run tests, and submit changes.
+Thanks for contributing. This doc covers local setup, architecture conventions, testing, and the PR workflow.
 
 ---
 
-## Local Development Setup
+## Local setup
 
-### Prerequisites
+**You need:**
 
-- Go 1.26+
+- Go 1.22+
 - Node.js 20+
 - Docker and Docker Compose
-- A Clerk account (free) — clerk.com
+- A Clerk account (only if using Clerk auth — skip for local auth)
 
-### 1. Clone the repository
+### 1. Clone and install
 
 ```bash
 git clone https://github.com/lifygo/lifygo.git
 cd lifygo
 ```
 
-### 2. Set up the API
+### 2. Start Postgres and Redis
+
+```bash
+docker compose -f infra/docker/docker-compose.yml up -d
+```
+
+### 3. Configure the API
 
 ```bash
 cd apps/api
 cp .env.example .env
-# Fill in your values — minimum required:
-# DATABASE_URL, REDIS_URL, CLERK_SECRET_KEY, CLERK_WEBHOOK_SECRET, ENCRYPTION_KEY
 ```
 
-Generate an encryption key:
+Fill in the required values. If using local auth (no Clerk):
 
 ```bash
-openssl rand -hex 32
+AUTH_PROVIDER=local
+JWT_SECRET=<at least 32 characters>
+DATABASE_URL=postgres://lifygo:lifygo@localhost:5432/lifygo?sslmode=disable
+REDIS_URL=redis://localhost:6379
+ENCRYPTION_KEY=<output of: openssl rand -hex 32>
 ```
 
-### 3. Start the database and cache
-
-```bash
-cd /path/to/lifygo
-docker compose -f infra/docker/docker-compose.yml up -d
-```
-
-### 4. Run database migrations
+### 4. Run migrations
 
 ```bash
 cd apps/api
 migrate -path migrations -database "postgres://lifygo:lifygo@localhost:5432/lifygo?sslmode=disable" up
 ```
 
-### 5. Start the API server
+### 5. Start the API
 
 ```bash
 go run ./cmd/server/main.go
 ```
 
-### 6. Set up the frontend
+### 6. Start the frontend
 
 ```bash
 cd apps/web
 cp .env.local.example .env.local
-# Fill in your Clerk keys
 npm install
 npm run dev
 ```
 
+Dashboard at `http://localhost:3000`. API at `http://localhost:8080`.
+
 ---
 
-## Project Structure
+## Project structure
 
 ```
 apps/
-├── api/                    Go REST API
-│   ├── cmd/server/         Entry point
+├── api/
+│   ├── cmd/server/          Entry point, wiring, router setup
 │   ├── internal/
-│   │   ├── config/         Environment variable loading
-│   │   ├── database/       PostgreSQL connection pool
-│   │   ├── handler/        HTTP handlers (thin, no business logic)
-│   │   ├── middleware/      Auth, rate limiting, logging, CORS
-│   │   ├── model/          Domain structs and errors
-│   │   ├── redis/          Redis connection and helpers
-│   │   ├── repository/     All database queries
-│   │   └── service/        All business logic
-│   ├── migrations/         SQL migration files (up + down)
+│   │   ├── config/          Env loading and validation
+│   │   ├── database/        PostgreSQL connection pool
+│   │   ├── handler/         HTTP handlers — no business logic
+│   │   ├── middleware/       Auth, rate limiting, logging, CORS
+│   │   ├── model/           Domain types, errors, validation
+│   │   ├── redis/           Redis connection
+│   │   ├── repository/      Database queries only
+│   │   └── service/         All business logic
+│   ├── migrations/          Numbered up/down SQL files
 │   └── pkg/
-│       ├── crypto/         AES-256, SHA-256, OTP generation
-│       ├── mailer/         SMTP send logic
-│       └── validator/      Input validation helpers
-├── web/                    Next.js dashboard
+│       ├── crypto/          AES-256, SHA-256, OTP generation
+│       ├── mailer/          SMTP client and connection pool
+│       └── validator/       Input validation helpers
+├── web/
 │   └── src/
-│       ├── app/            App Router pages
-│       ├── features/       Feature-based service + type files
-│       └── lib/            API client, auth helpers
-└── worker/                 Go Lambda function for AWS execution
+│       ├── app/             App Router pages and layouts
+│       ├── components/      Shared React components
+│       ├── features/        Feature-specific types
+│       └── lib/             API client, auth context
+└── worker/                  Go Lambda (AWS execution path)
 ```
 
----
-
-## Architecture Rules
-
-These rules keep the codebase clean and consistent:
+### Dependency rule
 
 ```
-handlers    → only translate HTTP to service calls, no business logic
-services    → all business logic lives here, call repositories
-repositories → only database queries, no business logic
-models      → domain structs and domain errors only
-pkg/        → reusable packages with zero internal dependencies
+handler → service → repository → model
 ```
 
-Never import `handler` from `service`. Never import `service` from `repository`.
-The dependency direction is always: handler → service → repository → model.
+- Handlers translate HTTP to service calls. No logic.
+- Services contain all business rules. Call repositories.
+- Repositories run database queries. No business logic.
+- Models are plain structs and domain errors.
+
+Never go the other direction. `pkg/` has zero internal dependencies.
 
 ---
 
 ## Testing
 
-### Run all unit tests
+### Unit tests
 
 ```bash
 cd apps/api
 go test ./... -race -count=1
 ```
 
-### Run integration tests (requires Docker running)
+### Integration tests (needs Docker running)
 
 ```bash
 go test -tags=integration ./internal/repository/... -v -race -count=1
 ```
 
-### Test coverage requirement
+### What we expect
 
-All new Go code must maintain at least 80% test coverage.
-Every new service method needs unit tests.
-Every new repository method needs integration tests.
-
-### Writing repository tests
-
-Integration tests use real PostgreSQL via Docker.
-Each test runs inside a transaction that is rolled back after the test —
-no cleanup needed, no test data left behind.
+- New service methods get unit tests
+- New repository queries get integration tests against a real database
+- Tests use transactions that roll back — no cleanup needed
 
 ```go
-func TestMyRepository_Create(t *testing.T) {
+func TestMyRepo_Create(t *testing.T) {
     pool := newTestPool(t)
+    tx := beginTx(t, pool)
+    defer tx.Rollback(context.Background())
 
-    t.Run("creates successfully", func(t *testing.T) {
-        tx := beginTx(t, pool)
-        repo := repository.NewMyRepository(tx)
-        // test here — transaction rolls back automatically
-    })
+    repo := repository.NewMyRepo(tx)
+    // test here
 }
 ```
 
 ---
 
-## Database Migrations
+## Migrations
 
-Every schema change needs both an up and a down migration.
-Migration files are numbered sequentially.
+Every schema change gets an up and a down file, numbered sequentially:
 
 ```bash
-# Create a new migration
-touch apps/api/migrations/000009_your_change.up.sql
-touch apps/api/migrations/000009_your_change.down.sql
+touch apps/api/migrations/000010_description.up.sql
+touch apps/api/migrations/000010_description.down.sql
+```
 
-# Apply migrations
+Apply:
+
+```bash
 migrate -path apps/api/migrations \
   -database "postgres://lifygo:lifygo@localhost:5432/lifygo?sslmode=disable" up
+```
 
-# Rollback one step
+Roll back one:
+
+```bash
 migrate -path apps/api/migrations \
   -database "postgres://lifygo:lifygo@localhost:5432/lifygo?sslmode=disable" down 1
 ```
 
 ---
 
-## Submitting a Pull Request
+## Pull requests
 
-1. Fork the repository
-2. Create a branch: `git checkout -b feature/your-feature-name`
-3. Make your changes
-4. Run all tests: `go test ./... -race -count=1`
-5. Run the linter: `go vet ./...`
-6. Commit with a clear message: `git commit -m "Add natural language scheduling"`
-7. Push and open a pull request against `main`
+1. Fork and branch off `main`: `git checkout -b feat/my-feature`
+2. Make your changes
+3. `go test ./... -race -count=1` passes
+4. Commit with a clear message: `feat: add natural language scheduling`
+5. Push and open a PR
 
-### Pull Request Checklist
+### PR checklist
 
-- [ ] Tests pass (`go test ./... -race -count=1`)
+- [ ] Tests pass locally
 - [ ] New code has tests
-- [ ] No secrets or API keys in the code
-- [ ] Migration has both up and down files
-- [ ] Environment variables documented in `.env.example`
+- [ ] No secrets, keys, or tokens committed
+- [ ] Migrations have up and down files
+- [ ] New env vars are in `.env.example`
 
 ---
 
-## Good First Issues
+## Where to start
 
-Looking for a place to start? Check issues labeled
-[`good first issue`](https://github.com/lifygo/lifygo/issues?q=label%3A%22good+first+issue%22)
-on GitHub.
+Issues tagged [`good first issue`](https://github.com/lifygo/lifygo/issues?q=label%3A%22good+first+issue%22) are ready to pick up.
 
-Current open contributions welcome:
-- `@lifygo/sdk` — JavaScript/TypeScript client SDK
-- Natural language scheduling
-- MCP server for AI agent integration
-- Additional SMTP provider guides
-- Paystack payment integration
+Ideas that don't need deep codebase knowledge:
+
+- Write an SMTP provider setup guide (Gmail, Resend, Brevo, etc.)
+- Add a client SDK in your language of choice
+- Improve error messages in the API
+- Write integration tests for uncovered repository methods
 
 ---
 
-## Code Style
+## Style
 
-- Go: standard `gofmt` formatting, exported functions have godoc comments
-- TypeScript: existing ESLint config, no `any` types
-- SQL: lowercase keywords, one statement per migration file
-- Commit messages: imperative mood, present tense ("Add feature" not "Added feature")
+- **Go:** `gofmt`, exported symbols have doc comments
+- **TypeScript:** follow the existing ESLint config, avoid `any`
+- **SQL:** lowercase keywords, one concern per migration
+- **Commits:** imperative, present tense — `"fix scheduler race"` not `"fixed scheduler race"`
+- **PRs:** small and focused. One thing per PR.
 
 ---
 
-## Questions
+## Help
 
-Open a GitHub Discussion or file an issue.
+Open a [GitHub Discussion](https://github.com/lifygo/lifygo/discussions) or drop an issue.

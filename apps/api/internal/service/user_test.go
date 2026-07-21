@@ -31,7 +31,7 @@ func TestUserService_CreateFromClerk(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
-		if user.ClerkUserID != input.ClerkUserID {
+		if user.ClerkUserID == nil || *user.ClerkUserID != input.ClerkUserID {
 			t.Errorf("ClerkUserID: got %q want %q", user.ClerkUserID, input.ClerkUserID)
 		}
 		if user.Email != input.Email {
@@ -121,10 +121,10 @@ func TestUserService_GetByClerkUserID(t *testing.T) {
 		repo := newFakeUserRepository()
 		svc := service.NewUserService(repo)
 
-		// Seed a user directly in the fake repo.
+		clerkID := "clerk_xyz"
 		repo.users["user_1"] = &model.User{
 			ID:          "user_1",
-			ClerkUserID: "clerk_xyz",
+			ClerkUserID: &clerkID,
 			Name:        "Test User",
 			Email:       "test@example.com",
 		}
@@ -134,8 +134,8 @@ func TestUserService_GetByClerkUserID(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
-		if user.ClerkUserID != "clerk_xyz" {
-			t.Errorf("ClerkUserID: got %q want clerk_xyz", user.ClerkUserID)
+		if user.ClerkUserID == nil || *user.ClerkUserID != "clerk_xyz" {
+			t.Errorf("ClerkUserID: got %v want clerk_xyz", user.ClerkUserID)
 		}
 	})
 
@@ -162,10 +162,6 @@ func TestUserService_GetByClerkUserID(t *testing.T) {
 	})
 }
 
-// -----------------------------------------------------------------------
-// GetByID
-// -----------------------------------------------------------------------
-
 func TestUserService_GetByID(t *testing.T) {
 	t.Parallel()
 
@@ -174,9 +170,10 @@ func TestUserService_GetByID(t *testing.T) {
 		repo := newFakeUserRepository()
 		svc := service.NewUserService(repo)
 
+		clerkID := "clerk_xyz"
 		repo.users["user_1"] = &model.User{
 			ID:          "user_1",
-			ClerkUserID: "clerk_xyz",
+			ClerkUserID: &clerkID,
 			Name:        "Test User",
 			Email:       "test@example.com",
 		}
@@ -225,9 +222,10 @@ func TestUserService_Delete(t *testing.T) {
 		repo := newFakeUserRepository()
 		svc := service.NewUserService(repo)
 
+		clerkID := "clerk_xyz"
 		repo.users["user_1"] = &model.User{
 			ID:          "user_1",
-			ClerkUserID: "clerk_xyz",
+			ClerkUserID: &clerkID,
 			Name:        "Test User",
 			Email:       "test@example.com",
 		}

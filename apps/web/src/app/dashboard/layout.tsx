@@ -2,12 +2,12 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { UserButton } from "@clerk/nextjs";
 import { ChevronLeft, ChevronRight, Mail } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { dashboardNavItems } from "@/components/dashboard/nav-items";
+import { UserMenu } from "@/components/dashboard/user-menu";
 import {
   Sidebar,
   SidebarContent,
@@ -121,7 +121,7 @@ export default function DashboardLayout({
                 </span>
               </div>
               <div className="scale-105">
-                <UserButton />
+                <UserMenu />
               </div>
             </div>
           </SidebarFooter>

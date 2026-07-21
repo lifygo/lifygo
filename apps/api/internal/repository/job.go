@@ -4,25 +4,20 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/jackc/pgx/v5"
 
 	"github.com/lifygo/lifygo/apps/api/internal/model"
 )
 
-// JobRepository talks to the "jobs" and "job_executions" tables in PostgreSQL.
-// It does not contain any business logic — only database queries.
 type JobRepository struct {
 	db DBExecutor
 }
 
-// NewJobRepository creates a new JobRepository.
 func NewJobRepository(db DBExecutor) *JobRepository {
 	return &JobRepository{db: db}
 }
 
-// Create inserts a new job row.
 func (r *JobRepository) Create(ctx context.Context, input model.CreateJobInput) (*model.Job, error) {
 	const query = `
 		INSERT INTO jobs (
@@ -37,7 +32,7 @@ func (r *JobRepository) Create(ctx context.Context, input model.CreateJobInput) 
 			cron_expression, run_at,
 			webhook_url, webhook_payload,
 			email_to, email_subject, email_body,
-			status, enabled, created_at, updated_at
+			status, enabled, last_run_at, created_at, updated_at
 	`
 
 	var job model.Job
@@ -68,6 +63,7 @@ func (r *JobRepository) Create(ctx context.Context, input model.CreateJobInput) 
 		&job.EmailBody,
 		&job.Status,
 		&job.Enabled,
+		&job.LastRunAt,
 		&job.CreatedAt,
 		&job.UpdatedAt,
 	)
@@ -79,8 +75,6 @@ func (r *JobRepository) Create(ctx context.Context, input model.CreateJobInput) 
 	return &job, nil
 }
 
-// GetByID fetches a single job by its internal UUID.
-// Returns model.ErrNotFound if no job has that ID.
 func (r *JobRepository) GetByID(ctx context.Context, id string) (*model.Job, error) {
 	const query = `
 		SELECT
@@ -88,7 +82,7 @@ func (r *JobRepository) GetByID(ctx context.Context, id string) (*model.Job, err
 			cron_expression, run_at,
 			webhook_url, webhook_payload,
 			email_to, email_subject, email_body,
-			status, enabled, created_at, updated_at
+			status, enabled, last_run_at, created_at, updated_at
 		FROM jobs
 		WHERE id = $1
 	`
@@ -109,6 +103,7 @@ func (r *JobRepository) GetByID(ctx context.Context, id string) (*model.Job, err
 		&job.EmailBody,
 		&job.Status,
 		&job.Enabled,
+		&job.LastRunAt,
 		&job.CreatedAt,
 		&job.UpdatedAt,
 	)
@@ -123,7 +118,6 @@ func (r *JobRepository) GetByID(ctx context.Context, id string) (*model.Job, err
 	return &job, nil
 }
 
-// ListByUserID returns all jobs belonging to a user, newest first.
 func (r *JobRepository) ListByUserID(ctx context.Context, userID string) ([]model.Job, error) {
 	const query = `
 		SELECT
@@ -131,7 +125,7 @@ func (r *JobRepository) ListByUserID(ctx context.Context, userID string) ([]mode
 			cron_expression, run_at,
 			webhook_url, webhook_payload,
 			email_to, email_subject, email_body,
-			status, enabled, created_at, updated_at
+			status, enabled, last_run_at, created_at, updated_at
 		FROM jobs
 		WHERE user_id = $1
 		ORDER BY created_at DESC
@@ -161,6 +155,7 @@ func (r *JobRepository) ListByUserID(ctx context.Context, userID string) ([]mode
 			&job.EmailBody,
 			&job.Status,
 			&job.Enabled,
+			&job.LastRunAt,
 			&job.CreatedAt,
 			&job.UpdatedAt,
 		); err != nil {
@@ -176,30 +171,45 @@ func (r *JobRepository) ListByUserID(ctx context.Context, userID string) ([]mode
 	return jobs, nil
 }
 
-// ListActiveDue returns all active, enabled jobs that are due to run.
-// Used by the scheduler worker to find jobs to execute.
-//
-// A job is due if:
-//   - It is a cron job that is active and enabled (always potentially due)
-//   - It is a one-time job with run_at <= now that has not yet completed
 func (r *JobRepository) ListActiveDue(ctx context.Context) ([]model.Job, error) {
 	const query = `
-		SELECT
-			id, user_id, name, type, schedule_type,
-			cron_expression, run_at,
-			webhook_url, webhook_payload,
-			email_to, email_subject, email_body,
-			status, enabled, created_at, updated_at
-		FROM jobs
-		WHERE enabled = TRUE
-		  AND status = 'active'
-		  AND (
-		    schedule_type = 'cron'
-		    OR (schedule_type = 'one_time' AND run_at <= $1)
-		  )
+		WITH selected_jobs AS (
+			SELECT id
+			FROM jobs
+			WHERE enabled = TRUE
+			  AND status = 'active'
+			  AND (
+			    (schedule_type = 'cron' AND (last_run_at IS NULL OR last_run_at < date_trunc('minute', clock_timestamp())))
+			    OR (schedule_type = 'one_time' AND run_at <= clock_timestamp() AND last_run_at IS NULL)
+			  )
+			ORDER BY id
+			FOR UPDATE SKIP LOCKED
+		)
+		UPDATE jobs
+		SET last_run_at = clock_timestamp(), updated_at = clock_timestamp()
+		FROM selected_jobs
+		WHERE jobs.id = selected_jobs.id
+		RETURNING
+			jobs.id,
+			jobs.user_id,
+			jobs.name,
+			jobs.type,
+			jobs.schedule_type,
+			jobs.cron_expression,
+			jobs.run_at,
+			jobs.webhook_url,
+			jobs.webhook_payload,
+			jobs.email_to,
+			jobs.email_subject,
+			jobs.email_body,
+			jobs.status,
+			jobs.enabled,
+			jobs.last_run_at,
+			jobs.created_at,
+			jobs.updated_at
 	`
 
-	rows, err := r.db.Query(ctx, query, time.Now().UTC())
+	rows, err := r.db.Query(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list active due jobs: %w", err)
 	}
@@ -223,6 +233,7 @@ func (r *JobRepository) ListActiveDue(ctx context.Context) ([]model.Job, error) 
 			&job.EmailBody,
 			&job.Status,
 			&job.Enabled,
+			&job.LastRunAt,
 			&job.CreatedAt,
 			&job.UpdatedAt,
 		); err != nil {
@@ -238,8 +249,6 @@ func (r *JobRepository) ListActiveDue(ctx context.Context) ([]model.Job, error) 
 	return jobs, nil
 }
 
-// UpdateStatus updates the status of a job.
-// Used by the scheduler after a one-time job completes or fails.
 func (r *JobRepository) UpdateStatus(ctx context.Context, id string, status model.JobStatus) error {
 	const query = `
 		UPDATE jobs
@@ -259,10 +268,6 @@ func (r *JobRepository) UpdateStatus(ctx context.Context, id string, status mode
 	return nil
 }
 
-// Delete removes a job by ID.
-// Checks ownership — the job must belong to userID.
-// Because of ON DELETE CASCADE, all job_executions for this job
-// are also deleted automatically.
 func (r *JobRepository) Delete(ctx context.Context, id, userID string) error {
 	const query = `DELETE FROM jobs WHERE id = $1 AND user_id = $2`
 
@@ -278,8 +283,6 @@ func (r *JobRepository) Delete(ctx context.Context, id, userID string) error {
 	return nil
 }
 
-// CreateExecution inserts a new job execution log row.
-// Called by the scheduler after every job execution attempt.
 func (r *JobRepository) CreateExecution(ctx context.Context, jobID, userID, status string, httpStatus *int, errorMessage *string, durationMs *int) (*model.JobExecution, error) {
 	const query = `
 		INSERT INTO job_executions (job_id, user_id, status, http_status, error_message, duration_ms)
@@ -306,7 +309,6 @@ func (r *JobRepository) CreateExecution(ctx context.Context, jobID, userID, stat
 	return &exec, nil
 }
 
-// ListExecutionsByJobID returns executions for a specific job, newest first.
 func (r *JobRepository) ListExecutionsByJobID(ctx context.Context, jobID string, limit, offset int) ([]model.JobExecution, error) {
 	const query = `
 		SELECT id, job_id, user_id, status, http_status, error_message, duration_ms, executed_at

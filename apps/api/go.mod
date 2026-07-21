@@ -10,11 +10,13 @@ require (
 	github.com/clerk/clerk-sdk-go/v2 v2.7.0
 	github.com/go-chi/chi/v5 v5.3.0
 	github.com/go-chi/cors v1.2.2
+	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/jackc/pgx/v5 v5.10.0
 	github.com/joho/godotenv v1.5.1
 	github.com/redis/go-redis/v9 v9.20.1
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/svix/svix-webhooks v1.96.0
+	golang.org/x/crypto v0.54.0
 )
 
 require (
@@ -38,8 +40,6 @@ require (
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
-	golang.org/x/crypto v0.43.0 // indirect
-	golang.org/x/sync v0.21.0 // indirect
-	golang.org/x/sys v0.46.0 // indirect
-	golang.org/x/text v0.38.0 // indirect
+	golang.org/x/sync v0.22.0 // indirect
+	golang.org/x/text v0.40.0 // indirect
 )

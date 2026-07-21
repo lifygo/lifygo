@@ -1,7 +1,5 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
-// Generic fetch wrapper for the LifyGo API.
-// Adds the API key header and parses JSON automatically.
 export async function apiFetch<T>(
   path: string,
   apiKey: string,
@@ -14,6 +12,7 @@ export async function apiFetch<T>(
       "X-API-Key": apiKey,
       ...options.headers,
     },
+    credentials: options.credentials || "omit",
   });
 
   const data = await res.json();

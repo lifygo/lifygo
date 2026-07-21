@@ -50,6 +50,7 @@ type Job struct {
 	EmailBody      *string         `json:"email_body"      db:"email_body"`
 	Status         JobStatus       `json:"status"          db:"status"`
 	Enabled        bool            `json:"enabled"         db:"enabled"`
+	LastRunAt      *time.Time      `json:"last_run_at"     db:"last_run_at"`
 	CreatedAt      time.Time       `json:"created_at"      db:"created_at"`
 	UpdatedAt      time.Time       `json:"updated_at"      db:"updated_at"`
 }

@@ -10,42 +10,32 @@ import (
 	"github.com/lifygo/lifygo/apps/api/internal/model"
 )
 
-// UserRepository talks to the "users" table in PostgreSQL.
-// It does not contain any business logic — only database queries.
-// All business rules live in internal/service.
 type UserRepository struct {
 	db DBExecutor
 }
 
-// NewUserRepository creates a new UserRepository.
-// db is the database connection pool (or a transaction, for testing).
 func NewUserRepository(db DBExecutor) *UserRepository {
 	return &UserRepository{db: db}
 }
 
-// Create inserts a new user row.
-// This is called when we receive a "user.created" webhook from Clerk.
-// Returns the full user record, including the generated ID and timestamp.
 func (r *UserRepository) Create(ctx context.Context, input model.CreateUserInput) (*model.User, error) {
 	const query = `
-		INSERT INTO users (clerk_user_id, name, email)
-		VALUES ($1, $2, $3)
-		RETURNING id, clerk_user_id, name, email, created_at
+		INSERT INTO users (clerk_user_id, name, email, password_hash)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id, clerk_user_id, name, email, password_hash, created_at
 	`
 
 	var user model.User
-	err := r.db.QueryRow(ctx, query, input.ClerkUserID, input.Name, input.Email).Scan(
+	err := r.db.QueryRow(ctx, query, strToNil(input.ClerkUserID), input.Name, input.Email, input.PasswordHash).Scan(
 		&user.ID,
 		&user.ClerkUserID,
 		&user.Name,
 		&user.Email,
+		&user.PasswordHash,
 		&user.CreatedAt,
 	)
 
 	if err != nil {
-		// "unique_violation" means a user with this clerk_user_id or
-		// email already exists. We turn that into a clear domain error
-		// instead of leaking the raw Postgres error.
 		if isUniqueViolation(err) {
 			return nil, model.ErrAlreadyExists
 		}
@@ -55,11 +45,9 @@ func (r *UserRepository) Create(ctx context.Context, input model.CreateUserInput
 	return &user, nil
 }
 
-// GetByID fetches a single user by their internal UUID.
-// Returns model.ErrNotFound if no user has that ID.
 func (r *UserRepository) GetByID(ctx context.Context, id string) (*model.User, error) {
 	const query = `
-		SELECT id, clerk_user_id, name, email, created_at
+		SELECT id, clerk_user_id, name, email, password_hash, created_at
 		FROM users
 		WHERE id = $1
 	`
@@ -70,6 +58,7 @@ func (r *UserRepository) GetByID(ctx context.Context, id string) (*model.User, e
 		&user.ClerkUserID,
 		&user.Name,
 		&user.Email,
+		&user.PasswordHash,
 		&user.CreatedAt,
 	)
 
@@ -83,13 +72,9 @@ func (r *UserRepository) GetByID(ctx context.Context, id string) (*model.User, e
 	return &user, nil
 }
 
-// GetByClerkUserID fetches a single user by their Clerk user ID.
-// This is the main lookup used when a request comes in with a
-// Clerk session token — we need to map the Clerk ID to our internal user.
-// Returns model.ErrNotFound if no user has that Clerk ID.
 func (r *UserRepository) GetByClerkUserID(ctx context.Context, clerkUserID string) (*model.User, error) {
 	const query = `
-		SELECT id, clerk_user_id, name, email, created_at
+		SELECT id, clerk_user_id, name, email, password_hash, created_at
 		FROM users
 		WHERE clerk_user_id = $1
 	`
@@ -100,6 +85,7 @@ func (r *UserRepository) GetByClerkUserID(ctx context.Context, clerkUserID strin
 		&user.ClerkUserID,
 		&user.Name,
 		&user.Email,
+		&user.PasswordHash,
 		&user.CreatedAt,
 	)
 
@@ -113,10 +99,33 @@ func (r *UserRepository) GetByClerkUserID(ctx context.Context, clerkUserID strin
 	return &user, nil
 }
 
-// Delete removes a user by their internal UUID.
-// Because of "ON DELETE CASCADE" in the migrations, this also deletes
-// all of that user's API keys, SMTP config, and email logs automatically.
-// Returns model.ErrNotFound if no user has that ID.
+func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*model.User, error) {
+	const query = `
+		SELECT id, clerk_user_id, name, email, password_hash, created_at
+		FROM users
+		WHERE email = $1
+	`
+
+	var user model.User
+	err := r.db.QueryRow(ctx, query, email).Scan(
+		&user.ID,
+		&user.ClerkUserID,
+		&user.Name,
+		&user.Email,
+		&user.PasswordHash,
+		&user.CreatedAt,
+	)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, model.ErrNotFound
+		}
+		return nil, fmt.Errorf("failed to get user by email: %w", err)
+	}
+
+	return &user, nil
+}
+
 func (r *UserRepository) Delete(ctx context.Context, id string) error {
 	const query = `DELETE FROM users WHERE id = $1`
 
@@ -130,4 +139,11 @@ func (r *UserRepository) Delete(ctx context.Context, id string) error {
 	}
 
 	return nil
+}
+
+func strToNil(s string) *string {
+	if s == "" {
+		return nil
+	}
+	return &s
 }
