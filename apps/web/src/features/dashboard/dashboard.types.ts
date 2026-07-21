@@ -1,4 +1,4 @@
-import type { EmailLog } from "@/features/logs";
+import type { EmailLog } from "@/features/logs/logs.types";
 import type { Job } from "@/features/jobs";
 
 export interface DashboardStats {
