@@ -1,5 +1,5 @@
 "use client"
-export const dynamic = "force-dynamic";
+
 import React, { useState, useEffect } from "react"
 import { useApi } from "@/lib/use-api"
 import { ENDPOINTS } from "@/lib/endpoints"
