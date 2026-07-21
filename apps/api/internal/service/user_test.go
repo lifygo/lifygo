@@ -32,7 +32,7 @@ func TestUserService_CreateFromClerk(t *testing.T) {
 			t.Fatalf("unexpected error: %v", err)
 		}
 		if user.ClerkUserID == nil || *user.ClerkUserID != input.ClerkUserID {
-			t.Errorf("ClerkUserID: got %q want %q", user.ClerkUserID, input.ClerkUserID)
+			t.Errorf("ClerkUserID: got %q want %q", *user.ClerkUserID, input.ClerkUserID)
 		}
 		if user.Email != input.Email {
 			t.Errorf("Email: got %q want %q", user.Email, input.Email)
