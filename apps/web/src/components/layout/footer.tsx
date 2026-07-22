@@ -3,7 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { ArrowUpRight, ShieldCheck } from "lucide-react"
-import lifygoLogo from "@/assets/logos/lifygo.png"
+import lifygoLogo from "@/assets/logos/lifygo-officiel.png"
 
 function CustomGithubIcon({ className }: { className?: string }) {
   return (

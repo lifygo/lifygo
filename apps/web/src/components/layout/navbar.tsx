@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/navigation-menu"
 import { Mail, Webhook } from "lucide-react"
 import { cn } from "@/lib/utils"
-import lifygoLogo from "@/assets/logos/lifygo.png"
+import lifygoLogo from "@/assets/logos/lifygo-officiel.png"
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false)

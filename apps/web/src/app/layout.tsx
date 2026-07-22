@@ -18,9 +18,13 @@ export const metadata: Metadata = {
   title: "LifyGo: Developer Email & Scheduling Platform",
   description: "Send transactional emails and schedule webhooks via a simple API.",
   icons: {
-    icon: [{ url: "/favicon.png?v=1", type: "image/png", sizes: "any" }],
-    shortcut: ["/favicon.png?v=1"],
-    apple: [{ url: "/favicon.png?v=1", sizes: "180x180", type: "image/png" }],
+    icon: [
+      { url: "/favicon.jpg", type: "image/jpeg", sizes: "512x512" },
+      { url: "/favicon-32x32.png", type: "image/png", sizes: "32x32" },
+      { url: "/favicon-16x16.png", type: "image/png", sizes: "16x16" },
+    ],
+    shortcut: ["/favicon.png"],
+    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
   },
 };
 
