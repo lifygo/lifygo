@@ -1,0 +1,68 @@
+{
+  "name": "LifyGo",
+  "logo": {
+    "dark": "/logo/dark.svg",
+    "light": "/logo/light.svg"
+  },
+  "favicon": "/favicon.ico",
+  "colors": {
+    "primary": "#4f46e5",
+    "light": "#818cf8",
+    "dark": "#3730a3"
+  },
+  "topbarLinks": [
+    {
+      "name": "GitHub",
+      "url": "https://github.com/lifygo/lifygo"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "Try the demo",
+    "url": "https://lifygo.com/sign-up"
+  },
+  "anchors": [
+    {
+      "name": "GitHub",
+      "icon": "github",
+      "url": "https://github.com/lifygo/lifygo"
+    }
+  ],
+  "navigation": [
+    {
+      "group": "Getting Started",
+      "pages": [
+        "introduction",
+        "quickstart",
+        "authentication"
+      ]
+    },
+    {
+      "group": "Notify",
+      "pages": [
+        "notify/send-email",
+        "notify/send-otp",
+        "notify/verify-otp",
+        "notify/logs"
+      ]
+    },
+    {
+      "group": "Schedule",
+      "pages": [
+        "schedule/create-job",
+        "schedule/manage-jobs",
+        "schedule/executions"
+      ]
+    },
+    {
+      "group": "Guides",
+      "pages": [
+        "guides/gmail-smtp",
+        "guides/self-hosting",
+        "guides/errors"
+      ]
+    }
+  ],
+  "footerSocials": {
+    "github": "https://github.com/lifygo/lifygo"
+  }
+}
