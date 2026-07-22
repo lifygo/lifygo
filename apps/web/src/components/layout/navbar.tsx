@@ -104,12 +104,14 @@ export function Navbar() {
 
                       <div className="mt-3 flex items-center justify-between border-t border-neutral-800 pt-3 px-2">
                         <span className="text-[11px] text-neutral-500">One API key for both.</span>
-                        <Link
-                          href="/docs"
+                        <a
+                          href="https://docs.lifygo.com"
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="text-[11px] font-medium text-brand transition-opacity hover:opacity-80"
                         >
                           Read the docs →
-                        </Link>
+                        </a>
                       </div>
                     </div>
                   </NavigationMenuContent>
@@ -124,12 +126,14 @@ export function Navbar() {
               How it works
             </a>
 
-            <Link
-              href="/docs"
+            <a
+              href="https://docs.lifygo.com"
+              target="_blank"
+              rel="noopener noreferrer"
               className="rounded-md px-3 py-2 text-sm font-medium text-neutral-400 transition-colors duration-200 hover:bg-white/[0.06] hover:text-neutral-50"
             >
               Docs
-            </Link>
+            </a>
             <a
               href="https://github.com/lifygo/lifygo"
               target="_blank"
