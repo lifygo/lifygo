@@ -1,0 +1,88 @@
+---
+title: "Send Email"
+description: "POST /send — Send a transactional email"
+---
+
+# Send Email
+
+`POST /send`
+
+Sends a transactional email using your configured SMTP server.
+
+---
+
+## Endpoint
+
+```http
+POST /send
+```
+
+---
+
+## Request
+
+Example request:
+
+```bash
+curl -X POST http://localhost:8080/send \
+  -H "X-API-Key: lfy_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "to":"hello@example.com",
+    "subject":"Welcome to Acme",
+    "body":"Thanks for signing up."
+  }'
+```
+
+---
+
+## Request Body
+
+| Field | Type | Required | Description |
+|------|------|:--------:|-------------|
+| `to` | `string` | ✅ | Recipient email address |
+| `subject` | `string` | ✅ | Email subject |
+| `body` | `string` | ✅ | Email body (plain text or HTML) |
+| `is_html` | `boolean` | No | Send the body as HTML |
+
+---
+
+## Sending HTML Email
+
+To send an HTML email, set `is_html` to `true`.
+
+```json
+{
+  "to": "hello@example.com",
+  "subject": "Welcome",
+  "body": "<h1>Hello</h1><p>Thanks for signing up.</p>",
+  "is_html": true
+}
+```
+
+---
+
+## Successful Response
+
+**HTTP 200 OK**
+
+```json
+{
+  "id": "log_abc123",
+  "to": "hello@example.com",
+  "subject": "Welcome to Acme",
+  "status": "sent",
+  "sent_at": "2026-07-22T09:30:00Z"
+}
+```
+
+---
+
+## Error Responses
+
+| Status | Description |
+|:------:|-------------|
+| **400** | Missing required field (`to`, `subject`, or `body`) |
+| **401** | Invalid or missing API key |
+| **422** | No SMTP configuration has been set up |
+| **500** | SMTP server unreachable or authentication failed |

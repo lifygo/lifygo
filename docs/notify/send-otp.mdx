@@ -1,0 +1,75 @@
+---
+title: "Send OTP"
+description: "POST /send/otp — Generate and send a one-time passcode"
+---
+
+# Send OTP
+
+`POST /send/otp`
+
+Generates a cryptographically secure 6-digit one-time passcode (OTP) and sends it to the specified email address.
+
+---
+
+## Endpoint
+
+```http
+POST /send/otp
+```
+
+---
+
+## Request
+
+Example request:
+
+```bash
+curl -X POST http://localhost:8080/send/otp \
+  -H "X-API-Key: lfy_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "to":"hello@example.com"
+  }'
+```
+
+---
+
+## Request Body
+
+| Field | Type | Required | Description |
+|------|------|:--------:|-------------|
+| `to` | `string` | ✅ | Recipient email address |
+
+---
+
+## Successful Response
+
+**HTTP 200 OK**
+
+```json
+{
+  "message": "OTP sent",
+  "expires_at": "2026-07-22T09:40:00Z"
+}
+```
+
+---
+
+## OTP Behavior
+
+LifyGo OTPs follow these security rules:
+
+- OTPs are **6-digit** numeric codes.
+- Generated using Go's `crypto/rand` package.
+- Stored in Redis with a **10-minute TTL**.
+- Only **one active OTP per email** is allowed at any time.
+- Sending a new OTP automatically invalidates the previous one.
+- OTPs are **single-use** and are deleted immediately after successful verification.
+
+---
+
+## Expiration
+
+- OTPs expire after **10 minutes**.
+- Expired OTPs cannot be verified.
+- Once an OTP has been successfully verified, it is permanently removed from storage.

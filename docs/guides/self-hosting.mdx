@@ -1,0 +1,108 @@
+---
+title: "Self-Hosting"
+description: "Deploy LifyGo on your own server"
+---
+
+# Self-Hosting
+
+LifyGo can be deployed on any Linux server capable of running Docker.
+
+A small VPS (such as a DigitalOcean Droplet or Hetzner Cloud instance) is sufficient for most deployments.
+
+---
+
+## Prerequisites
+
+- Ubuntu 22.04 or newer
+- Docker
+- Docker Compose
+- A domain name pointing to your server
+- An SMTP account (Gmail, Zoho, or another provider)
+
+---
+
+## 1. Clone the Repository
+
+```bash
+git clone https://github.com/lifygo/lifygo.git
+cd lifygo
+```
+
+---
+
+## 2. Configure the Environment
+
+```bash
+cp apps/api/.env.example apps/api/.env
+```
+
+Update the `.env` file with your configuration.
+
+At minimum:
+
+```env
+AUTH_PROVIDER=local
+JWT_SECRET=a-long-random-string
+DATABASE_URL=postgres://lifygo:yourpassword@localhost:5432/lifygo?sslmode=disable
+REDIS_URL=redis://localhost:6379
+ENCRYPTION_KEY=$(openssl rand -hex 32)
+```
+
+---
+
+## 3. Start Infrastructure
+
+```bash
+docker compose -f infra/docker/docker-compose.yml up -d
+```
+
+---
+
+## 4. Run Database Migrations
+
+```bash
+cd apps/api
+
+migrate \
+  -path migrations \
+  -database "postgres://lifygo:yourpassword@localhost:5432/lifygo?sslmode=disable" \
+  up
+```
+
+---
+
+## 5. Configure Nginx
+
+A sample Nginx configuration is available in:
+
+```text
+infra/nginx/
+```
+
+The configuration:
+
+- Proxies requests to the API
+- Proxies requests to the dashboard
+- Supports HTTPS with Let's Encrypt
+
+---
+
+## 6. Access the Dashboard
+
+Open your browser and visit:
+
+```text
+https://your-domain.com
+```
+
+Sign in and configure your SMTP settings.
+
+---
+
+## Maintenance
+
+To keep your deployment healthy:
+
+- Regularly back up your PostgreSQL database.
+- Keep your `ENCRYPTION_KEY` safe. Without it, encrypted SMTP passwords cannot be recovered.
+- Pull the latest repository changes and restart your Docker containers when updating LifyGo.

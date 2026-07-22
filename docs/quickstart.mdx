@@ -1,0 +1,144 @@
+---
+title: "Quickstart"
+description: "Get LifyGo running in under 5 minutes"
+---
+
+# Quickstart
+
+Get LifyGo running locally in under 5 minutes.
+
+## Prerequisites
+
+Before you begin, make sure you have the following installed:
+
+- Docker
+- Go 1.22+
+- Node.js 20+
+
+---
+
+## 1. Clone the Repository
+
+```bash
+git clone https://github.com/lifygo/lifygo.git
+cd lifygo
+```
+
+---
+
+## 2. Start Infrastructure Services
+
+Start PostgreSQL and Redis using Docker Compose.
+
+```bash
+docker compose -f infra/docker/docker-compose.yml up -d
+```
+
+---
+
+## 3. Configure the API
+
+Navigate to the API application and create your environment file.
+
+```bash
+cd apps/api
+cp .env.example .env
+```
+
+Update the `.env` file with the following values:
+
+```env
+AUTH_PROVIDER=local
+JWT_SECRET=at-least-32-characters
+DATABASE_URL=postgres://lifygo:lifygo@localhost:5432/lifygo?sslmode=disable
+REDIS_URL=redis://localhost:6379
+ENCRYPTION_KEY=$(openssl rand -hex 32)
+```
+
+---
+
+## 4. Run Database Migrations
+
+```bash
+migrate \
+  -path migrations \
+  -database "postgres://lifygo:lifygo@localhost:5432/lifygo?sslmode=disable" \
+  up
+```
+
+---
+
+## 5. Start the API Server
+
+```bash
+go run ./cmd/server/main.go
+```
+
+The API will be available at:
+
+```text
+http://localhost:8080
+```
+
+---
+
+## 6. Start the Dashboard
+
+Open another terminal and run:
+
+```bash
+cd apps/web
+cp .env.local.example .env.local
+npm install
+npm run dev
+```
+
+The dashboard will be available at:
+
+```text
+http://localhost:3000
+```
+
+---
+
+## 7. Configure SMTP
+
+1. Open the dashboard.
+2. Sign in.
+3. Navigate to **SMTP Settings**.
+4. Add your SMTP credentials.
+
+> SMTP passwords are encrypted using AES-256 before being stored.
+
+---
+
+## 8. Send Your First Email
+
+Once you've generated an API key from the dashboard, test your installation:
+
+```bash
+curl -X POST http://localhost:8080/send \
+  -H "X-API-Key: lfy_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "to":"hello@example.com",
+    "subject":"Test",
+    "body":"It works."
+  }'
+```
+
+If everything is configured correctly, LifyGo will send your first email successfully.
+
+---
+
+## Next Steps
+
+After completing the quickstart, you can explore:
+
+- Authentication
+- Email API
+- OTP API
+- Cron Jobs
+- SMTP Management
+- Webhooks
+- SDKs

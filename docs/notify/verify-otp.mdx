@@ -1,0 +1,78 @@
+---
+title: "Verify OTP"
+description: "POST /verify/otp — Verify a one-time passcode"
+---
+
+# Verify OTP
+
+`POST /verify/otp`
+
+Verifies a 6-digit one-time passcode (OTP) that was previously sent to a user's email address.
+
+---
+
+## Endpoint
+
+```http
+POST /verify/otp
+```
+
+---
+
+## Request
+
+Example request:
+
+```bash
+curl -X POST http://localhost:8080/verify/otp \
+  -H "X-API-Key: lfy_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email":"hello@example.com",
+    "code":"483920"
+  }'
+```
+
+---
+
+## Request Body
+
+| Field | Type | Required | Description |
+|------|------|:--------:|-------------|
+| `email` | `string` | ✅ | Email address the OTP was sent to |
+| `code` | `string` | ✅ | The 6-digit OTP code |
+
+---
+
+## Successful Response
+
+**HTTP 200 OK**
+
+```json
+{
+  "verified": true,
+  "message": "OTP verified"
+}
+```
+
+---
+
+## Invalid or Expired OTP
+
+**HTTP 400 Bad Request**
+
+```json
+{
+  "error": "invalid or expired OTP"
+}
+```
+
+---
+
+## Error Responses
+
+| Status | Description |
+|:------:|-------------|
+| **400** | Invalid, expired, or already-used OTP |
+| **401** | Invalid or missing API key |
+| **422** | SMTP configuration has not been set up |

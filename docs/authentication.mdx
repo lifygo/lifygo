@@ -1,0 +1,49 @@
+---
+title: "Authentication"
+description: "How API key authentication works in LifyGo"
+---
+
+# Authentication
+
+Every request to the LifyGo API must include your API key in the `X-API-Key` header.
+
+## Getting your key
+
+1. Sign in to the LifyGo dashboard.
+2. Go to **API Keys**.
+3. Click **Generate key**.
+4. Copy the key immediately. It will not be shown again.
+
+API keys start with:
+
+```text
+lfy_live_
+```
+
+## Using your key
+
+Pass your API key in the `X-API-Key` header on every request.
+
+```bash
+curl -X POST http://localhost:8080/send \
+  -H "X-API-Key: lfy_live_4f9a721c810de08e21c" \
+  -H "Content-Type: application/json" \
+  -d '{"to":"hello@example.com","subject":"Test","body":"Test"}'
+```
+
+The same API key works for:
+
+- Email API
+- OTP API
+- Cron Job API
+
+## Key Security
+
+LifyGo follows several security practices to protect your API keys:
+
+- API keys are hashed using **SHA-256** before being stored.
+- The original (raw) API key is **never stored**.
+- You can generate multiple API keys for the same account.
+- Old keys can be deleted at any time.
+- Rotate your keys regularly by creating a new key and deleting the old one.
+- **Never commit your API keys to version control** or expose them in client-side applications.

@@ -1,0 +1,31 @@
+---
+title: "Introduction"
+description: "What LifyGo is and why you would use it"
+---
+
+# What is LifyGo
+
+LifyGo is a self-hosted API for transactional email, OTP verification, and cron job scheduling. It plugs into your existing SMTP server so you never pay per email.
+
+## The problem
+
+Every developer already pays for email somewhere. Google Workspace, Zoho, your hosting plan. They all include SMTP. But when you need to send transactional emails from your app, you end up signing up for Resend or SendGrid and paying a second bill.
+
+LifyGo fixes that. You connect the SMTP you already own. LifyGo gives you a clean API to send through it. No per-email fees. No new monthly bill.
+
+## What you can do
+
+- Send transactional emails through your own SMTP
+- Generate and verify one-time passcodes
+- Schedule recurring cron jobs that fire webhooks or emails
+- Monitor everything from a single dashboard
+
+## How it works
+
+You run LifyGo on your own server or VPS. You add your SMTP credentials once. You generate an API key. Then you call the API from your app.
+
+Every email goes through your own SMTP server. Your reputation. Your infrastructure. Your data.
+
+## Open source
+
+LifyGo is AGPL-3.0 licensed. Free to use. Free to modify. Free to self-host. The dashboard includes a hosted demo so you can try it before deploying.

@@ -1,0 +1,91 @@
+---
+title: "Error Codes"
+description: "HTTP status codes and what they mean"
+---
+
+# Error Codes
+
+LifyGo uses standard HTTP status codes for every API response.
+
+When an error occurs, the response body contains an `error` field describing the problem.
+
+---
+
+## Error Response Format
+
+```json
+{
+  "error": "A human-readable description of what went wrong."
+}
+```
+
+---
+
+## HTTP Status Codes
+
+| Status | Meaning |
+|:------:|---------|
+| **200** | Request completed successfully |
+| **201** | Resource created successfully (API key, scheduled job, etc.) |
+| **400** | Missing or invalid request data |
+| **401** | Missing or invalid API key |
+| **404** | Requested resource was not found |
+| **422** | Request is valid, but required configuration is missing (for example, SMTP is not configured) |
+| **429** | Rate limit exceeded (default: 100 requests per hour per API key) |
+| **500** | Internal server error |
+
+---
+
+## Common Error Examples
+
+### Missing API Key
+
+```json
+{
+  "error": "missing API key"
+}
+```
+
+### Invalid API Key
+
+```json
+{
+  "error": "invalid API key"
+}
+```
+
+### Missing Required Field
+
+```json
+{
+  "error": "subject is required"
+}
+```
+
+### SMTP Not Configured
+
+```json
+{
+  "error": "SMTP configuration not found"
+}
+```
+
+### Rate Limit Exceeded
+
+```json
+{
+  "error": "rate limit exceeded"
+}
+```
+
+---
+
+## Troubleshooting
+
+If you receive a **500 Internal Server Error**, check:
+
+- API server logs
+- SMTP server connectivity
+- Database availability
+- Redis availability
+- Environment variable configuration

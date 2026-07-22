@@ -1,0 +1,89 @@
+---
+title: "Gmail SMTP Setup"
+description: "How to use your Gmail or Google Workspace account as your SMTP server"
+---
+
+# Gmail SMTP Setup
+
+LifyGo supports sending email through both personal Gmail accounts and Google Workspace accounts.
+
+---
+
+## 1. Enable Two-Factor Authentication
+
+Google requires two-factor authentication (2FA) before App Passwords can be created.
+
+Visit:
+
+```text
+https://myaccount.google.com/security
+```
+
+Enable **2-Step Verification** if it is not already enabled.
+
+---
+
+## 2. Generate an App Password
+
+Go to:
+
+```text
+https://myaccount.google.com/apppasswords
+```
+
+Then:
+
+1. Select **Mail** as the app.
+2. Select **Other** as the device.
+3. Enter **LifyGo** as the device name.
+4. Copy the generated 16-character password.
+
+> This password only allows LifyGo to send emails. It does not provide access to your inbox or Google account settings.
+
+---
+
+## 3. Configure LifyGo
+
+Open the LifyGo dashboard and navigate to **SMTP Settings**.
+
+Use the following configuration:
+
+| Field | Value |
+|------|------|
+| Host | `smtp.gmail.com` |
+| Port | `587` |
+| Username | Your Gmail address |
+| Password | Your 16-character App Password |
+| From Address | Your Gmail address |
+
+---
+
+## 4. Test Your Configuration
+
+```bash
+curl -X POST http://localhost:8080/send \
+  -H "X-API-Key: lfy_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "to":"yourself@example.com",
+    "subject":"SMTP Test",
+    "body":"Gmail SMTP works."
+  }'
+```
+
+---
+
+## Gmail Sending Limits
+
+| Account Type | Daily Limit |
+|--------------|------------:|
+| Free Gmail | ~500 emails/day |
+| Google Workspace | Higher limits depending on your plan |
+
+For higher email volumes, consider using a dedicated SMTP provider such as:
+
+- Zoho Mail
+- Amazon SES
+- Mailgun
+- SendGrid
+- Your hosting provider's SMTP service
