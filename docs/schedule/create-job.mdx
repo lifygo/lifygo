@@ -1,0 +1,108 @@
+---
+title: "Create Job"
+description: "POST /jobs — Create a cron or one-time scheduled job"
+---
+
+# Create Job
+
+`POST /jobs`
+
+Creates a scheduled job that either sends an email or invokes a webhook on a recurring cron schedule or at a specific time.
+
+---
+
+## Endpoint
+
+```http
+POST /jobs
+```
+
+---
+
+## Request
+
+Example request:
+
+```bash
+curl -X POST http://localhost:8080/jobs \
+  -H "X-API-Key: lfy_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name":"weekly-digest",
+    "type":"webhook",
+    "schedule_type":"cron",
+    "cron_expression":"0 9 * * 1",
+    "webhook_url":"https://yourapp.com/webhook"
+  }'
+```
+
+---
+
+## Request Body
+
+| Field | Type | Required | Description |
+|------|------|:--------:|-------------|
+| `name` | `string` | ✅ | Friendly name for the job |
+| `type` | `string` | ✅ | `webhook` or `email` |
+| `schedule_type` | `string` | ✅ | `cron` or `one_time` |
+| `cron_expression` | `string` | If `cron` | Standard cron expression |
+| `run_at` | `string` | If `one_time` | ISO 8601 timestamp |
+| `webhook_url` | `string` | If `webhook` | URL to invoke |
+| `webhook_payload` | `object` | No | JSON payload sent to the webhook |
+| `email_to` | `string` | If `email` | Recipient email address |
+| `email_subject` | `string` | If `email` | Email subject |
+| `email_body` | `string` | If `email` | Email body |
+
+---
+
+## Example: Cron Webhook
+
+```bash
+curl -X POST http://localhost:8080/jobs \
+  -H "X-API-Key: lfy_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name":"health-check",
+    "type":"webhook",
+    "schedule_type":"cron",
+    "cron_expression":"*/5 * * * *",
+    "webhook_url":"https://yourapp.com/health"
+  }'
+```
+
+---
+
+## Example: One-Time Email
+
+```bash
+curl -X POST http://localhost:8080/jobs \
+  -H "X-API-Key: lfy_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name":"welcome-email",
+    "type":"email",
+    "schedule_type":"one_time",
+    "run_at":"2026-08-01T09:00:00Z",
+    "email_to":"hello@example.com",
+    "email_subject":"Welcome",
+    "email_body":"Thanks for signing up."
+  }'
+```
+
+---
+
+## Successful Response
+
+**HTTP 201 Created**
+
+```json
+{
+  "id": "job_abc123",
+  "name": "weekly-digest",
+  "type": "webhook",
+  "schedule_type": "cron",
+  "cron_expression": "0 9 * * 1",
+  "status": "active",
+  "created_at": "2026-07-22T09:00:00Z"
+}
+```

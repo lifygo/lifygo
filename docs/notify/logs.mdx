@@ -1,0 +1,70 @@
+---
+title: "Email Logs"
+description: "GET /logs — View email delivery history"
+---
+
+# Email Logs
+
+`GET /logs`
+
+Returns a paginated history of emails sent using your API key.
+
+Each log contains recipient information, delivery status, timestamps, and any SMTP errors.
+
+---
+
+## Endpoint
+
+```http
+GET /logs
+```
+
+---
+
+## Request
+
+```bash
+curl "http://localhost:8080/logs?limit=10&offset=0" \
+  -H "X-API-Key: lfy_your_key"
+```
+
+---
+
+## Query Parameters
+
+| Parameter | Type | Default | Description |
+|------|------|------:|-------------|
+| `limit` | `int` | `10` | Number of results per page |
+| `offset` | `int` | `0` | Pagination offset |
+| `status` | `string` | — | Filter by `sent` or `failed` |
+
+---
+
+## Successful Response
+
+```json
+{
+  "logs": [
+    {
+      "id": "log_abc123",
+      "to": "hello@example.com",
+      "subject": "Welcome",
+      "status": "sent",
+      "error_message": null,
+      "sent_at": "2026-07-22T09:00:00Z"
+    }
+  ],
+  "total": 1,
+  "limit": 10,
+  "offset": 0
+}
+```
+
+---
+
+## Log Statuses
+
+| Status | Description |
+|------|-------------|
+| `sent` | Email was successfully delivered to the SMTP server |
+| `failed` | Sending failed. Check `error_message` for more information |

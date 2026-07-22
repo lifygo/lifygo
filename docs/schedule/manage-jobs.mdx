@@ -1,0 +1,73 @@
+---
+title: "Manage Jobs"
+description: "List, retrieve, and delete scheduled jobs"
+---
+
+# Manage Jobs
+
+Manage all scheduled jobs created using the LifyGo API.
+
+---
+
+## List Jobs
+
+`GET /jobs`
+
+Returns all scheduled jobs associated with your API key.
+
+```bash
+curl http://localhost:8080/jobs \
+  -H "X-API-Key: lfy_your_key"
+```
+
+### Response
+
+```json
+[
+  {
+    "id": "job_abc123",
+    "name": "weekly-digest",
+    "type": "webhook",
+    "schedule_type": "cron",
+    "cron_expression": "0 9 * * 1",
+    "status": "active",
+    "created_at": "2026-07-22T09:00:00Z"
+  }
+]
+```
+
+---
+
+## Get a Single Job
+
+`GET /jobs/{id}`
+
+```bash
+curl http://localhost:8080/jobs/job_abc123 \
+  -H "X-API-Key: lfy_your_key"
+```
+
+Returns the full configuration for the specified scheduled job.
+
+---
+
+## Delete a Job
+
+`DELETE /jobs/{id}`
+
+Deletes a scheduled job immediately.
+
+```bash
+curl -X DELETE http://localhost:8080/jobs/job_abc123 \
+  -H "X-API-Key: lfy_your_key"
+```
+
+### Response
+
+```json
+{
+  "message": "job deleted"
+}
+```
+
+> Deleted jobs cannot be recovered. Their execution history remains available in the execution logs.

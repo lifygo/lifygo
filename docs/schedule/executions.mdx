@@ -1,0 +1,74 @@
+---
+title: "Job Executions"
+description: "GET /jobs/{id}/executions — View execution history"
+---
+
+# Job Executions
+
+`GET /jobs/{id}/executions`
+
+Returns the execution history for a scheduled job.
+
+Each execution records whether the job succeeded or failed, how long it took, and any returned error.
+
+---
+
+## Endpoint
+
+```http
+GET /jobs/{id}/executions
+```
+
+---
+
+## Request
+
+```bash
+curl http://localhost:8080/jobs/job_abc123/executions \
+  -H "X-API-Key: lfy_your_key"
+```
+
+---
+
+## Query Parameters
+
+| Parameter | Type | Default | Description |
+|------|------|------:|-------------|
+| `limit` | `int` | `20` | Maximum number of results |
+| `offset` | `int` | `0` | Pagination offset |
+
+---
+
+## Successful Response
+
+```json
+[
+  {
+    "id": "exec_xyz",
+    "job_id": "job_abc123",
+    "status": "success",
+    "http_status": 200,
+    "duration_ms": 312,
+    "error_message": null,
+    "executed_at": "2026-07-22T09:00:00Z"
+  },
+  {
+    "id": "exec_xyz2",
+    "job_id": "job_abc123",
+    "status": "failed",
+    "http_status": 500,
+    "duration_ms": 89,
+    "error_message": "connection refused",
+    "executed_at": "2026-07-15T09:00:00Z"
+  }
+]
+```
+
+---
+
+## Execution Statuses
+
+| Status | Description |
+|------|-------------|
+| `success` | Job completed successfully |
+| `failed` | Job encountered an error. Check `error_message` for details. |
