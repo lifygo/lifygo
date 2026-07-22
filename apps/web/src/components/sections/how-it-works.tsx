@@ -1,6 +1,7 @@
 "use client"
 
-import { KeyRound, Lock, Copy, CheckCircle2, ShieldCheck, Terminal } from "lucide-react"
+import { useState } from "react"
+import { KeyRound, Lock, Copy, Check, ShieldCheck, Terminal, ArrowUpRight } from "lucide-react"
 
 function GithubIcon({ className }: { className?: string }) {
   return (
@@ -22,171 +23,262 @@ function GoogleIcon({ className }: { className?: string }) {
 }
 
 export function HowItWorks() {
+  const [copiedKey, setCopiedKey] = useState(false)
+  const [copiedCurl, setCopiedCurl] = useState(false)
+
+  const apiKey = "lfy_live_9a721c810de08e21c3b99"
+  const curlCommand = `curl -X POST http://localhost:8080/send \\
+  -H "X-API-Key: ${apiKey}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "to": "hello@example.com",
+    "subject": "Welcome aboard",
+    "body": "You are in."
+  }'`
+
+  const handleCopyKey = () => {
+    navigator.clipboard.writeText(apiKey)
+    setCopiedKey(true)
+    setTimeout(() => setCopiedKey(false), 2000)
+  }
+
+  const handleCopyCurl = () => {
+    navigator.clipboard.writeText(curlCommand)
+    setCopiedCurl(true)
+    setTimeout(() => setCopiedCurl(false), 2000)
+  }
+
   return (
-    <section id="how-it-works" className="relative w-full overflow-hidden bg-white px-6 py-24 font-sans antialiased md:py-32 rounded-t-[48px] md:rounded-t-[64px] text-neutral-900 shadow-[0_-12px_40px_rgba(0,0,0,0.03)] -mt-12 z-20 scroll-mt-20">
-
-      <div className="absolute inset-x-0 top-12 pointer-events-none select-none overflow-hidden flex justify-center z-0 opacity-[0.03]">
-        <h1 className="font-heading font-black tracking-tighter uppercase text-[24vw] leading-none text-neutral-950">
-          HOW
-        </h1>
-      </div>
-
-      <div className="relative mx-auto max-w-5xl z-10">
-        <div className="mb-24 md:mb-32 text-left max-w-2xl">
-          <h2 className="text-4xl font-black tracking-tight text-neutral-950 sm:text-5xl uppercase font-heading">
-            From zero to production in five minutes.
-          </h2>
-          <p className="mt-4 text-base leading-relaxed text-neutral-500">
-            No new infrastructure. No vendor accounts. Just your SMTP, one API key, and a curl command.
-          </p>
+    <section className="relative w-full bg-neutral-950 text-neutral-100 font-sans antialiased selection:bg-brand selection:text-white">
+      <div className="relative w-full min-h-[60vh] flex flex-col justify-end overflow-hidden border-b border-neutral-800/80 pt-24 pb-16 md:pb-24 px-6 md:px-12 lg:px-20">
+        <div className="absolute inset-0 z-0 select-none pointer-events-none">
+          <img
+            src="https://i.pinimg.com/736x/42/ff/64/42ff64e0090e1ef52c2b2d3ac9eec5b8.jpg"
+            alt=""
+            className="w-full h-full object-cover object-center opacity-70 mix-blend-luminosity grayscale"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/60 to-neutral-950/20" />
+          <div className="absolute inset-0 bg-gradient-to-r from-neutral-950/90 via-neutral-950/40 to-neutral-950/90" />
         </div>
 
-        <ol className="flex flex-col gap-24 relative">
+        <div className="relative z-10 max-w-5xl mx-auto w-full">
+          <h1 className="font-heading text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-white leading-[1.05] max-w-4xl drop-shadow-sm">
+            From zero to delivery in five minutes.
+          </h1>
+          
+          <p className="mt-6 text-lg sm:text-xl text-neutral-300 max-w-2xl leading-relaxed drop-shadow-sm">
+            Connect your SMTP server, generate an API key, and send your first email with a single curl command. No vendor accounts. No monthly fees.
+          </p>
+        </div>
+      </div>
 
-          <li className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12 items-center group">
-            <div className="lg:col-span-5 flex flex-col justify-center order-1">
+      <div className="relative z-10 w-full bg-neutral-900/50 py-24 px-6 md:px-12 lg:px-20">
+        <div className="max-w-5xl mx-auto flex flex-col gap-24 lg:gap-32">
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center">
+            <div className="lg:col-span-5 flex flex-col justify-center">
               <div className="flex items-center gap-3 mb-5">
-                <span className="font-mono text-xs font-bold tracking-widest bg-brand text-white px-3 py-1" style={{ borderRadius: '4px 0px 4px 0px' }}>
-                  01
-                </span>
-                <div className="h-px bg-neutral-200 flex-1" />
+                <div className="relative group inline-flex">
+                  <div className="absolute -inset-0.5 bg-brand/50 blur-sm rounded-[4px_0_4px_0] opacity-60 group-hover:opacity-100 transition duration-300" />
+                  <span className="relative flex items-center justify-center min-w-[2.5rem] h-7 px-3 bg-brand text-white font-mono text-xs font-black tracking-wider rounded-[4px_0_4px_0] shadow-lg shadow-brand/20 border border-white/10">
+                    01
+                  </span>
+                </div>
               </div>
-              <h3 className="text-2xl font-bold tracking-tight text-neutral-950">
+              <h2 className="font-heading text-2xl sm:text-3xl font-bold text-white tracking-tight">
                 Plug in your SMTP
-              </h3>
-              <p className="mt-3 text-sm leading-relaxed text-neutral-500">
-                Sign in with Google or GitHub. Add the SMTP credentials you already have — Gmail, Zoho, Resend, anything. Your password is encrypted with AES-256 and never leaves your control.
+              </h2>
+              <p className="mt-4 text-sm sm:text-base text-neutral-400 leading-relaxed">
+                Sign in with Google or GitHub, then add the SMTP credentials you already have. Gmail, Zoho, your hosting provider. Your password is encrypted with AES-256 and never stored in plain text.
               </p>
             </div>
 
-            <div className="lg:col-span-7 order-2">
-              <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm transition-all duration-300 group-hover:shadow-md">
-                <div className="border-b border-neutral-100 bg-neutral-50 px-5 py-3 flex items-center justify-between">
-                  <span className="text-xs font-mono tracking-wide text-neutral-400">dashboard / smtp</span>
-                  <span className="h-2 w-2 rounded-full bg-neutral-200" />
+            <div className="lg:col-span-7">
+              <div className="rounded-2xl border border-neutral-800 bg-neutral-900/80 p-6 sm:p-8 shadow-2xl backdrop-blur-sm transition-all duration-300 hover:border-neutral-700">
+                <div className="flex items-center justify-between pb-6 mb-6 border-b border-neutral-800">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-neutral-700" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-neutral-700" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-neutral-700" />
+                  </div>
+                  <span className="font-mono text-xs text-neutral-500">smtp settings</span>
                 </div>
-                <div className="flex flex-col gap-3 p-5">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <button className="flex items-center justify-center gap-2.5 rounded-lg border border-neutral-200 bg-white px-4 py-2.5 text-xs font-medium text-neutral-700 transition-colors hover:bg-neutral-50">
-                      <GoogleIcon className="h-4 w-4 text-neutral-400" />
-                      Continue with Google
+
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <button className="flex items-center justify-center gap-2.5 px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-950 text-xs font-medium text-neutral-300 hover:border-neutral-700 hover:text-white transition-all">
+                      <GoogleIcon className="w-4 h-4" />
+                      Google Workspace
                     </button>
-                    <button className="flex items-center justify-center gap-2.5 rounded-lg border border-neutral-200 bg-white px-4 py-2.5 text-xs font-medium text-neutral-700 transition-colors hover:bg-neutral-50">
-                      <GithubIcon className="h-4 w-4 text-neutral-400" />
-                      Continue with GitHub
+                    <button className="flex items-center justify-center gap-2.5 px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-950 text-xs font-medium text-neutral-300 hover:border-neutral-700 hover:text-white transition-all">
+                      <GithubIcon className="w-4 h-4" />
+                      GitHub
                     </button>
                   </div>
-                  <div className="flex items-center justify-between rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-2.5">
-                    <div className="flex items-center gap-2">
-                      <span className="h-1.5 w-1.5 rounded-full bg-brand" />
-                      <span className="font-mono text-xs text-neutral-600">smtp.gmail.com:587</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-xs text-neutral-400 font-mono">
-                      <Lock className="h-3 w-3" />
-                      AES-256
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </li>
 
-          <li className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12 items-center group">
-            <div className="lg:col-span-5 flex flex-col justify-center order-1 lg:order-2">
-              <div className="flex items-center gap-3 mb-5">
-                <span className="font-mono text-xs font-bold tracking-widest bg-brand text-white px-3 py-1" style={{ borderRadius: '4px 0px 4px 0px' }}>
-                  02
-                </span>
-                <div className="h-px bg-neutral-200 flex-1" />
-              </div>
-              <h3 className="text-2xl font-bold tracking-tight text-neutral-950">
-                Get one key. Use it everywhere.
-              </h3>
-              <p className="mt-3 text-sm leading-relaxed text-neutral-500">
-                A single API key unlocks email sending, OTP verification, and job scheduling. Add it to your environment and you are done. No SDK required.
-              </p>
-            </div>
-
-            <div className="lg:col-span-7 order-2 lg:order-1">
-              <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm transition-all duration-300 group-hover:shadow-md">
-                <div className="border-b border-neutral-100 bg-neutral-50 px-5 py-3 flex items-center justify-between">
-                  <span className="text-xs font-mono tracking-wide text-neutral-400">dashboard / api-keys</span>
-                  <span className="rounded-full bg-neutral-100 border border-neutral-200 px-2 py-0.5 text-[10px] font-mono text-neutral-500">live</span>
-                </div>
-                <div className="p-5">
-                  <div className="mb-3 text-xs text-neutral-400 font-mono">your key — shown once</div>
-                  <div className="flex items-center justify-between rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3">
-                    <div className="flex items-center gap-2.5 overflow-hidden">
-                      <KeyRound className="h-3.5 w-3.5 shrink-0 text-brand" />
-                      <span className="truncate font-mono text-xs text-neutral-700">
-                        lfy_4f9a721c810de08e21c3b...
+                  <div className="p-4 rounded-xl border border-neutral-800 bg-neutral-950/60 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-xs text-neutral-400">Host</span>
+                      <span className="font-mono text-xs text-white">smtp.gmail.com</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-xs text-neutral-400">Port</span>
+                      <span className="font-mono text-xs text-white">587</span>
+                    </div>
+                    <div className="flex items-center justify-between pt-2 border-t border-neutral-800/60">
+                      <span className="font-mono text-xs text-neutral-400">Encryption</span>
+                      <span className="flex items-center gap-1.5 font-mono text-xs text-emerald-400">
+                        <Lock className="w-3 h-3" /> AES-256
                       </span>
                     </div>
-                    <Copy className="h-3.5 w-3.5 shrink-0 text-neutral-400 cursor-pointer hover:text-neutral-900 transition-colors" />
-                  </div>
-                  <div className="mt-3 flex items-center gap-1.5 text-[11px] text-neutral-400 font-mono">
-                    <ShieldCheck className="h-3.5 w-3.5" />
-                    pass as <code className="text-brand bg-brand/5 border border-brand/10 px-1 rounded">X-API-Key</code> on every request
                   </div>
                 </div>
               </div>
             </div>
-          </li>
+          </div>
 
-          <li className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12 items-center group">
-            <div className="lg:col-span-5 flex flex-col justify-center order-1">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center">
+            <div className="lg:col-span-5 lg:order-2 flex flex-col justify-center">
               <div className="flex items-center gap-3 mb-5">
-                <span className="font-mono text-xs font-bold tracking-widest bg-brand text-white px-3 py-1" style={{ borderRadius: '4px 0px 4px 0px' }}>
-                  03
-                </span>
-                <div className="h-px bg-neutral-200 flex-1" />
+                <div className="relative group inline-flex">
+                  <div className="absolute -inset-0.5 bg-brand/50 blur-sm rounded-[4px_0_4px_0] opacity-60 group-hover:opacity-100 transition duration-300" />
+                  <span className="relative flex items-center justify-center min-w-[2.5rem] h-7 px-3 bg-brand text-white font-mono text-xs font-black tracking-wider rounded-[4px_0_4px_0] shadow-lg shadow-brand/20 border border-white/10">
+                    02
+                  </span>
+                </div>
               </div>
-              <h3 className="text-2xl font-bold tracking-tight text-neutral-950">
-                One call. Done.
-              </h3>
-              <p className="mt-3 text-sm leading-relaxed text-neutral-500">
-                POST to send. POST to schedule. Every delivery and execution is logged automatically. Check your dashboard — no extra setup needed.
+              <h2 className="font-heading text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                One key. Use it everywhere.
+              </h2>
+              <p className="mt-4 text-sm sm:text-base text-neutral-400 leading-relaxed">
+                A single API key covers email sending, OTP verification, and cron job scheduling. Drop it in your environment and you are done. No SDK required.
               </p>
             </div>
 
-            <div className="lg:col-span-7 order-2">
-              <div className="overflow-hidden rounded-xl border border-neutral-200 shadow-sm transition-all duration-300 group-hover:shadow-md">
-                <div className="border-b border-neutral-800 bg-neutral-900 px-5 py-3 flex items-center justify-between">
-                  <span className="text-xs font-mono text-neutral-500 flex items-center gap-1.5">
-                    <Terminal className="h-3.5 w-3.5" /> terminal
-                  </span>
-                  <span className="flex items-center gap-1.5 font-mono text-[11px] font-medium text-emerald-400">
-                    <CheckCircle2 className="h-3.5 w-3.5" />
-                    200 OK
+            <div className="lg:col-span-7 lg:order-1">
+              <div className="rounded-2xl border border-neutral-800 bg-neutral-900/80 p-6 sm:p-8 shadow-2xl backdrop-blur-sm transition-all duration-300 hover:border-neutral-700">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-2">
+                    <KeyRound className="w-4 h-4 text-brand" />
+                    <span className="font-mono text-xs text-neutral-400">Your API key</span>
+                  </div>
+                  <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/20">
+                    ACTIVE
                   </span>
                 </div>
-                <div className="bg-neutral-950 p-5">
-                  <pre className="overflow-x-auto font-mono text-xs leading-6 text-neutral-300">
+
+                <div className="relative flex items-center justify-between p-4 rounded-xl border border-neutral-800 bg-neutral-950 font-mono text-xs">
+                  <span className="text-neutral-200 truncate pr-4">{apiKey}</span>
+                  <button
+                    onClick={handleCopyKey}
+                    className="flex items-center gap-1.5 shrink-0 px-3 py-1.5 rounded-lg bg-neutral-800 hover:bg-brand text-neutral-300 hover:text-white transition-all text-xs"
+                  >
+                    {copiedKey ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-white" />
+                        <span className="text-white">Copied</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>Copy</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                <div className="mt-4 flex items-center gap-2 text-xs text-neutral-500">
+                  <ShieldCheck className="w-4 h-4 text-brand" />
+                  <span>Pass as <code className="text-neutral-300 font-mono">X-API-Key</code> on every request</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center">
+            <div className="lg:col-span-5 flex flex-col justify-center">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="relative group inline-flex">
+                  <div className="absolute -inset-0.5 bg-brand/50 blur-sm rounded-[4px_0_4px_0] opacity-60 group-hover:opacity-100 transition duration-300" />
+                  <span className="relative flex items-center justify-center min-w-[2.5rem] h-7 px-3 bg-brand text-white font-mono text-xs font-black tracking-wider rounded-[4px_0_4px_0] shadow-lg shadow-brand/20 border border-white/10">
+                    03
+                  </span>
+                </div>
+              </div>
+              <h2 className="font-heading text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                One call. Done.
+              </h2>
+              <p className="mt-4 text-sm sm:text-base text-neutral-400 leading-relaxed">
+                POST to send an email. POST to schedule a cron job. Every delivery and execution is logged automatically to your dashboard.
+              </p>
+              
+              <div className="mt-6 pt-6 border-t border-neutral-800">
+                <a
+                  href="https://docs.lifygo.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-brand hover:text-brand/80 transition-colors"
+                >
+                  Read the full API docs
+                  <ArrowUpRight className="w-4 h-4" />
+                </a>
+              </div>
+            </div>
+
+            <div className="lg:col-span-7">
+              <div className="rounded-2xl border border-neutral-800 bg-neutral-950 overflow-hidden shadow-2xl transition-all duration-300 hover:border-neutral-700">
+                <div className="flex items-center justify-between px-5 py-3.5 border-b border-neutral-800 bg-neutral-900/60">
+                  <div className="flex items-center gap-2 font-mono text-xs text-neutral-400">
+                    <Terminal className="w-4 h-4 text-brand" />
+                    <span>terminal</span>
+                  </div>
+                  <button
+                    onClick={handleCopyCurl}
+                    className="flex items-center gap-1.5 text-xs text-neutral-400 hover:text-white transition-colors"
+                  >
+                    {copiedCurl ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-brand" />
+                        <span className="text-brand">Copied</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>Copy</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                <div className="p-5 sm:p-6 overflow-x-auto font-mono text-xs sm:text-sm leading-relaxed text-neutral-300">
+                  <pre>
                     <code>
-                      <span className="text-neutral-500">curl </span>
-                      <span className="text-neutral-300">https://api.lifygo.com/send</span>{"\n"}
-                      <span className="text-neutral-500">  -H </span>
-                      <span className="text-emerald-400">"X-API-Key: lfy_your_key"</span>{"\n"}
-                      <span className="text-neutral-500">  -d </span>
-                      <span className="text-sky-400">{"'{"}</span>{"\n"}
-                      <span className="text-neutral-300">{"       \"to\": \"user@example.com\","}</span>{"\n"}
-                      <span className="text-neutral-300">{"       \"subject\": \"Welcome aboard\","}</span>{"\n"}
-                      <span className="text-neutral-300">{"       \"body\": \"You're in.\""}</span>{"\n"}
-                      <span className="text-sky-400">{"  }'"}</span>
+                      <span className="text-neutral-500">curl</span> -X POST http://localhost:8080/send \<br />
+                      {"  "}-H <span className="text-emerald-400">"X-API-Key: {apiKey}"</span> \<br />
+                      {"  "}-H <span className="text-emerald-400">"Content-Type: application/json"</span> \<br />
+                      {"  "}-d <span className="text-amber-300">{'{'}</span><br />
+                      {"    "}<span className="text-neutral-400">"to":</span> <span className="text-amber-200">"hello@example.com"</span>,<br />
+                      {"    "}<span className="text-neutral-400">"subject":</span> <span className="text-amber-200">"Welcome aboard"</span>,<br />
+                      {"    "}<span className="text-neutral-400">"body":</span> <span className="text-amber-200">"You are in."</span><br />
+                      {"  "}<span className="text-amber-300">{'}'}</span>
                     </code>
                   </pre>
                 </div>
-                <div className="border-t border-neutral-800 bg-neutral-900 px-5 py-3">
-                  <div className="flex items-center gap-2 text-[11px] text-neutral-500 font-mono">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    delivered · 14ms · logged to dashboard
+
+                <div className="flex items-center justify-between px-5 py-3 border-t border-neutral-800/80 bg-neutral-900/30 text-xs font-mono text-neutral-500">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <span>200 OK · 14ms</span>
                   </div>
+                  <a href="https://docs.lifygo.com" target="_blank" rel="noopener noreferrer" className="hover:text-neutral-300 transition-colors">
+                    docs.lifygo.com
+                  </a>
                 </div>
               </div>
             </div>
-          </li>
+          </div>
 
-        </ol>
+        </div>
       </div>
     </section>
   )

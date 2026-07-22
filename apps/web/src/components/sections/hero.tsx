@@ -89,7 +89,7 @@ export function Hero() {
         </div>
 
         <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-          {["Self host or try our demo", "Runs on a $6 VPS", "No per-email fees, ever"].map((item) => (
+          {["Self host or try our demo", "Runs on your VPS", "No per-email fees, ever"].map((item) => (
             <div key={item} className="flex items-center gap-1.5 text-sm text-neutral-400">
               <Check className="h-4 w-4 shrink-0 text-brand" aria-hidden="true" />
               <span>{item}</span>
