@@ -31,34 +31,34 @@
     {
       "group": "Getting Started",
       "pages": [
-        "introduction",
-        "quickstart",
-        "authentication"
+        "docs/introduction",
+        "docs/quickstart",
+        "docs/authentication"
       ]
     },
     {
       "group": "Notify",
       "pages": [
-        "notify/send-email",
-        "notify/send-otp",
-        "notify/verify-otp",
-        "notify/logs"
+        "docs/notify/send-email",
+        "docs/notify/send-otp",
+        "docs/notify/verify-otp",
+        "docs/notify/logs"
       ]
     },
     {
       "group": "Schedule",
       "pages": [
-        "schedule/create-job",
-        "schedule/manage-jobs",
-        "schedule/executions"
+        "docs/schedule/create-job",
+        "docs/schedule/manage-jobs",
+        "docs/schedule/executions"
       ]
     },
     {
       "group": "Guides",
       "pages": [
-        "guides/gmail-smtp",
-        "guides/self-hosting",
-        "guides/errors"
+        "docs/guides/gmail-smtp",
+        "docs/guides/self-hosting",
+        "docs/guides/errors"
       ]
     }
   ],
