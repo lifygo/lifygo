@@ -28,41 +28,23 @@
       "url": "https://github.com/lifygo/lifygo"
     }
   ],
-  "navigation": [
-    {
-      "group": "Getting Started",
-      "pages": [
-        "docs/introduction",
-        "docs/quickstart",
-        "docs/authentication"
-      ]
-    },
-    {
-      "group": "Notify",
-      "pages": [
-        "docs/notify/send-email",
-        "docs/notify/send-otp",
-        "docs/notify/verify-otp",
-        "docs/notify/logs"
-      ]
-    },
-    {
-      "group": "Schedule",
-      "pages": [
-        "docs/schedule/create-job",
-        "docs/schedule/manage-jobs",
-        "docs/schedule/executions"
-      ]
-    },
-    {
-      "group": "Guides",
-      "pages": [
-        "docs/guides/gmail-smtp",
-        "docs/guides/self-hosting",
-        "docs/guides/errors"
-      ]
-    }
-  ],
+  "navigation": {
+    "pages": [
+      "docs/introduction",
+      "docs/quickstart",
+      "docs/authentication",
+      "docs/notify/send-email",
+      "docs/notify/send-otp",
+      "docs/notify/verify-otp",
+      "docs/notify/logs",
+      "docs/schedule/create-job",
+      "docs/schedule/manage-jobs",
+      "docs/schedule/executions",
+      "docs/guides/gmail-smtp",
+      "docs/guides/self-hosting",
+      "docs/guides/errors"
+    ]
+  },
   "footerSocials": {
     "github": "https://github.com/lifygo/lifygo"
   }
