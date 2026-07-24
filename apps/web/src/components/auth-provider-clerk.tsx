@@ -14,6 +14,7 @@ function ClerkAuthInner({ children }: { children: React.ReactNode }) {
 
   const signOut = useCallback(async () => {
     await clerkSignOut();
+    window.location.href = "https://lifygo.com";
   }, [clerkSignOut]);
 
   const u =

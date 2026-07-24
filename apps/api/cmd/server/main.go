@@ -118,7 +118,12 @@ func main() {
 	r.Use(chiMiddleware.Timeout(30 * time.Second))
 
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000"},
+		AllowedOrigins: []string{
+			"http://localhost:3000",
+			"https://lifygo.com",
+			"https://www.lifygo.com",
+			"https://dashboard.lifygo.com",
+		},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Content-Type", "X-API-Key", "Authorization"},
 		AllowCredentials: true,

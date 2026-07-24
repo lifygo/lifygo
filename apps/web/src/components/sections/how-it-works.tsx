@@ -1,7 +1,15 @@
 "use client"
 
 import { useState } from "react"
-import { KeyRound, Lock, Copy, Check, ShieldCheck, Terminal, ArrowUpRight } from "lucide-react"
+import { Copy, Check, KeyRound, ShieldCheck, Terminal, Eye, EyeOff, Server, Lock, ArrowUpRight } from "lucide-react"
+
+function GoogleIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
+      <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 15.987 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" />
+    </svg>
+  )
+}
 
 function GithubIcon({ className }: { className?: string }) {
   return (
@@ -11,24 +19,8 @@ function GithubIcon({ className }: { className?: string }) {
   )
 }
 
-function GoogleIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
-      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
-      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.99.66-2.25 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0012 23z" />
-      <path d="M5.84 14.1A6.6 6.6 0 015.5 12c0-.73.13-1.44.34-2.1V7.06H2.18A11 11 0 001 12c0 1.77.42 3.45 1.18 4.94l3.66-2.84z" />
-      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1A11 11 0 002.18 7.06l3.66 2.84C6.71 7.3 9.14 5.38 12 5.38z" />
-    </svg>
-  )
-}
-
-export function HowItWorks() {
-  const [copiedKey, setCopiedKey] = useState(false)
-  const [copiedCurl, setCopiedCurl] = useState(false)
-
-  const apiKey = "lfy_live_9a721c810de08e21c3b99"
-  const curlCommand = `curl -X POST http://localhost:8080/send \\
-  -H "X-API-Key: ${apiKey}" \\
+const curlExample = `curl -X POST https://api.lifygo.com/send \\
+  -H "X-API-Key: lfy_your_key" \\
   -H "Content-Type: application/json" \\
   -d '{
     "to": "hello@example.com",
@@ -36,99 +28,117 @@ export function HowItWorks() {
     "body": "You are in."
   }'`
 
+export function HowItWorks() {
+  const [copiedKey, setCopiedKey] = useState(false)
+  const [copiedCurl, setCopiedCurl] = useState(false)
+  const [showKey, setShowKey] = useState(false)
+  const [selectedSmtp, setSelectedSmtp] = useState<"gmail" | "aws">("gmail")
+
+  const rawKey = "lfy_live_9a721c810de08e21c3b99"
+  const maskedKey = "lfy_live_••••••••••••••••••••"
+
   const handleCopyKey = () => {
-    navigator.clipboard.writeText(apiKey)
+    navigator.clipboard.writeText(rawKey)
     setCopiedKey(true)
     setTimeout(() => setCopiedKey(false), 2000)
   }
 
   const handleCopyCurl = () => {
-    navigator.clipboard.writeText(curlCommand)
+    navigator.clipboard.writeText(curlExample)
     setCopiedCurl(true)
     setTimeout(() => setCopiedCurl(false), 2000)
   }
 
   return (
-    <section className="relative w-full bg-neutral-950 text-neutral-100 font-sans antialiased selection:bg-brand selection:text-white">
-      <div className="relative w-full min-h-[60vh] flex flex-col justify-end overflow-hidden border-b border-neutral-800/80 pt-24 pb-16 md:pb-24 px-6 md:px-12 lg:px-20">
-        <div className="absolute inset-0 z-0 select-none pointer-events-none">
+    <section className="w-full font-sans antialiased bg-white">
+      
+      <div className="relative w-full bg-neutral-950 pt-32 pb-48 px-6 md:px-12 lg:px-20 overflow-hidden">
+        <div className="absolute inset-0 z-0 pointer-events-none select-none">
           <img
             src="https://i.pinimg.com/736x/42/ff/64/42ff64e0090e1ef52c2b2d3ac9eec5b8.jpg"
             alt=""
-            className="w-full h-full object-cover object-center opacity-70 mix-blend-luminosity grayscale"
+            className="w-full h-full object-cover object-center opacity-30 mix-blend-luminosity grayscale"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/60 to-neutral-950/20" />
-          <div className="absolute inset-0 bg-gradient-to-r from-neutral-950/90 via-neutral-950/40 to-neutral-950/90" />
+          <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/60 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-neutral-950/60 via-transparent to-neutral-950/60" />
         </div>
 
-        <div className="relative z-10 max-w-5xl mx-auto w-full">
-          <h1 className="font-heading text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-white leading-[1.05] max-w-4xl drop-shadow-sm">
+        <div className="relative z-10 max-w-5xl mx-auto w-full text-center md:text-left">
+          <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-white max-w-4xl leading-[1.05]">
             From zero to delivery in five minutes.
           </h1>
-          
-          <p className="mt-6 text-lg sm:text-xl text-neutral-300 max-w-2xl leading-relaxed drop-shadow-sm">
-            Connect your SMTP server, generate an API key, and send your first email with a single curl command. No vendor accounts. No monthly fees.
+          <p className="mt-6 text-lg sm:text-xl text-neutral-400 max-w-2xl leading-relaxed mx-auto md:mx-0">
+            Sign up free or self host on your own server. Connect your SMTP, generate an API key, and send your first email with a single curl command.
           </p>
         </div>
       </div>
 
-      <div className="relative z-10 w-full bg-neutral-900/50 py-24 px-6 md:px-12 lg:px-20">
-        <div className="max-w-5xl mx-auto flex flex-col gap-24 lg:gap-32">
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center">
+      <div className="relative z-20 w-full px-6 md:px-12 lg:px-20 pb-32 -mt-24 sm:-mt-32">
+        <div className="max-w-5xl mx-auto flex flex-col gap-12 sm:gap-16">
+          
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center bg-white rounded-2xl p-6 sm:p-10 border border-neutral-200 shadow-xl shadow-neutral-200/40">
             <div className="lg:col-span-5 flex flex-col justify-center">
-              <div className="flex items-center gap-3 mb-5">
-                <div className="relative group inline-flex">
-                  <div className="absolute -inset-0.5 bg-brand/50 blur-sm rounded-[4px_0_4px_0] opacity-60 group-hover:opacity-100 transition duration-300" />
-                  <span className="relative flex items-center justify-center min-w-[2.5rem] h-7 px-3 bg-brand text-white font-mono text-xs font-black tracking-wider rounded-[4px_0_4px_0] shadow-lg shadow-brand/20 border border-white/10">
-                    01
-                  </span>
-                </div>
-              </div>
-              <h2 className="font-heading text-2xl sm:text-3xl font-bold text-white tracking-tight">
+              <span className="inline-flex h-7 px-3 items-center justify-center font-mono text-xs font-black bg-brand text-white rounded-[4px_0_4px_0] mb-5 w-fit">
+                01
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-bold text-neutral-950 tracking-tight">
                 Plug in your SMTP
               </h2>
-              <p className="mt-4 text-sm sm:text-base text-neutral-400 leading-relaxed">
-                Sign in with Google or GitHub, then add the SMTP credentials you already have. Gmail, Zoho, your hosting provider. Your password is encrypted with AES-256 and never stored in plain text.
+              <p className="mt-4 text-sm sm:text-base text-neutral-600 leading-relaxed">
+                Sign in with Google or GitHub, then add your SMTP credentials. Your password is encrypted with AES-256 and never stored in plain text. Or skip this entirely and use our free hosted version.
               </p>
             </div>
 
             <div className="lg:col-span-7">
-              <div className="rounded-2xl border border-neutral-800 bg-neutral-900/80 p-6 sm:p-8 shadow-2xl backdrop-blur-sm transition-all duration-300 hover:border-neutral-700">
-                <div className="flex items-center justify-between pb-6 mb-6 border-b border-neutral-800">
+              <div className="rounded-xl border border-neutral-200 bg-neutral-50 overflow-hidden">
+                <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-200 bg-white">
                   <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-neutral-700" />
-                    <span className="w-2.5 h-2.5 rounded-full bg-neutral-700" />
-                    <span className="w-2.5 h-2.5 rounded-full bg-neutral-700" />
+                    <Server className="w-4 h-4 text-neutral-400" />
+                    <span className="font-mono text-xs text-neutral-700">smtp settings</span>
                   </div>
-                  <span className="font-mono text-xs text-neutral-500">smtp settings</span>
+                  <div className="flex bg-neutral-100 rounded-md p-0.5 border border-neutral-200">
+                    <button
+                      onClick={() => setSelectedSmtp("gmail")}
+                      className={`px-3 py-1 rounded-sm text-xs font-medium transition-all ${selectedSmtp === "gmail" ? "bg-white text-neutral-900 shadow-sm border border-neutral-200/50" : "text-neutral-500 hover:text-neutral-900"}`}
+                    >
+                      Gmail
+                    </button>
+                    <button
+                      onClick={() => setSelectedSmtp("aws")}
+                      className={`px-3 py-1 rounded-sm text-xs font-medium transition-all ${selectedSmtp === "aws" ? "bg-white text-neutral-900 shadow-sm border border-neutral-200/50" : "text-neutral-500 hover:text-neutral-900"}`}
+                    >
+                      AWS SES
+                    </button>
+                  </div>
                 </div>
 
-                <div className="space-y-4">
+                <div className="p-5 sm:p-6 space-y-5">
                   <div className="grid grid-cols-2 gap-3">
-                    <button className="flex items-center justify-center gap-2.5 px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-950 text-xs font-medium text-neutral-300 hover:border-neutral-700 hover:text-white transition-all">
+                    <a href="/sign-in" className="flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-lg border border-neutral-200 bg-white text-sm font-medium text-neutral-700 hover:border-brand/40 hover:text-neutral-900 transition-colors shadow-sm">
                       <GoogleIcon className="w-4 h-4" />
-                      Google Workspace
-                    </button>
-                    <button className="flex items-center justify-center gap-2.5 px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-950 text-xs font-medium text-neutral-300 hover:border-neutral-700 hover:text-white transition-all">
+                      Google
+                    </a>
+                    <a href="/sign-in" className="flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-lg border border-neutral-200 bg-white text-sm font-medium text-neutral-700 hover:border-brand/40 hover:text-neutral-900 transition-colors shadow-sm">
                       <GithubIcon className="w-4 h-4" />
                       GitHub
-                    </button>
+                    </a>
                   </div>
 
-                  <div className="p-4 rounded-xl border border-neutral-800 bg-neutral-950/60 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono text-xs text-neutral-400">Host</span>
-                      <span className="font-mono text-xs text-white">smtp.gmail.com</span>
+                  <div className="rounded-lg border border-neutral-200 bg-white p-4 space-y-3 font-mono text-sm shadow-sm">
+                    <div className="flex items-center justify-between border-b border-neutral-100 pb-2">
+                      <span className="text-neutral-400 text-xs">Host</span>
+                      <span className="text-neutral-900">
+                        {selectedSmtp === "gmail" ? "smtp.gmail.com" : "email-smtp.us-east-1.amazonaws.com"}
+                      </span>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono text-xs text-neutral-400">Port</span>
-                      <span className="font-mono text-xs text-white">587</span>
+                    <div className="flex items-center justify-between border-b border-neutral-100 pb-2">
+                      <span className="text-neutral-400 text-xs">Port</span>
+                      <span className="text-neutral-900">587</span>
                     </div>
-                    <div className="flex items-center justify-between pt-2 border-t border-neutral-800/60">
-                      <span className="font-mono text-xs text-neutral-400">Encryption</span>
-                      <span className="flex items-center gap-1.5 font-mono text-xs text-emerald-400">
-                        <Lock className="w-3 h-3" /> AES-256
+                    <div className="flex items-center justify-between pt-1">
+                      <span className="text-neutral-400 text-xs">Encryption</span>
+                      <span className="flex items-center gap-1.5 text-neutral-900">
+                        <Lock className="w-3.5 h-3.5 text-neutral-400" /> AES-256
                       </span>
                     </div>
                   </div>
@@ -137,101 +147,104 @@ export function HowItWorks() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center">
-            <div className="lg:col-span-5 lg:order-2 flex flex-col justify-center">
-              <div className="flex items-center gap-3 mb-5">
-                <div className="relative group inline-flex">
-                  <div className="absolute -inset-0.5 bg-brand/50 blur-sm rounded-[4px_0_4px_0] opacity-60 group-hover:opacity-100 transition duration-300" />
-                  <span className="relative flex items-center justify-center min-w-[2.5rem] h-7 px-3 bg-brand text-white font-mono text-xs font-black tracking-wider rounded-[4px_0_4px_0] shadow-lg shadow-brand/20 border border-white/10">
-                    02
-                  </span>
-                </div>
-              </div>
-              <h2 className="font-heading text-2xl sm:text-3xl font-bold text-white tracking-tight">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center bg-white rounded-2xl p-6 sm:p-10 border border-neutral-200 shadow-xl shadow-neutral-200/40">
+            <div className="lg:col-span-5 flex flex-col justify-center">
+              <span className="inline-flex h-7 px-3 items-center justify-center font-mono text-xs font-black bg-brand text-white rounded-[4px_0_4px_0] mb-5 w-fit">
+                02
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-bold text-neutral-950 tracking-tight">
                 One key. Use it everywhere.
               </h2>
-              <p className="mt-4 text-sm sm:text-base text-neutral-400 leading-relaxed">
+              <p className="mt-4 text-sm sm:text-base text-neutral-600 leading-relaxed">
                 A single API key covers email sending, OTP verification, and cron job scheduling. Drop it in your environment and you are done. No SDK required.
               </p>
             </div>
 
-            <div className="lg:col-span-7 lg:order-1">
-              <div className="rounded-2xl border border-neutral-800 bg-neutral-900/80 p-6 sm:p-8 shadow-2xl backdrop-blur-sm transition-all duration-300 hover:border-neutral-700">
+            <div className="lg:col-span-7">
+              <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-6 sm:p-8">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-2">
-                    <KeyRound className="w-4 h-4 text-brand" />
-                    <span className="font-mono text-xs text-neutral-400">Your API key</span>
+                    <KeyRound className="w-4 h-4 text-neutral-400" />
+                    <span className="font-mono text-sm text-neutral-900 font-medium">Your API key</span>
                   </div>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/20">
+                  <span className="px-2.5 py-1 rounded text-[10px] font-mono font-bold tracking-wider text-emerald-600 bg-emerald-500/10 border border-emerald-500/20">
                     ACTIVE
                   </span>
                 </div>
 
-                <div className="relative flex items-center justify-between p-4 rounded-xl border border-neutral-800 bg-neutral-950 font-mono text-xs">
-                  <span className="text-neutral-200 truncate pr-4">{apiKey}</span>
-                  <button
-                    onClick={handleCopyKey}
-                    className="flex items-center gap-1.5 shrink-0 px-3 py-1.5 rounded-lg bg-neutral-800 hover:bg-brand text-neutral-300 hover:text-white transition-all text-xs"
-                  >
-                    {copiedKey ? (
-                      <>
-                        <Check className="w-3.5 h-3.5 text-white" />
-                        <span className="text-white">Copied</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3.5 h-3.5" />
-                        <span>Copy</span>
-                      </>
-                    )}
-                  </button>
+                <div className="flex items-center justify-between p-4 rounded-lg border border-neutral-300 bg-white shadow-sm font-mono text-sm mb-4">
+                  <span className="text-neutral-900 select-all">
+                    {showKey ? rawKey : maskedKey}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setShowKey(!showKey)}
+                      className="p-2 rounded-md hover:bg-neutral-100 text-neutral-500 hover:text-neutral-900 transition-colors"
+                    >
+                      {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                    <button
+                      onClick={handleCopyKey}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-neutral-900 text-white hover:bg-neutral-800 transition-colors text-xs font-medium shadow-sm"
+                    >
+                      {copiedKey ? (
+                        <>
+                          <Check className="w-3.5 h-3.5" />
+                          <span>Copied</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>Copy</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
 
-                <div className="mt-4 flex items-center gap-2 text-xs text-neutral-500">
-                  <ShieldCheck className="w-4 h-4 text-brand" />
-                  <span>Pass as <code className="text-neutral-300 font-mono">X-API-Key</code> on every request</span>
+                <div className="flex items-start gap-3 p-4 rounded-lg border border-neutral-200 bg-white">
+                  <ShieldCheck className="w-4 h-4 text-brand shrink-0 mt-0.5" />
+                  <p className="text-xs text-neutral-600 leading-relaxed">
+                    Pass this as <code className="text-neutral-900 font-bold font-mono bg-neutral-100 px-1 py-0.5 rounded border border-neutral-200">X-API-Key</code> on every request. Never expose it in client-side code.
+                  </p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center">
-            <div className="lg:col-span-5 flex flex-col justify-center">
-              <div className="flex items-center gap-3 mb-5">
-                <div className="relative group inline-flex">
-                  <div className="absolute -inset-0.5 bg-brand/50 blur-sm rounded-[4px_0_4px_0] opacity-60 group-hover:opacity-100 transition duration-300" />
-                  <span className="relative flex items-center justify-center min-w-[2.5rem] h-7 px-3 bg-brand text-white font-mono text-xs font-black tracking-wider rounded-[4px_0_4px_0] shadow-lg shadow-brand/20 border border-white/10">
-                    03
-                  </span>
-                </div>
-              </div>
-              <h2 className="font-heading text-2xl sm:text-3xl font-bold text-white tracking-tight">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-start bg-white rounded-2xl p-6 sm:p-10 border border-neutral-200 shadow-xl shadow-neutral-200/40">
+            <div className="lg:col-span-5 flex flex-col justify-start">
+              <span className="inline-flex h-7 px-3 items-center justify-center font-mono text-xs font-black bg-brand text-white rounded-[4px_0_4px_0] mb-5 w-fit">
+                03
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-bold text-neutral-950 tracking-tight">
                 One call. Done.
               </h2>
-              <p className="mt-4 text-sm sm:text-base text-neutral-400 leading-relaxed">
-                POST to send an email. POST to schedule a cron job. Every delivery and execution is logged automatically to your dashboard.
+              <p className="mt-4 text-sm sm:text-base text-neutral-600 leading-relaxed">
+                POST to send an email. POST to schedule a cron job. Every delivery and execution is logged automatically to your dashboard. Need production reliability? Enable AWS EventBridge and jobs survive server restarts.
               </p>
               
-              <div className="mt-6 pt-6 border-t border-neutral-800">
+              <div className="mt-8 pt-6 border-t border-neutral-100">
                 <a
                   href="https://docs.lifygo.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-sm font-semibold text-brand hover:text-brand/80 transition-colors"
+                  className="group inline-flex items-center gap-2 text-sm font-bold text-brand hover:text-brand/80 transition-colors"
                 >
                   Read the full API docs
-                  <ArrowUpRight className="w-4 h-4" />
+                  <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                 </a>
               </div>
             </div>
 
             <div className="lg:col-span-7">
-              <div className="rounded-2xl border border-neutral-800 bg-neutral-950 overflow-hidden shadow-2xl transition-all duration-300 hover:border-neutral-700">
-                <div className="flex items-center justify-between px-5 py-3.5 border-b border-neutral-800 bg-neutral-900/60">
-                  <div className="flex items-center gap-2 font-mono text-xs text-neutral-400">
-                    <Terminal className="w-4 h-4 text-brand" />
-                    <span>terminal</span>
+              <div className="rounded-xl border border-neutral-800 bg-neutral-950 overflow-hidden shadow-2xl">
+                <div className="flex items-center justify-between px-5 py-3 border-b border-neutral-800 bg-neutral-900">
+                  <div className="flex items-center gap-2 text-neutral-400">
+                    <Terminal className="w-4 h-4" />
+                    <span className="font-mono text-xs">terminal</span>
                   </div>
+                  
                   <button
                     onClick={handleCopyCurl}
                     className="flex items-center gap-1.5 text-xs text-neutral-400 hover:text-white transition-colors"
@@ -250,29 +263,18 @@ export function HowItWorks() {
                   </button>
                 </div>
 
-                <div className="p-5 sm:p-6 overflow-x-auto font-mono text-xs sm:text-sm leading-relaxed text-neutral-300">
-                  <pre>
-                    <code>
-                      <span className="text-neutral-500">curl</span> -X POST http://localhost:8080/send \<br />
-                      {"  "}-H <span className="text-emerald-400">"X-API-Key: {apiKey}"</span> \<br />
-                      {"  "}-H <span className="text-emerald-400">"Content-Type: application/json"</span> \<br />
-                      {"  "}-d <span className="text-amber-300">{'{'}</span><br />
-                      {"    "}<span className="text-neutral-400">"to":</span> <span className="text-amber-200">"hello@example.com"</span>,<br />
-                      {"    "}<span className="text-neutral-400">"subject":</span> <span className="text-amber-200">"Welcome aboard"</span>,<br />
-                      {"    "}<span className="text-neutral-400">"body":</span> <span className="text-amber-200">"You are in."</span><br />
-                      {"  "}<span className="text-amber-300">{'}'}</span>
-                    </code>
+                <div className="p-5 sm:p-6 overflow-x-auto bg-neutral-950">
+                  <pre className="font-mono text-sm leading-relaxed text-neutral-200">
+                    <code>{curlExample}</code>
                   </pre>
                 </div>
 
-                <div className="flex items-center justify-between px-5 py-3 border-t border-neutral-800/80 bg-neutral-900/30 text-xs font-mono text-neutral-500">
+                <div className="flex items-center justify-between px-5 py-3 border-t border-neutral-800 bg-neutral-900/50 text-xs font-mono text-neutral-500">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                    <span>200 OK · 14ms</span>
+                    <span>200 OK</span>
                   </div>
-                  <a href="https://docs.lifygo.com" target="_blank" rel="noopener noreferrer" className="hover:text-neutral-300 transition-colors">
-                    docs.lifygo.com
-                  </a>
+                  <span>POST /send</span>
                 </div>
               </div>
             </div>

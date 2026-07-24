@@ -13,7 +13,7 @@ const SNIPPETS: Record<
 > = {
   email: {
     lines: [
-      { tokens: [{ text: "curl ", cls: "text-neutral-500" }, { text: "http://localhost:8080/send", cls: "text-neutral-200" }] },
+      { tokens: [{ text: "curl ", cls: "text-neutral-500" }, { text: "https://api.lifygo.com/send", cls: "text-neutral-200" }] },
       { tokens: [{ text: "  -H ", cls: "text-neutral-500" }, { text: '"X-API-Key: lfy_your_key"', cls: "text-emerald-400" }] },
       { tokens: [{ text: "  -d ", cls: "text-neutral-500" }, { text: "'{", cls: "text-sky-400" }] },
       { tokens: [{ text: '    "to": "hello@example.com",', cls: "text-sky-400" }] },
@@ -24,7 +24,7 @@ const SNIPPETS: Record<
   },
   cron: {
     lines: [
-      { tokens: [{ text: "curl ", cls: "text-neutral-500" }, { text: "http://localhost:8080/jobs", cls: "text-neutral-200" }] },
+      { tokens: [{ text: "curl ", cls: "text-neutral-500" }, { text: "https://api.lifygo.com/jobs", cls: "text-neutral-200" }] },
       { tokens: [{ text: "  -H ", cls: "text-neutral-500" }, { text: '"X-API-Key: lfy_your_key"', cls: "text-emerald-400" }] },
       { tokens: [{ text: "  -d ", cls: "text-neutral-500" }, { text: "'{", cls: "text-sky-400" }] },
       { tokens: [{ text: '    "name": "weekly-digest",', cls: "text-sky-400" }] },
@@ -61,15 +61,15 @@ export function Hero() {
 
       <div className="relative mx-auto max-w-6xl px-6 pb-20 pt-12 text-center md:pt-16">
         <h1 className="mx-auto max-w-4xl text-balance text-4xl font-semibold leading-[1.1] tracking-tight text-neutral-50 sm:text-5xl lg:text-6xl">
-          The simplest API for email,
+          Email and cron jobs,
           <br className="hidden sm:block" />
-          <span className="text-neutral-500">OTP verification, and job scheduling.</span>
+          <span className="text-neutral-500">without the monthly bill.</span>
         </h1>
 
         <p className="mx-auto mt-6 max-w-3xl text-balance text-base leading-relaxed text-neutral-400 sm:text-lg">
-          Bring your own SMTP. One API key to send transactional emails,
-          verify users with OTP codes, and schedule recurring webhooks or emails.
-          Open source, self-hostable, and free no per-email fees, ever.
+          Start free on our hosted version, or self-host on your own server.
+          Send transactional emails, verify OTPs, and schedule recurring webhooks.
+          One API key. No per-email fees. No credit card.
         </p>
 
         <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -89,7 +89,7 @@ export function Hero() {
         </div>
 
         <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-          {["Self host or try our demo", "Runs on your VPS", "No per-email fees, ever"].map((item) => (
+          {["Free hosted version", "Self-host on your own server", "No per-email fees, ever"].map((item) => (
             <div key={item} className="flex items-center gap-1.5 text-sm text-neutral-400">
               <Check className="h-4 w-4 shrink-0 text-brand" aria-hidden="true" />
               <span>{item}</span>
