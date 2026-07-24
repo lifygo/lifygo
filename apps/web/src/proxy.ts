@@ -7,6 +7,13 @@ const AUTH_PROVIDER = process.env.NEXT_PUBLIC_AUTH_PROVIDER || "clerk";
 const isProtectedRoute = createRouteMatcher(["/dashboard(.*)"]);
 
 function localMiddleware(req: NextRequest) {
+  const hostname = req.headers.get("host") || "";
+  const isDashboard = hostname.startsWith("dashboard.");
+
+  if (isDashboard && req.nextUrl.pathname === "/") {
+    return NextResponse.redirect(new URL("/sign-in", req.url));
+  }
+
   if (isProtectedRoute(req)) {
     const token = req.cookies.get("lifygo_token")?.value;
     if (!token) {
@@ -18,6 +25,13 @@ function localMiddleware(req: NextRequest) {
 }
 
 const clerkMw = clerkMiddleware(async (auth, req) => {
+  const hostname = req.headers.get("host") || "";
+  const isDashboard = hostname.startsWith("dashboard.");
+
+  if (isDashboard && req.nextUrl.pathname === "/") {
+    return NextResponse.redirect(new URL("/sign-in", req.url));
+  }
+
   if (isProtectedRoute(req)) {
     await auth.protect();
   }

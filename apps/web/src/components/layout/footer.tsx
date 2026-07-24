@@ -44,7 +44,7 @@ export function Footer() {
               />
             </Link>
             <p className="text-sm text-neutral-400 leading-relaxed max-w-xs">
-              Transactional email, OTP verification, and cron job scheduling. Self-hosted. Open source.
+              Transactional email, OTP verification, and cron job scheduling. Free hosted or self-host. Open source.
             </p>
           </div>
 
@@ -79,9 +79,18 @@ export function Footer() {
         </div>
 
         <div className="mt-10 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <span className="text-xs text-neutral-500">
-            &copy; {currentYear} LifyGo. Open source under AGPL-3.0.
-          </span>
+          <div className="flex items-center gap-4 text-xs text-neutral-500">
+            <span>&copy; {currentYear} LifyGo. Open source under AGPL-3.0.</span>
+            <span className="hidden sm:inline text-neutral-700">|</span>
+            <span className="hidden sm:inline">
+              Powered by{" "}
+              <a href="https://go.dev" target="_blank" rel="noopener noreferrer" className="text-neutral-400 hover:text-white transition-colors">Go</a>
+              {", "}
+              <a href="https://aws.amazon.com" target="_blank" rel="noopener noreferrer" className="text-neutral-400 hover:text-white transition-colors">AWS</a>
+              {", and "}
+              <a href="https://clerk.com" target="_blank" rel="noopener noreferrer" className="text-neutral-400 hover:text-white transition-colors">Clerk</a>
+            </span>
+          </div>
 
           <div className="flex items-center gap-3">
             <a 

@@ -5,13 +5,79 @@ description: "Get LifyGo running in under 5 minutes"
 
 # Quickstart
 
-Get LifyGo running locally in under 5 minutes.
+LifyGo can be used in two ways:
+
+- **Hosted Cloud** — Start sending emails in minutes with no infrastructure to manage.
+- **Self-Hosted** — Deploy LifyGo on your own server for complete control.
+
+Choose the option that best fits your needs.
+
+---
+
+# Hosted Cloud (2 Minutes)
+
+No installation. No server management. No credit card required.
+
+## 1. Create an Account
+
+Visit:
+
+```text
+https://lifygo.com/sign-up
+```
+
+Create your free LifyGo account.
+
+---
+
+## 2. Generate an API Key
+
+From the dashboard:
+
+1. Open **API Keys**
+2. Click **Generate Key**
+3. Copy the generated API key
+
+> The API key is shown only once.
+
+---
+
+## 3. Send Your First Email
+
+```bash
+curl -X POST https://api.lifygo.com/send \
+  -H "X-API-Key: lfy_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "to":"hello@example.com",
+    "subject":"Test",
+    "body":"It works."
+  }'
+```
+
+That's it!
+
+The same API key can also be used for:
+
+- Email API
+- OTP API
+- Scheduled Jobs (Cron)
+- Webhooks
+
+---
+
+# Self-Hosted (5 Minutes)
+
+Run LifyGo on your own infrastructure.
+
+---
 
 ## Prerequisites
 
-Before you begin, make sure you have the following installed:
+Install the following:
 
 - Docker
+- Docker Compose
 - Go 1.22+
 - Node.js 20+
 
@@ -28,7 +94,7 @@ cd lifygo
 
 ## 2. Start Infrastructure Services
 
-Start PostgreSQL and Redis using Docker Compose.
+Launch PostgreSQL and Redis.
 
 ```bash
 docker compose -f infra/docker/docker-compose.yml up -d
@@ -38,14 +104,12 @@ docker compose -f infra/docker/docker-compose.yml up -d
 
 ## 3. Configure the API
 
-Navigate to the API application and create your environment file.
-
 ```bash
 cd apps/api
 cp .env.example .env
 ```
 
-Update the `.env` file with the following values:
+Update your `.env` file:
 
 ```env
 AUTH_PROVIDER=local
@@ -68,7 +132,7 @@ migrate \
 
 ---
 
-## 5. Start the API Server
+## 5. Start the API
 
 ```bash
 go run ./cmd/server/main.go
@@ -84,7 +148,7 @@ http://localhost:8080
 
 ## 6. Start the Dashboard
 
-Open another terminal and run:
+Open another terminal:
 
 ```bash
 cd apps/web
@@ -103,18 +167,17 @@ http://localhost:3000
 
 ## 7. Configure SMTP
 
-1. Open the dashboard.
-2. Sign in.
-3. Navigate to **SMTP Settings**.
-4. Add your SMTP credentials.
+Open the dashboard and navigate to:
+
+**SMTP Settings**
+
+Enter your SMTP credentials.
 
 > SMTP passwords are encrypted using AES-256 before being stored.
 
 ---
 
 ## 8. Send Your First Email
-
-Once you've generated an API key from the dashboard, test your installation:
 
 ```bash
 curl -X POST http://localhost:8080/send \
@@ -127,18 +190,22 @@ curl -X POST http://localhost:8080/send \
   }'
 ```
 
-If everything is configured correctly, LifyGo will send your first email successfully.
+If the request succeeds, your LifyGo installation is ready.
 
 ---
 
-## Next Steps
+# Next Steps
 
-After completing the quickstart, you can explore:
+Continue with the rest of the documentation:
 
-- Authentication
-- Email API
-- OTP API
-- Cron Jobs
-- SMTP Management
-- Webhooks
-- SDKs
+- [Authentication](/docs/authentication)
+- [Send Email](/docs/notify/send-email)
+- [Send OTP](/docs/notify/send-otp)
+- [Verify OTP](/docs/notify/verify-otp)
+- [Create Scheduled Jobs](/docs/schedule/create-job)
+- [Manage Jobs](/docs/schedule/manage-jobs)
+- [Job Executions](/docs/schedule/executions)
+- [Email Logs](/docs/notify/logs)
+- [Gmail SMTP Setup](/docs/guides/gmail-smtp)
+- [Self-Hosting Guide](/docs/guides/self-hosting)
+- [Error Codes](/docs/guides/errors)

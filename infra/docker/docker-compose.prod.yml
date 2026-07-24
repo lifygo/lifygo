@@ -1,28 +1,6 @@
 name: lifygo-prod
 
-# -----------------------------------------------------------------------
-# Production Docker Compose for LifyGo
-#
-# Usage on the server:
-#   docker compose -f infra/docker/docker-compose.prod.yml up -d
-#
-# Environment variables are read from the host environment.
-# Copy .env.example to /etc/lifygo.env on the server and source it,
-# or pass them directly when starting the containers.
-#
-# Before first run:
-#   1. Build the API image: docker build -f infra/docker/api.Dockerfile -t lifygo-api:latest .
-#   2. Set all required environment variables on the host
-#   3. Run: docker compose -f infra/docker/docker-compose.prod.yml up -d
-# -----------------------------------------------------------------------
-
 services:
-
-  # -----------------------------------------------------------------------
-  # migrate — runs database migrations on startup then exits.
-  # The API service depends on this completing successfully before starting.
-  # This ensures the schema is always up to date before the API accepts requests.
-  # -----------------------------------------------------------------------
   migrate:
     image: lifygo-api:latest
     command: [
@@ -40,11 +18,6 @@ services:
       - lifygo_network
     restart: on-failure
 
-  # -----------------------------------------------------------------------
-  # api — the Go API server.
-  # Only port 8080 is exposed, and only to the internal Docker network.
-  # Nginx proxies external HTTPS traffic to this port.
-  # -----------------------------------------------------------------------
   api:
     image: lifygo-api:latest
     container_name: lifygo-api
@@ -79,11 +52,7 @@ services:
         limits:
           memory: 256M
 
-  # -----------------------------------------------------------------------
-  # postgres — PostgreSQL database.
-  # Port 5432 is NOT exposed to the host machine.
-  # Only services on lifygo_network can reach it.
-  # -----------------------------------------------------------------------
+
   postgres:
     image: postgres:16-alpine
     container_name: lifygo-postgres
@@ -106,11 +75,7 @@ services:
         limits:
           memory: 256M
 
-  # -----------------------------------------------------------------------
-  # redis — Redis cache for rate limiting and OTP storage.
-  # Port 6379 is NOT exposed to the host machine.
-  # Only services on lifygo_network can reach it.
-  # -----------------------------------------------------------------------
+
   redis:
     image: redis:7-alpine
     container_name: lifygo-redis
@@ -130,23 +95,12 @@ services:
         limits:
           memory: 96M
 
-# -----------------------------------------------------------------------
-# Networks
-# lifygo_network is an internal bridge network.
-# All inter-service communication happens here.
-# Nothing outside Docker can reach services on this network
-# except through explicitly published ports.
-# -----------------------------------------------------------------------
+
 networks:
   lifygo_network:
     driver: bridge
 
-# -----------------------------------------------------------------------
-# Volumes
-# Named volumes persist data across container restarts and rebuilds.
-# docker compose down does NOT delete these volumes.
-# docker compose down -v DOES delete them — never run this in production.
-# -----------------------------------------------------------------------
+
 volumes:
   postgres_data:
   redis_data:

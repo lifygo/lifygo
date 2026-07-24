@@ -1,22 +1,45 @@
 # LifyGo
 
-Transactional email, OTP verification, and job scheduling — self-hosted, single binary, your own SMTP.
+Transactional email, OTP verification, and job scheduling in one API.
 
-No per-email fees. No vendor lock-in. Just an API that does what it says.
+Start free on our hosted version, or self-host on your own server. Use your SMTP or ours. Either way, no per-email fees and no vendor lock-in.
 
 ---
 
 ## What it does
 
-Three things every SaaS backend needs, in one place:
+Three things every SaaS backend needs, in one API:
 
-- **Send transactional emails** through your own SMTP server
-- **Generate and verify OTP codes** with Redis-backed TTL
-- **Schedule recurring or one-shot jobs** that fire webhooks or emails
+- **Send transactional emails** — use your own SMTP or our free hosted version
+- **Generate and verify OTP codes** — 6-digit codes, 10-minute TTL, single use
+- **Schedule recurring jobs** — cron or one-time, webhooks or emails
+
+**Two ways to start:**
+
+| Free hosted | Self-hosted |
+|---|---|
+| Sign up at lifygo.com | Clone and run on your server |
+| Get an API key instantly | Connect your own SMTP |
+| Start sending in 2 minutes | Full control, zero external dependencies |
+| No credit card | AGPL-3.0, runs on any VPS |
 
 ---
 
 ## Quick start
+
+### Free hosted (2 minutes)
+
+1. Go to [lifygo.com/sign-up](https://lifygo.com/sign-up)
+2. Create an account
+3. Copy your API key
+4. Send your first email:
+
+```bash
+curl -X POST https://api.lifygo.com/send \
+  -H "X-API-Key: lfy_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{"to": "hello@example.com", "subject": "Test", "body": "It works."}'
+
 
 ```bash
 git clone https://github.com/lifygo/lifygo.git

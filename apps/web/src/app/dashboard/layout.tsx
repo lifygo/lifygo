@@ -42,7 +42,7 @@ export default function DashboardLayout({
         <Sidebar collapsible="icon" className="border-r border-border bg-card">
           <SidebarHeader className="relative flex h-14 flex-row items-center justify-between px-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
             <Link
-              href="/dashboard"
+              href="https://lifygo.com"
               className="flex items-center gap-2 rounded-md group-data-[collapsible=icon]:hidden"
             >
               <Mail className="h-5 w-5 shrink-0 text-brand" strokeWidth={2.5} />
