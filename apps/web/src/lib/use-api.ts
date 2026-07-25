@@ -1,10 +1,13 @@
 "use client";
 
-import { useAuth } from "@clerk/nextjs";
+import { useLifygoAuth } from "@/components/auth-provider";
 import { apiFetch } from "./api";
 
 export function useApi() {
-  const { getToken } = useAuth();
+  // Use the configured auth provider (local or Clerk) instead of coupling
+  // API calls to Clerk. This is important for local development, where the
+  // app is wrapped in LocalAuthProvider rather than ClerkProvider.
+  const { getToken } = useLifygoAuth();
 
   async function call<T>(path: string, options: RequestInit = {}): Promise<T> {
     const token = await getToken();

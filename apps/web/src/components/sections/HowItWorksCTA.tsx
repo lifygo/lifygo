@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { ArrowRight } from "lucide-react"
 
 const steps = [
@@ -28,12 +29,16 @@ export function HowItWorksCTA() {
   return (
     <section className="w-full bg-white text-neutral-900 font-sans antialiased pt-12 pb-24 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Banner CTA Box */}
         <div className="relative rounded-3xl bg-neutral-100/80 overflow-hidden min-h-[460px] flex flex-col md:flex-row items-stretch border border-neutral-200/80 shadow-sm">
           <div className="relative md:w-1/2 w-full min-h-[300px] md:min-h-full">
-            <img
+            <Image
               src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=1200&auto=format&fit=crop"
               alt="Developer working on laptop"
-              className="absolute inset-0 w-full h-full object-cover object-top"
+              fill
+              sizes="(max-width: 768px) 100vw, 50vw"
+              className="object-cover object-top"
+              priority
             />
             <div className="absolute inset-0 bg-gradient-to-t from-neutral-100/90 via-transparent to-transparent md:bg-gradient-to-r md:from-transparent md:to-neutral-100/90" />
           </div>
@@ -57,6 +62,7 @@ export function HowItWorksCTA() {
           </div>
         </div>
 
+        {/* Overlapping Step Cards */}
         <div className="relative z-20 -mt-12 sm:-mt-20 px-2 sm:px-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6">
             {steps.map((step, index) => (

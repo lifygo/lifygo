@@ -9,20 +9,21 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { 
-  Send, 
   Mail, 
   KeyRound, 
+  Send, 
+  Terminal, 
   AlertCircle, 
   CheckCircle2, 
-  Terminal, 
-  ShieldCheck,
-  Clock 
+  ShieldCheck, 
+  Clock, 
+  Loader2,
+  RotateCcw
 } from "lucide-react"
 
 export default function SendPage() {
   const { call } = useApi()
 
-  // Send email state
   const [emailForm, setEmailForm] = useState({
     to: "",
     subject: "",
@@ -32,7 +33,6 @@ export default function SendPage() {
   const [emailLoading, setEmailLoading] = useState(false)
   const [emailError, setEmailError] = useState("")
 
-  // OTP state
   const [otpTo, setOtpTo] = useState("")
   const [otpCode, setOtpCode] = useState("")
   const [otpSent, setOtpSent] = useState<SendOtpResponse | null>(null)
@@ -94,218 +94,241 @@ export default function SendPage() {
   }
 
   return (
-    <div className="max-w-4xl text-foreground">
-      {/* Header Context */}
-      <div className="flex flex-col gap-1 mb-8">
-        <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground uppercase tracking-widest">
-          <Send className="h-3.5 w-3.5 text-brand" />
-          API Playground
-        </div>
-        <h1 className="font-heading text-3xl font-black text-foreground uppercase tracking-tight mt-1">
-          Send Test
-        </h1>
-        <p className="text-sm leading-relaxed text-muted-foreground max-w-xl mt-1">
-          Simulate manual API transaction triggers. Run raw tests to guarantee your server routing parameters and authentication instances perform optimally.
+    <div className="mx-auto w-full max-w-5xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
+      <div className="space-y-1.5">
+        <h1 className="text-xl font-semibold tracking-tight text-foreground">API Playground</h1>
+        <p className="text-sm text-muted-foreground">
+          Simulate email dispatches and test authentication workflows in real-time.
         </p>
       </div>
 
-      <Tabs defaultValue="email" className="w-full">
-        <TabsList className="inline-flex bg-muted p-1 rounded-md h-10 mb-8 border border-border">
-          <TabsTrigger value="email" className="text-xs font-medium gap-2 px-4 data-[state=active]:bg-background data-[state=active]:text-foreground">
-            <Mail className="h-4 w-4" /> Standard Mail Dispatch
+      <Tabs defaultValue="email" className="w-full space-y-6">
+        <TabsList className="h-9 w-fit rounded-lg border border-border bg-muted/40 p-1">
+          <TabsTrigger value="email" className="h-7 gap-2 px-3 text-xs font-medium">
+            <Mail className="h-3.5 w-3.5 text-muted-foreground" />
+            Transactional Email
           </TabsTrigger>
-          <TabsTrigger value="otp" className="text-xs font-medium gap-2 px-4 data-[state=active]:bg-background data-[state=active]:text-foreground">
-            <KeyRound className="h-4 w-4" /> Secure OTP Gateway
+          <TabsTrigger value="otp" className="h-7 gap-2 px-3 text-xs font-medium">
+            <KeyRound className="h-3.5 w-3.5 text-muted-foreground" />
+            OTP Verification
           </TabsTrigger>
         </TabsList>
 
-        {/* Send Email View */}
-        <TabsContent value="email" className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-none">
-          <div 
-            style={{ borderRadius: "12px 0px 12px 12px" }}
-            className="border border-border bg-card p-6 shadow-xs relative overflow-hidden lg:col-span-7 flex flex-col gap-5"
-          >
-            <div className="flex flex-col gap-1.5">
-              <Label className="text-xs font-mono uppercase tracking-wider text-muted-foreground font-bold">
-                Recipient (To)
-              </Label>
-              <Input
-                placeholder="recipient@example.com"
-                value={emailForm.to}
-                onChange={(e) => setEmailForm((p) => ({ ...p, to: e.target.value }))}
-                className="bg-muted/30 border-border focus-visible:ring-brand text-sm text-foreground"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <Label className="text-xs font-mono uppercase tracking-wider text-muted-foreground font-bold">
-                Subject
-              </Label>
-              <Input
-                placeholder="Hello from LifyGo Pipeline"
-                value={emailForm.subject}
-                onChange={(e) => setEmailForm((p) => ({ ...p, subject: e.target.value }))}
-                className="bg-muted/30 border-border focus-visible:ring-brand text-sm font-medium text-foreground"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <Label className="text-xs font-mono uppercase tracking-wider text-muted-foreground font-bold">
-                Body Plaintext Content
-              </Label>
-              <Input
-                placeholder="This is a secure manual routing execution payload."
-                value={emailForm.body}
-                onChange={(e) => setEmailForm((p) => ({ ...p, body: e.target.value }))}
-                className="bg-muted/30 border-border focus-visible:ring-brand text-sm text-foreground"
-              />
-            </div>
-
-            <Button
-              onClick={handleSendEmail}
-              disabled={emailLoading || !emailForm.to || !emailForm.subject || !emailForm.body}
-              className="mt-2 bg-foreground text-background hover:bg-foreground/90 transition-colors text-xs font-medium h-10 shadow-xs"
-            >
-              {emailLoading ? "Routing Transaction..." : "Fire Test Transaction"}
-            </Button>
-          </div>
-
-          {/* Response Console Layer */}
-          <div className="lg:col-span-5 flex flex-col gap-4">
-            <div className="flex items-center gap-2 border-b border-border pb-2.5">
-              <Terminal className="h-4 w-4 text-muted-foreground" />
-              <h2 className="font-heading font-bold text-foreground text-xs uppercase tracking-wider">
-                Instance Output Stream
-              </h2>
-            </div>
-
-            {emailError && (
-              <div className="flex items-start gap-3 rounded-md bg-destructive/10 border border-destructive/20 p-4 text-sm text-destructive">
-                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                <div className="font-mono text-xs">{emailError}</div>
+        <TabsContent value="email" className="m-0">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-start">
+            <div className="space-y-4 rounded-lg border border-border bg-card p-6 shadow-sm lg:col-span-7">
+              <div className="space-y-2">
+                <Label htmlFor="email-to" className="text-xs font-medium text-muted-foreground">
+                  Recipient
+                </Label>
+                <Input
+                  id="email-to"
+                  placeholder="recipient@example.com"
+                  value={emailForm.to}
+                  onChange={(e) => setEmailForm((p) => ({ ...p, to: e.target.value }))}
+                  className="h-9 bg-transparent"
+                  disabled={emailLoading}
+                />
               </div>
-            )}
 
-            {emailResult ? (
-              <div className="flex items-start gap-3 rounded-md bg-emerald-500/10 border border-emerald-500/20 p-4 text-sm text-emerald-500">
-                <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5" />
-                <div>
-                  <h5 className="font-semibold tracking-tight text-xs text-foreground">Transaction Dispatched</h5>
-                  <div className="mt-1 font-mono text-[11px] bg-card/60 border border-emerald-500/30 px-1.5 py-0.5 rounded text-emerald-500 w-fit">
-                    log_id: {emailResult.log_id}
+              <div className="space-y-2">
+                <Label htmlFor="email-subject" className="text-xs font-medium text-muted-foreground">
+                  Subject
+                </Label>
+                <Input
+                  id="email-subject"
+                  placeholder="Test Email Subject"
+                  value={emailForm.subject}
+                  onChange={(e) => setEmailForm((p) => ({ ...p, subject: e.target.value }))}
+                  className="h-9 bg-transparent"
+                  disabled={emailLoading}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email-body" className="text-xs font-medium text-muted-foreground">
+                  Message Body
+                </Label>
+                <Input
+                  id="email-body"
+                  placeholder="Enter message body text..."
+                  value={emailForm.body}
+                  onChange={(e) => setEmailForm((p) => ({ ...p, body: e.target.value }))}
+                  className="h-9 bg-transparent"
+                  disabled={emailLoading}
+                />
+              </div>
+
+              <Button
+                onClick={handleSendEmail}
+                disabled={emailLoading || !emailForm.to || !emailForm.subject || !emailForm.body}
+                className="h-9 w-full text-xs font-medium"
+              >
+                {emailLoading ? (
+                  <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Send className="mr-2 h-3.5 w-3.5" />
+                )}
+                Send Test Email
+              </Button>
+            </div>
+
+            <div className="space-y-4 lg:col-span-5">
+              <div className="flex items-center gap-2 border-b border-border pb-2">
+                <Terminal className="h-3.5 w-3.5 text-muted-foreground" />
+                <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  Response Stream
+                </h2>
+              </div>
+
+              {emailError && (
+                <div className="flex items-start gap-3 rounded-md border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-600 dark:text-red-400">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                  <p className="font-mono text-xs leading-relaxed">{emailError}</p>
+                </div>
+              )}
+
+              {emailResult ? (
+                <div className="flex items-start gap-3 rounded-md border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-600 dark:text-emerald-400">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium">Email sent successfully</p>
+                    <p className="font-mono text-xs text-emerald-700/80 dark:text-emerald-300/80">
+                      log_id: {emailResult.log_id}
+                    </p>
                   </div>
                 </div>
-              </div>
-            ) : !emailError ? (
-              <div className="border border-dashed border-border bg-muted/20 rounded-lg p-8 text-center text-xs font-mono text-muted-foreground">
-                Awaiting dispatch initiation...
-              </div>
-            ) : null}
+              ) : !emailError ? (
+                <div className="flex h-32 flex-col items-center justify-center rounded-lg border border-dashed border-border bg-transparent text-xs text-muted-foreground">
+                  Awaiting dispatch request...
+                </div>
+              ) : null}
+            </div>
           </div>
         </TabsContent>
 
-        {/* OTP Verification View */}
-        <TabsContent value="otp" className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-none">
-          <div 
-            style={{ borderRadius: "12px 0px 12px 12px" }}
-            className="border border-border bg-card p-6 shadow-xs relative overflow-hidden lg:col-span-7 flex flex-col gap-5"
-          >
-            <div className="flex flex-col gap-1.5">
-              <Label className="text-xs font-mono uppercase tracking-wider text-muted-foreground font-bold">
-                Recipient Target Email
-              </Label>
-              <Input
-                placeholder="auth-user@example.com"
-                value={otpTo}
-                onChange={(e) => setOtpTo(e.target.value)}
-                disabled={!!otpSent}
-                className="bg-muted/30 border-border focus-visible:ring-brand text-sm text-foreground"
-              />
-            </div>
+        <TabsContent value="otp" className="m-0">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-start">
+            <div className="space-y-4 rounded-lg border border-border bg-card p-6 shadow-sm lg:col-span-7">
+              <div className="space-y-2">
+                <Label htmlFor="otp-to" className="text-xs font-medium text-muted-foreground">
+                  Recipient Target Email
+                </Label>
+                <Input
+                  id="otp-to"
+                  placeholder="user@example.com"
+                  value={otpTo}
+                  onChange={(e) => setOtpTo(e.target.value)}
+                  disabled={!!otpSent || otpLoading}
+                  className="h-9 bg-transparent"
+                />
+              </div>
 
-            {!otpSent ? (
-              <Button
-                onClick={handleSendOtp}
-                disabled={otpLoading || !otpTo}
-                className="mt-2 bg-foreground text-background hover:bg-foreground/90 transition-colors text-xs font-medium h-10 shadow-xs"
-              >
-                {otpLoading ? "Generating Token..." : "Issue Verification Token"}
-              </Button>
-            ) : (
-              <div className="mt-2 pt-4 border-t border-border flex flex-col gap-5 animate-none">
-                <div className="flex flex-col gap-1.5">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-xs font-mono uppercase tracking-wider text-muted-foreground font-bold">
-                      Enter 6-Digit Secure OTP
-                    </Label>
-                    <span 
-                      onClick={() => { setOtpSent(null); setOtpCode(""); setOtpResult(null); }}
-                      className="text-[10px] font-mono text-brand hover:underline cursor-pointer"
-                    >
-                      Reset Gateway
-                    </span>
-                  </div>
-                  <Input
-                    placeholder="000000"
-                    value={otpCode}
-                    maxLength={6}
-                    onChange={(e) => setOtpCode(e.target.value)}
-                    className="bg-muted/30 border-border focus-visible:ring-brand tracking-widest text-center font-mono text-base font-bold text-foreground"
-                  />
-                </div>
-
+              {!otpSent ? (
                 <Button
-                  onClick={handleVerifyOtp}
-                  disabled={verifyLoading || otpCode.length !== 6 || !!otpResult}
-                  className="bg-foreground text-background hover:bg-foreground/90 transition-colors text-xs font-medium h-10 shadow-xs"
+                  onClick={handleSendOtp}
+                  disabled={otpLoading || !otpTo.trim()}
+                  className="h-9 w-full text-xs font-medium"
                 >
-                  {verifyLoading ? "Validating Cryptographic Node..." : "Verify Token Authentication"}
+                  {otpLoading ? (
+                    <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <KeyRound className="mr-2 h-3.5 w-3.5" />
+                  )}
+                  Send Verification Code
                 </Button>
-              </div>
-            )}
-          </div>
+              ) : (
+                <div className="space-y-4 pt-2">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="otp-code" className="text-xs font-medium text-muted-foreground">
+                        6-Digit Code
+                      </Label>
+                      <button
+                        onClick={() => {
+                          setOtpSent(null)
+                          setOtpCode("")
+                          setOtpResult(null)
+                          setOtpError("")
+                        }}
+                        className="inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                      >
+                        <RotateCcw className="h-3 w-3" />
+                        Reset
+                      </button>
+                    </div>
+                    <Input
+                      id="otp-code"
+                      placeholder="000000"
+                      value={otpCode}
+                      maxLength={6}
+                      onChange={(e) => setOtpCode(e.target.value)}
+                      className="h-9 bg-transparent font-mono text-center tracking-widest"
+                      disabled={verifyLoading || !!otpResult}
+                    />
+                  </div>
 
-          {/* OTP Console Output Layer */}
-          <div className="lg:col-span-5 flex flex-col gap-4">
-            <div className="flex items-center gap-2 border-b border-border pb-2.5">
-              <Terminal className="h-4 w-4 text-muted-foreground" />
-              <h2 className="font-heading font-bold text-foreground text-xs uppercase tracking-wider">
-                Auth Channel Status
-              </h2>
+                  <Button
+                    onClick={handleVerifyOtp}
+                    disabled={verifyLoading || otpCode.length !== 6 || !!otpResult}
+                    className="h-9 w-full text-xs font-medium"
+                  >
+                    {verifyLoading ? (
+                      <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <ShieldCheck className="mr-2 h-3.5 w-3.5" />
+                    )}
+                    Verify Code
+                  </Button>
+                </div>
+              )}
             </div>
 
-            {otpError && (
-              <div className="flex items-start gap-3 rounded-md bg-destructive/10 border border-destructive/20 p-4 text-sm text-destructive">
-                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                <div className="font-mono text-xs">{otpError}</div>
+            <div className="space-y-4 lg:col-span-5">
+              <div className="flex items-center gap-2 border-b border-border pb-2">
+                <Terminal className="h-3.5 w-3.5 text-muted-foreground" />
+                <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  Authentication Status
+                </h2>
               </div>
-            )}
 
-            {otpSent && !otpResult && (
-              <div className="flex items-start gap-3 rounded-md bg-amber-500/10 border border-amber-500/20 p-4 text-sm text-amber-500">
-                <Clock className="h-4 w-4 shrink-0 mt-0.5" />
-                <div className="text-xs">
-                  <span className="font-semibold block text-foreground">Secure Token Dispatched</span>
-                  Expires at <span className="font-mono font-bold">{new Date(otpSent.expires_at).toLocaleTimeString()}</span>
+              {otpError && (
+                <div className="flex items-start gap-3 rounded-md border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-600 dark:text-red-400">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                  <p className="font-mono text-xs leading-relaxed">{otpError}</p>
                 </div>
-              </div>
-            )}
+              )}
 
-            {otpResult && (
-              <div className="flex items-start gap-3 rounded-md bg-emerald-500/10 border border-emerald-500/20 p-4 text-sm text-emerald-500">
-                <ShieldCheck className="h-4 w-4 shrink-0 mt-0.5" />
-                <div>
-                  <h5 className="font-semibold tracking-tight text-xs text-foreground">Identity Authenticated</h5>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">Handshake signature validated successfully.</p>
+              {otpSent && !otpResult && !otpError && (
+                <div className="flex items-start gap-3 rounded-md border border-amber-500/20 bg-amber-500/10 p-4 text-xs text-amber-800 dark:text-amber-300">
+                  <Clock className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                  <div>
+                    <p className="font-medium">Verification Code Sent</p>
+                    <p className="mt-0.5 text-amber-700/80 dark:text-amber-400/80">
+                      Expires at {new Date(otpSent.expires_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {!otpSent && !otpError && (
-              <div className="border border-dashed border-border bg-muted/20 rounded-lg p-8 text-center text-xs font-mono text-muted-foreground">
-                Awaiting token handshake generation...
-              </div>
-            )}
+              {otpResult && (
+                <div className="flex items-start gap-3 rounded-md border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-600 dark:text-emerald-400">
+                  <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />
+                  <div>
+                    <p className="text-xs font-medium">OTP Verified</p>
+                    <p className="text-xs text-emerald-700/80 dark:text-emerald-300/80">
+                      Identity token authenticated successfully.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {!otpSent && !otpError && (
+                <div className="flex h-32 flex-col items-center justify-center rounded-lg border border-dashed border-border bg-transparent text-xs text-muted-foreground">
+                  Awaiting OTP dispatch...
+                </div>
+              )}
+            </div>
           </div>
         </TabsContent>
       </Tabs>

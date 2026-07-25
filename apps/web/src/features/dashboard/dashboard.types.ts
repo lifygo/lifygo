@@ -1,5 +1,6 @@
 import type { EmailLog } from "@/features/logs/logs.types";
 import type { Job } from "@/features/jobs";
+import type { JobExecution } from "@/features/jobs";
 
 export interface DashboardStats {
   total_emails_sent: number;
@@ -10,4 +11,5 @@ export interface DashboardStats {
   has_smtp_config: boolean;
   recent_email_logs: EmailLog[];
   recent_jobs: Job[];
+  recent_job_executions: JobExecution[];
 }

@@ -1,53 +1,49 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useApi } from "@/lib/use-api"
 import { ENDPOINTS } from "@/lib/endpoints"
 import type { ApiKey, ApiKeyResponse } from "@/features/api-keys"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Key, AlertCircle, PlusCircle, Trash2, KeyRound, Clock } from "lucide-react"
+import { AlertCircle, Trash2, Loader2, Copy, Check } from "lucide-react"
 
 export default function ApiKeysPage() {
   const { call } = useApi()
   const [name, setName] = useState("")
-  const [keys, setKeys] = useState<ApiKey[]>([]);
+  const [keys, setKeys] = useState<ApiKey[]>([])
   const [newKey, setNewKey] = useState<ApiKeyResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [deleting, setDeleting] = useState<string | null>(null)
   const [error, setError] = useState("")
+  const [copied, setCopied] = useState(false)
+
+  const fetchKeys = useCallback(async () => {
+    try {
+      const data = await call<ApiKey[]>(ENDPOINTS.API_KEYS.LIST)
+      setKeys(data)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load keys")
+    }
+  }, [call])
 
   useEffect(() => {
-    let cancelled = false
-
-    async function fetchKeys() {
-      try {
-        const data = await call<ApiKey[]>(ENDPOINTS.API_KEYS.LIST)
-        if (!cancelled) setKeys(data)
-      } catch (err) {
-        if (!cancelled)
-          setError(err instanceof Error ? err.message : "Failed to load keys")
-      }
-    }
-
     fetchKeys()
-    return () => { cancelled = true }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [fetchKeys])
 
   async function handleCreate() {
+    if (!name.trim()) return
     setError("")
     setLoading(true)
+    setCopied(false)
     try {
       const created = await call<ApiKeyResponse>(ENDPOINTS.API_KEYS.CREATE, {
         method: "POST",
-        body: JSON.stringify({ name }),
+        body: JSON.stringify({ name: name.trim() }),
       })
       setNewKey(created)
       setName("")
-      const data = await call<ApiKey[]>(ENDPOINTS.API_KEYS.LIST)
-      setKeys(data)
+      await fetchKeys()
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create key")
     } finally {
@@ -68,139 +64,152 @@ export default function ApiKeysPage() {
     }
   }
 
+  const handleCopy = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch (err) {
+      console.error("Failed to copy text")
+    }
+  }
+
   return (
-    <div className="max-w-4xl text-foreground">
-      {/* Header Info Block */}
-      <div className="flex flex-col gap-1 mb-8">
-        <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground uppercase tracking-widest">
-          <Key className="h-3.5 w-3.5 text-brand" />
-          Access Credentials Token Manager
-        </div>
-        <h1 className="font-heading text-3xl font-black text-foreground uppercase tracking-tight mt-1">
-          API Keys
-        </h1>
-        <p className="text-sm leading-relaxed text-muted-foreground max-w-xl mt-1">
-          Authenticate programmatic developer payload loops. Pass these secure tokens inside your request headers to unlock LifyGo server actions.
+    <div className="mx-auto w-full max-w-5xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
+      <div className="space-y-1.5">
+        <h1 className="text-xl font-semibold tracking-tight text-foreground">API Keys</h1>
+        <p className="text-sm text-muted-foreground">
+          Manage your secret tokens to securely authenticate programmatic requests to the API.
         </p>
       </div>
 
-      {/* Error Callout */}
       {error && (
-        <div className="mb-6 flex items-start gap-3 rounded-md bg-destructive/10 border border-destructive/20 p-4 text-sm text-destructive max-w-2xl">
-          <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
-          <div>
-            <h5 className="font-semibold tracking-tight">Key Handshake Error</h5>
-            <p className="text-destructive/90 text-xs mt-0.5 font-mono">{error}</p>
-          </div>
+        <div className="flex items-center gap-3 rounded-md border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-600 dark:text-red-400">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <p>{error}</p>
         </div>
       )}
 
-      {/* Key Exposure Notice Banner */}
       {newKey && (
-        <div className="border border-amber-500/20 rounded-lg p-5 bg-amber-500/10 mb-6 flex flex-col gap-2.5 max-w-2xl">
-          <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider font-bold text-amber-600 dark:text-amber-400">
-            <KeyRound className="h-3.5 w-3.5 animate-bounce" /> Securing Production Token
+        <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-5">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-medium text-amber-900 dark:text-amber-200">
+              Save your new API key
+            </h3>
           </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            Copy this token string now. LifyGo salts secrets instantly using hash filters—for cluster isolation reasons, this code <span className="font-bold underline text-foreground">will never be revealed again</span>.
+          <p className="mt-1 text-sm text-amber-700/90 dark:text-amber-400/90">
+            For security reasons, we will only show this key once. Please copy it and store it somewhere safe.
           </p>
-          <code className="block bg-background border border-border rounded p-3 text-xs font-mono break-all select-all text-foreground font-semibold tracking-tight shadow-inner">
-            {newKey.key}
-          </code>
+          <div className="mt-4 flex items-center gap-2">
+            <code className="flex-1 rounded-md border border-amber-500/20 bg-amber-500/5 px-3 py-2.5 font-mono text-sm font-medium text-amber-950 dark:text-amber-100">
+              {newKey.key}
+            </code>
+            <Button
+              onClick={() => handleCopy(newKey.key)}
+              variant="outline"
+              className="h-[42px] shrink-0 gap-2 border-amber-500/20 bg-background hover:bg-amber-500/10 hover:text-amber-900 dark:hover:text-amber-100"
+            >
+              {copied ? (
+                <>
+                  <Check className="h-4 w-4 text-emerald-500" />
+                  <span>Copied</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="h-4 w-4" />
+                  <span>Copy</span>
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Token Provision Input Block */}
-        <div 
-          style={{ borderRadius: "12px 0px 12px 12px" }}
-          className="border border-border bg-card p-6 shadow-xs relative overflow-hidden lg:col-span-5 flex flex-col gap-4"
-        >
-          <div className="flex items-center gap-2 border-b border-border pb-3 mb-1">
-            <PlusCircle className="h-4 w-4 text-muted-foreground" />
-            <h2 className="font-heading font-bold text-foreground text-sm uppercase tracking-tight">
-              Provision Key Pair
-            </h2>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-12">
+        <div className="flex-1 space-y-4 lg:max-w-xs">
+          <h2 className="text-sm font-medium text-foreground">Create new key</h2>
+          <div className="space-y-3">
             <Input
-              placeholder="Alias Name (e.g., production-worker)"
+              placeholder="e.g. Production Worker"
               value={name}
               onChange={(e) => setName(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && name && handleCreate()}
-              className="bg-muted/30 border-border focus-visible:ring-brand font-medium text-sm text-foreground h-10"
+              className="h-9 w-full bg-transparent"
+              disabled={loading}
             />
+            <Button
+              onClick={handleCreate}
+              disabled={loading || !name.trim()}
+              className="h-9 w-full"
+            >
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Generate Key
+            </Button>
           </div>
-
-          <Button 
-            onClick={handleCreate} 
-            disabled={loading || !name}
-            className="bg-foreground text-background hover:bg-foreground/90 transition-colors text-xs font-medium h-10 shadow-xs w-full"
-          >
-            {loading ? "Generating Safe Token..." : "Generate API Key"}
-          </Button>
         </div>
 
-        {/* Dynamic Registered Keys Output Matrix */}
-        <div className="lg:col-span-7 flex flex-col gap-3">
+        <div className="flex-[2]">
           {keys.length === 0 ? (
-            <div className="border border-dashed border-border rounded-lg p-12 text-center bg-card/50">
-              <KeyRound className="h-8 w-8 text-muted-foreground/60 mx-auto mb-3" />
-              <p className="text-muted-foreground text-xs font-mono uppercase tracking-wider">
-                No cluster keys initialized.
-              </p>
+            <div className="flex h-32 flex-col items-center justify-center rounded-lg border border-dashed border-border bg-transparent text-sm text-muted-foreground">
+              No API keys configured.
             </div>
           ) : (
-            <div className="bg-card border border-border rounded-lg overflow-hidden shadow-xs">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left border-collapse">
-                  <thead>
-                    <tr className="bg-muted/50 border-b border-border font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                      <th className="p-4 font-semibold">Token Label Alias</th>
-                      <th className="p-4 font-semibold">Last Used Trace</th>
-                      <th className="p-4 font-semibold">Created (UTC)</th>
-                      <th className="p-4 text-right"></th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {keys.map((key) => (
-                      <tr key={key.id} className="hover:bg-muted/30 transition-colors group">
-                        <td className="p-4 font-medium text-foreground truncate max-w-[140px]">
-                          {key.name}
-                        </td>
-                        <td className="p-4 font-mono text-xs text-muted-foreground">
-                          {key.last_used_at ? (
-                            new Date(key.last_used_at).toLocaleDateString()
+            <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+              <table className="w-full text-left text-sm">
+                <thead className="border-b border-border bg-muted/40">
+                  <tr>
+                    <th className="h-10 px-4 align-middle font-medium text-muted-foreground">Name</th>
+                    <th className="h-10 px-4 align-middle font-medium text-muted-foreground">Created</th>
+                    <th className="h-10 px-4 align-middle font-medium text-muted-foreground">Last Used</th>
+                    <th className="h-10 px-4 text-right align-middle font-medium text-muted-foreground"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {keys.map((key) => (
+                    <tr key={key.id} className="group transition-colors hover:bg-muted/20">
+                      <td className="px-4 py-3 align-middle font-medium text-foreground">
+                        {key.name}
+                      </td>
+                      <td className="px-4 py-3 align-middle text-muted-foreground">
+                        {new Date(key.created_at).toLocaleDateString(undefined, {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
+                      </td>
+                      <td className="px-4 py-3 align-middle text-muted-foreground">
+                        {key.last_used_at ? (
+                          new Date(key.last_used_at).toLocaleDateString(undefined, {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })
+                        ) : (
+                          <span className="inline-flex items-center rounded-full border border-border bg-muted/50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                            Unused
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-right align-middle">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(key.id)}
+                          disabled={deleting === key.id}
+                          className="h-8 w-8 text-muted-foreground opacity-0 transition-all hover:bg-red-500/10 hover:text-red-600 group-hover:opacity-100 dark:hover:text-red-400"
+                          title="Revoke key"
+                        >
+                          {deleting === key.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
                           ) : (
-                            <Badge 
-                              variant="outline" 
-                              className="rounded-sm px-1.5 py-0 text-[9px] uppercase font-mono tracking-wider bg-muted text-muted-foreground/80 border-border"
-                            >
-                              Unused
-                            </Badge>
+                            <Trash2 className="h-4 w-4" />
                           )}
-                        </td>
-                        <td className="p-4 font-mono text-xs text-muted-foreground">
-                          {new Date(key.created_at).toLocaleDateString()}
-                        </td>
-                        <td className="p-4 text-right opacity-80 group-hover:opacity-100">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(key.id)}
-                            disabled={deleting === key.id}
-                            className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-all"
-                            aria-label="Terminate Token Access"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </div>

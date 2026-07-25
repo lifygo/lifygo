@@ -17,4 +17,7 @@ type DashboardStats struct {
 
 	// RecentJobs holds the last 5 jobs created.
 	RecentJobs []Job `json:"recent_jobs"`
+
+	// RecentJobExecutions holds the last 5 cron/webhook execution attempts.
+	RecentJobExecutions []JobExecution `json:"recent_job_executions"`
 }

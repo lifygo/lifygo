@@ -1,13 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useApi } from "@/lib/use-api"
 import { ENDPOINTS } from "@/lib/endpoints"
 import type { SmtpConfig, UpsertSmtpConfigInput } from "@/features/smtp"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { AlertCircle, CheckCircle2, Trash2 } from "lucide-react"
+import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react"
 
 const emptyForm: UpsertSmtpConfigInput = {
   host: "",
@@ -26,31 +26,25 @@ export default function SmtpPage() {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
 
+  const fetchConfig = useCallback(async () => {
+    try {
+      const data = await call<SmtpConfig>(ENDPOINTS.SMTP.GET)
+      setConfig(data)
+      setForm((prev) => ({
+        ...prev,
+        host: data.host,
+        port: data.port,
+        username: data.username,
+        from_address: data.from_address,
+      }))
+    } catch {
+      
+    }
+  }, [call])
+
   useEffect(() => {
-    let cancelled = false
-    async function fetchConfig() {
-      try {
-        const data = await call<SmtpConfig>(ENDPOINTS.SMTP.GET)
-        if (!cancelled) {
-          setConfig(data)
-          setForm((prev) => ({
-            ...prev,
-            host: data.host,
-            port: data.port,
-            username: data.username,
-            from_address: data.from_address,
-          }))
-        }
-      } catch {
-        // No config yet — show empty form.
-      }
-    }
     fetchConfig()
-    return () => {
-      cancelled = true
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [fetchConfig])
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const { name, value } = e.target
@@ -70,7 +64,7 @@ export default function SmtpPage() {
         body: JSON.stringify(form),
       })
       setConfig(data)
-      setSuccess("SMTP configuration saved.")
+      setSuccess("SMTP configuration saved successfully.")
       setForm((prev) => ({ ...prev, password: "" }))
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save configuration")
@@ -81,6 +75,7 @@ export default function SmtpPage() {
 
   async function handleDelete() {
     setError("")
+    setSuccess("")
     setDeleting(true)
     try {
       await call(ENDPOINTS.SMTP.DELETE, { method: "DELETE" })
@@ -95,87 +90,72 @@ export default function SmtpPage() {
   }
 
   return (
-    <div className="max-w-2xl text-foreground">
-      {/* Header */}
-      <div className="mb-8 flex flex-col gap-1.5">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">SMTP configuration</h1>
-        <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">
-          LifyGo sends transactional email through your own mail server. Credentials are
-          encrypted at rest with AES-256 and never stored in plain text.
+    <div className="mx-auto w-full max-w-5xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
+      <div className="space-y-1.5">
+        <h1 className="text-xl font-semibold tracking-tight text-foreground">SMTP Configuration</h1>
+        <p className="text-sm text-muted-foreground">
+          Configure your mail server details for sending transactional emails. Credentials are encrypted at rest.
         </p>
       </div>
 
-      {/* Alerts */}
       {error && (
-        <div className="mb-6 flex items-start gap-3 rounded-lg border border-destructive/20 bg-destructive/[0.06] p-4 text-sm text-destructive">
-          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-          <div>
-            <h5 className="font-medium">Couldn&apos;t save configuration</h5>
-            <p className="mt-0.5 text-xs text-destructive/80">{error}</p>
-          </div>
+        <div className="flex items-center gap-3 rounded-md border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-600 dark:text-red-400">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <p>{error}</p>
         </div>
       )}
 
       {success && (
-        <div className="mb-6 flex items-start gap-3 rounded-lg border border-emerald-500/20 bg-emerald-500/[0.06] p-4 text-sm text-emerald-700 dark:text-emerald-400">
-          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+        <div className="flex items-center gap-3 rounded-md border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-600 dark:text-emerald-400">
+          <CheckCircle2 className="h-4 w-4 shrink-0" />
           <p>{success}</p>
         </div>
       )}
 
-      {/* Form card */}
-      <div className="rounded-lg border border-border bg-card">
-        <div className="flex items-center justify-between border-b border-border px-6 py-4 sm:px-8">
-          <span className="text-sm font-medium text-foreground">Mail server</span>
-          <span
-            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
-              config
-                ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
-                : "bg-amber-500/10 text-amber-700 dark:text-amber-400"
-            }`}
-          >
-            <span
-              className={`h-1.5 w-1.5 rounded-full ${config ? "bg-emerald-500" : "bg-amber-500"}`}
-              aria-hidden="true"
-            />
-            {config ? "Connected" : "Not connected"}
-          </span>
+      <div className="max-w-2xl overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+        <div className="flex items-center justify-between border-b border-border px-6 py-4">
+          <span className="text-sm font-medium text-foreground">Mail Server Settings</span>
+          <div className="flex items-center gap-2">
+            <span className={`h-2 w-2 rounded-full ${config ? "bg-emerald-500" : "bg-amber-500"}`} />
+            <span className="text-xs font-medium text-muted-foreground">
+              {config ? "Connected" : "Not connected"}
+            </span>
+          </div>
         </div>
 
-        <div className="grid gap-6 p-6 sm:grid-cols-12 sm:p-8">
-          {/* Host */}
-          <div className="flex flex-col gap-2 sm:col-span-8">
-            <Label htmlFor="host" className="text-xs font-medium text-muted-foreground">
-              Host
-            </Label>
-            <Input
-              id="host"
-              name="host"
-              placeholder="smtp.gmail.com"
-              value={form.host}
-              onChange={handleChange}
-              className="text-sm"
-            />
+        <div className="space-y-4 p-6">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-12">
+            <div className="space-y-2 sm:col-span-8">
+              <Label htmlFor="host" className="text-xs font-medium text-muted-foreground">
+                Host
+              </Label>
+              <Input
+                id="host"
+                name="host"
+                placeholder="smtp.gmail.com"
+                value={form.host}
+                onChange={handleChange}
+                className="h-9 bg-transparent"
+              />
+            </div>
+
+            <div className="space-y-2 sm:col-span-4">
+              <Label htmlFor="port" className="text-xs font-medium text-muted-foreground">
+                Port
+              </Label>
+              <Input
+                id="port"
+                name="port"
+                type="number"
+                placeholder="587"
+                value={form.port}
+                onChange={handleChange}
+                className="h-9 font-mono text-sm bg-transparent"
+              />
+            </div>
           </div>
 
-          {/* Port */}
-          <div className="flex flex-col gap-2 sm:col-span-4">
-            <Label htmlFor="port" className="text-xs font-medium text-muted-foreground">
-              Port
-            </Label>
-            <Input
-              id="port"
-              name="port"
-              type="number"
-              placeholder="587"
-              value={form.port}
-              onChange={handleChange}
-              className="font-mono text-sm"
-            />
-          </div>
-
-          {/* Username */}
-          <div className="flex flex-col gap-2 sm:col-span-12">
+          <div className="space-y-2">
             <Label htmlFor="username" className="text-xs font-medium text-muted-foreground">
               Username
             </Label>
@@ -185,17 +165,16 @@ export default function SmtpPage() {
               placeholder="you@domain.com"
               value={form.username}
               onChange={handleChange}
-              className="text-sm"
+              className="h-9 bg-transparent"
             />
           </div>
 
-          {/* Password */}
-          <div className="flex flex-col gap-2 sm:col-span-12">
+          <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="password" className="text-xs font-medium text-muted-foreground">
                 Password
               </Label>
-              {config && <span className="text-xs text-muted-foreground">Currently set</span>}
+              {config && <span className="text-xs text-muted-foreground/60">Configured</span>}
             </div>
             <Input
               id="password"
@@ -204,14 +183,13 @@ export default function SmtpPage() {
               placeholder={config ? "••••••••••••••••" : "Enter password"}
               value={form.password}
               onChange={handleChange}
-              className="text-sm"
+              className="h-9 bg-transparent"
             />
           </div>
 
-          {/* From address */}
-          <div className="flex flex-col gap-2 sm:col-span-12">
+          <div className="space-y-2">
             <Label htmlFor="from_address" className="text-xs font-medium text-muted-foreground">
-              From address
+              From Address
             </Label>
             <Input
               id="from_address"
@@ -219,32 +197,39 @@ export default function SmtpPage() {
               placeholder="hello@yourdomain.com"
               value={form.from_address}
               onChange={handleChange}
-              className="text-sm"
+              className="h-9 bg-transparent"
             />
           </div>
         </div>
 
-        {/* Footer actions */}
-        <div className="flex flex-col items-stretch justify-between gap-4 border-t border-border px-6 py-5 sm:flex-row sm:items-center sm:px-8">
-          <span className="text-xs text-muted-foreground">
-            {config ? "Changes apply to new email sends immediately." : "All fields are required to connect."}
-          </span>
+        <div className="flex flex-col gap-4 border-t border-border px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-muted-foreground">
+            {config ? "Updates take effect for future dispatches." : "Fill in all fields to establish connection."}
+          </p>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             {config && (
               <Button
-                variant="outline"
+                variant="ghost"
                 onClick={handleDelete}
-                disabled={deleting}
-                className="h-9 gap-2 border-border bg-transparent text-xs font-medium text-muted-foreground hover:border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
+                disabled={deleting || loading}
+                className="h-9 text-xs font-medium text-muted-foreground hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400"
               >
-                <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-                {deleting ? "Removing…" : "Remove"}
+                {deleting ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  "Remove"
+                )}
               </Button>
             )}
 
-            <Button onClick={handleSave} disabled={loading} className="h-9 px-5 text-xs font-medium">
-              {loading ? "Saving…" : config ? "Save changes" : "Connect"}
+            <Button
+              onClick={handleSave}
+              disabled={loading || deleting}
+              className="h-9 px-4 text-xs font-medium"
+            >
+              {loading && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}
+              {config ? "Save Changes" : "Connect"}
             </Button>
           </div>
         </div>
