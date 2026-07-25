@@ -16,7 +16,7 @@ async function fetchUser() {
 }
 
 export function LocalAuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<React.ContextType<typeof AuthContext>["user"]>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
@@ -27,8 +27,9 @@ export function LocalAuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const getToken = useCallback(async () => {
-    const match = document.cookie.match(/(?:^|;\s*)lifygo_token=([^;]*)/);
-    return match ? match[1] : null;
+    // lifygo_token is HttpOnly by design. The browser sends it automatically
+    // with credentials: "include"; JavaScript must not try to read it.
+    return null;
   }, []);
 
   const signOut = useCallback(async () => {

@@ -8,21 +8,20 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { AlertCircle, CheckCircle2, Trash2, Webhook, Mail, Clock, RefreshCw, ChevronDown, ChevronRight } from "lucide-react"
-
-const statusStyles: Record<string, string> = {
-  active: "text-emerald-600 dark:text-emerald-400",
-  failed: "text-destructive",
-  completed: "text-sky-600 dark:text-sky-400",
-  paused: "text-muted-foreground",
-}
-
-const statusDot: Record<string, string> = {
-  active: "bg-emerald-500",
-  failed: "bg-destructive",
-  completed: "bg-sky-500",
-  paused: "bg-muted-foreground/50",
-}
+import { 
+  AlertCircle, 
+  CheckCircle2, 
+  Trash2, 
+  Webhook, 
+  Mail, 
+  Clock, 
+  RefreshCw, 
+  ChevronDown, 
+  ChevronRight,
+  Server,
+  Loader2,
+  XCircle
+} from "lucide-react"
 
 interface JobExecution {
   id: string
@@ -133,7 +132,7 @@ export default function JobsPage() {
       })
 
       setJobs((prev) => [created, ...prev])
-      setSuccess("Job scheduled.")
+      setSuccess("Job scheduled successfully.")
       setForm({
         name: "",
         cron_expression: "",
@@ -165,315 +164,391 @@ export default function JobsPage() {
   }
 
   return (
-    <div className="max-w-4xl text-foreground">
-      <div className="mb-8 flex flex-col gap-1.5">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Scheduled jobs</h1>
-        <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-          <span>Free tier includes up to 3 active jobs.</span>
-          <a href="#" className="text-sm font-medium text-brand hover:opacity-80">
-            Upgrade for unlimited →
-          </a>
+    <div className="mx-auto w-full max-w-5xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
+      {/* Page Header */}
+      <div className="space-y-1.5">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <h1 className="text-xl font-semibold tracking-tight text-foreground">Scheduled Jobs</h1>
+          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground shadow-xs">
+            <Server className="h-3.5 w-3.5 text-emerald-500" />
+            <span>Open Source Tool</span>
+            <span className="text-border">•</span>
+            <span className="font-medium text-foreground">Deploy on your own VPS</span>
+          </div>
         </div>
+        <p className="text-sm text-muted-foreground">
+          Automate recurring webhooks and transactional email dispatches using cron schedules or one-time executions.
+        </p>
       </div>
 
       {error && (
-        <div className="mb-6 flex items-start gap-3 rounded-lg border border-destructive/20 bg-destructive/[0.06] p-4 text-sm text-destructive">
-          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-          <div>
-            <h5 className="font-medium">Something went wrong</h5>
-            <p className="mt-0.5 text-xs text-destructive/80">{error}</p>
-          </div>
+        <div className="flex items-center gap-3 rounded-md border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-600 dark:text-red-400">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <p>{error}</p>
         </div>
       )}
 
       {success && (
-        <div className="mb-6 flex items-start gap-3 rounded-lg border border-emerald-500/20 bg-emerald-500/[0.06] p-4 text-sm text-emerald-700 dark:text-emerald-400">
-          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+        <div className="flex items-center gap-3 rounded-md border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-600 dark:text-emerald-400">
+          <CheckCircle2 className="h-4 w-4 shrink-0" />
           <p>{success}</p>
         </div>
       )}
 
       <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12">
-        <div className="rounded-lg border border-border bg-card p-6 lg:col-span-5">
-          <h2 className="mb-5 border-b border-border pb-3 text-sm font-medium text-foreground">
-            New job
+        {/* New Job Creation Panel */}
+        <div className="rounded-lg border border-border bg-card p-6 shadow-sm lg:col-span-5">
+          <h2 className="border-b border-border pb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Schedule New Job
           </h2>
 
-          <div className="flex flex-col gap-5">
-            <div className="flex flex-col gap-1.5">
-              <Label className="text-xs font-medium text-muted-foreground">Name</Label>
+          <div className="mt-4 space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-xs font-medium text-muted-foreground">
+                Job Name
+              </Label>
               <Input
+                id="name"
                 name="name"
-                placeholder="weekly-report"
+                placeholder="weekly-report-sync"
                 value={form.name}
                 onChange={handleChange}
-                className="text-sm"
+                className="h-9 bg-transparent"
               />
             </div>
 
-            <div className="flex flex-col gap-2">
-              <Label className="text-xs font-medium text-muted-foreground">What runs</Label>
+            <div className="space-y-2">
+              <Label className="text-xs font-medium text-muted-foreground">Target Dispatch</Label>
               <Tabs value={jobType} onValueChange={(v) => setJobType(v as "webhook" | "email")} className="w-full">
-                <TabsList className="grid h-9 grid-cols-2 rounded-md border border-border bg-muted p-1">
-                  <TabsTrigger
-                    value="webhook"
-                    className="gap-1.5 text-xs font-medium data-[state=active]:bg-background data-[state=active]:text-foreground"
-                  >
-                    <Webhook className="h-3.5 w-3.5" aria-hidden="true" /> Webhook
+                <TabsList className="h-9 w-full rounded-lg border border-border bg-muted/40 p-1">
+                  <TabsTrigger value="webhook" className="h-7 w-full gap-2 text-xs font-medium">
+                    <Webhook className="h-3.5 w-3.5 text-muted-foreground" /> Webhook
                   </TabsTrigger>
-                  <TabsTrigger
-                    value="email"
-                    className="gap-1.5 text-xs font-medium data-[state=active]:bg-background data-[state=active]:text-foreground"
-                  >
-                    <Mail className="h-3.5 w-3.5" aria-hidden="true" /> Email
+                  <TabsTrigger value="email" className="h-7 w-full gap-2 text-xs font-medium">
+                    <Mail className="h-3.5 w-3.5 text-muted-foreground" /> Email
                   </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="webhook" className="mt-3 flex flex-col gap-3">
-                  <div className="flex flex-col gap-1.5">
-                    <Label className="text-xs text-muted-foreground">Endpoint URL</Label>
+                <TabsContent value="webhook" className="mt-3 space-y-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="webhook_url" className="text-xs text-muted-foreground">
+                      Endpoint URL
+                    </Label>
                     <Input
+                      id="webhook_url"
                       name="webhook_url"
-                      placeholder="https://myapp.com/api/webhook"
+                      placeholder="https://api.yourdomain.com/v1/sync"
                       value={form.webhook_url}
                       onChange={handleChange}
-                      className="font-mono text-xs"
+                      className="h-9 bg-transparent font-mono text-xs"
                     />
                   </div>
-                  <div className="flex flex-col gap-1.5">
-                    <Label className="text-xs text-muted-foreground">Payload (optional JSON)</Label>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="webhook_payload" className="text-xs text-muted-foreground">
+                      JSON Payload (Optional)
+                    </Label>
                     <Input
+                      id="webhook_payload"
                       name="webhook_payload"
                       placeholder='{"event": "scheduled_sync"}'
                       value={form.webhook_payload}
                       onChange={handleChange}
-                      className="font-mono text-xs"
+                      className="h-9 bg-transparent font-mono text-xs"
                     />
                   </div>
                 </TabsContent>
 
-                <TabsContent value="email" className="mt-3 flex flex-col gap-3">
-                  <div className="flex flex-col gap-1.5">
-                    <Label className="text-xs text-muted-foreground">To</Label>
+                <TabsContent value="email" className="mt-3 space-y-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="email_to" className="text-xs text-muted-foreground">
+                      Recipient Email
+                    </Label>
                     <Input
+                      id="email_to"
                       name="email_to"
-                      placeholder="dev-alerts@yourdomain.com"
+                      placeholder="alerts@yourdomain.com"
                       value={form.email_to}
                       onChange={handleChange}
-                      className="text-xs"
+                      className="h-9 bg-transparent text-xs"
                     />
                   </div>
-                  <div className="flex flex-col gap-1.5">
-                    <Label className="text-xs text-muted-foreground">Subject</Label>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="email_subject" className="text-xs text-muted-foreground">
+                      Subject
+                    </Label>
                     <Input
+                      id="email_subject"
                       name="email_subject"
-                      placeholder="Scheduled job notification"
+                      placeholder="Scheduled Job Executed"
                       value={form.email_subject}
                       onChange={handleChange}
-                      className="text-xs"
+                      className="h-9 bg-transparent text-xs"
                     />
                   </div>
-                  <div className="flex flex-col gap-1.5">
-                    <Label className="text-xs text-muted-foreground">Body</Label>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="email_body" className="text-xs text-muted-foreground">
+                      Body Content
+                    </Label>
                     <Input
+                      id="email_body"
                       name="email_body"
-                      placeholder="Job ran successfully."
+                      placeholder="Automated job dispatch notice."
                       value={form.email_body}
                       onChange={handleChange}
-                      className="text-xs"
+                      className="h-9 bg-transparent text-xs"
                     />
                   </div>
                 </TabsContent>
               </Tabs>
             </div>
 
-            <div className="flex flex-col gap-2 border-t border-border pt-4">
-              <Label className="text-xs font-medium text-muted-foreground">When it runs</Label>
+            <div className="space-y-2 border-t border-border pt-4">
+              <Label className="text-xs font-medium text-muted-foreground">Execution Interval</Label>
               <Tabs value={scheduleType} onValueChange={(v) => setScheduleType(v as "cron" | "one_time")} className="w-full">
-                <TabsList className="grid h-9 grid-cols-2 rounded-md border border-border bg-muted p-1">
-                  <TabsTrigger
-                    value="cron"
-                    className="gap-1.5 text-xs font-medium data-[state=active]:bg-background data-[state=active]:text-foreground"
-                  >
-                    <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" /> Recurring
+                <TabsList className="h-9 w-full rounded-lg border border-border bg-muted/40 p-1">
+                  <TabsTrigger value="cron" className="h-7 w-full gap-2 text-xs font-medium">
+                    <RefreshCw className="h-3.5 w-3.5 text-muted-foreground" /> Cron
                   </TabsTrigger>
-                  <TabsTrigger
-                    value="one_time"
-                    className="gap-1.5 text-xs font-medium data-[state=active]:bg-background data-[state=active]:text-foreground"
-                  >
-                    <Clock className="h-3.5 w-3.5" aria-hidden="true" /> One-time
+                  <TabsTrigger value="one_time" className="h-7 w-full gap-2 text-xs font-medium">
+                    <Clock className="h-3.5 w-3.5 text-muted-foreground" /> One-time
                   </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="cron" className="mt-3">
-                  <div className="flex flex-col gap-1.5">
-                    <Label className="text-xs text-muted-foreground">Cron expression</Label>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="cron_expression" className="text-xs text-muted-foreground">
+                      Cron Expression
+                    </Label>
                     <Input
+                      id="cron_expression"
                       name="cron_expression"
-                      placeholder="*/5 * * * * (every 5 minutes)"
+                      placeholder="*/5 * * * * (Every 5 mins)"
                       value={form.cron_expression}
                       onChange={handleChange}
-                      className="font-mono text-xs"
+                      className="h-9 bg-transparent font-mono text-xs"
                     />
                   </div>
                 </TabsContent>
 
                 <TabsContent value="one_time" className="mt-3">
-                  <div className="flex flex-col gap-1.5">
-                    <Label className="text-xs text-muted-foreground">Run at</Label>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="run_at" className="text-xs text-muted-foreground">
+                      Execution Date & Time
+                    </Label>
                     <Input
+                      id="run_at"
                       name="run_at"
                       type="datetime-local"
                       value={form.run_at}
                       onChange={handleChange}
-                      className="font-mono text-xs"
+                      className="h-9 bg-transparent font-mono text-xs"
                     />
                   </div>
                 </TabsContent>
               </Tabs>
             </div>
 
-            <Button onClick={handleCreate} disabled={loading || !form.name} className="mt-1 h-10 w-full text-xs font-medium">
-              {loading ? "Scheduling…" : "Create job"}
+            <Button onClick={handleCreate} disabled={loading || !form.name} className="h-9 w-full text-xs font-medium">
+              {loading && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}
+              Create Job
             </Button>
           </div>
         </div>
 
-        <div className="flex flex-col gap-3 lg:col-span-7">
-          <h2 className="border-b border-border px-1 pb-3 text-sm font-medium text-foreground">
-            Active jobs ({jobs.length})
-          </h2>
+        {/* Active Jobs List */}
+        <div className="space-y-4 lg:col-span-7">
+          <div className="flex items-center justify-between border-b border-border pb-2">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Active Jobs ({jobs.length})
+            </h2>
+          </div>
 
           {jobs.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-border p-12 text-center">
-              <Clock className="mx-auto mb-3 h-6 w-6 text-muted-foreground/50" aria-hidden="true" />
-              <p className="text-sm text-muted-foreground">No jobs scheduled yet.</p>
+            <div className="flex h-48 flex-col items-center justify-center rounded-lg border border-dashed border-border bg-card p-8 text-center">
+              <Clock className="mb-3 h-8 w-8 text-muted-foreground/40" />
+              <p className="text-sm font-medium text-foreground">No jobs scheduled</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Configure a webhook or email trigger to automate background tasks.
+              </p>
             </div>
           ) : (
-            <div className="overflow-hidden rounded-lg border border-border bg-card">
+            <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-left text-sm">
+                <table className="w-full border-collapse text-left text-xs">
                   <thead>
-                    <tr className="border-b border-border bg-muted/40 text-[11px] uppercase tracking-wide text-muted-foreground">
+                    <tr className="border-b border-border bg-muted/40 font-medium text-muted-foreground">
                       <th className="w-8 px-3 py-3" />
-                      <th className="px-4 py-3 font-medium">Name</th>
+                      <th className="px-4 py-3 font-medium">Job Name</th>
                       <th className="px-4 py-3 font-medium">Type</th>
                       <th className="px-4 py-3 font-medium">Schedule</th>
                       <th className="px-4 py-3 font-medium">Status</th>
-                      <th className="px-4 py-3" />
+                      <th className="px-4 py-3 text-right font-medium" />
                     </tr>
                   </thead>
-                  <tbody>
-                    {jobs.map((job) => (
+                  <tbody className="divide-y divide-border">
+                    {jobs.map((job) => {
+                      const isExpanded = expandedJob === job.id
+                      const isActive = job.status === "active"
+                      const isCompleted = job.status === "completed"
+                      const isFailed = job.status === "failed"
+
+                      return (
                         <React.Fragment key={job.id}>
                           <tr
-                            className="group border-t border-border transition-colors hover:bg-accent cursor-pointer"
+                            className="group transition-colors hover:bg-muted/30 cursor-pointer"
                             onClick={() => toggleExecutions(job.id)}
                           >
-                          <td className="px-3 py-3.5">
-                            {expandedJob === job.id ? (
-                              <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                            ) : (
-                              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                            )}
-                          </td>
-                          <td className="max-w-[140px] truncate px-4 py-3.5 font-medium text-foreground">
-                            {job.name}
-                          </td>
-                          <td className="px-4 py-3.5">
-                            <span className="inline-flex items-center gap-1.5 text-xs capitalize text-muted-foreground">
-                              {job.type === "webhook" ? (
-                                <Webhook className="h-3.5 w-3.5" aria-hidden="true" />
+                            <td className="px-3 py-3.5">
+                              {isExpanded ? (
+                                <ChevronDown className="h-4 w-4 text-muted-foreground" />
                               ) : (
-                                <Mail className="h-3.5 w-3.5" aria-hidden="true" />
-                              )}
-                              {job.type}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3.5 font-mono text-xs text-muted-foreground">
-                            {job.schedule_type === "cron"
-                              ? job.cron_expression
-                              : job.run_at
-                                ? new Date(job.run_at).toLocaleDateString()
-                                : "—"}
-                          </td>
-                          <td className="px-4 py-3.5">
-                            <span
-                              className={`inline-flex items-center gap-1.5 text-xs font-medium capitalize ${
-                                statusStyles[job.status] || "text-muted-foreground"
-                              }`}
-                            >
-                              <span className={`h-1.5 w-1.5 rounded-full ${statusDot[job.status] || "bg-muted-foreground/50"}`} aria-hidden="true" />
-                              {job.status}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3.5 text-right opacity-0 transition-opacity group-hover:opacity-100">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                handleDelete(job.id)
-                              }}
-                              disabled={deleting === job.id}
-                              className="h-8 w-8 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                              aria-label={`Delete job ${job.name}`}
-                            >
-                              <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-                            </Button>
-                          </td>
-                        </tr>
-                        {expandedJob === job.id && (
-                          <tr key={`${job.id}-executions`}>
-                            <td colSpan={6} className="border-t border-border bg-muted/20 px-4 py-3">
-                              {loadingExecutions === job.id ? (
-                                <p className="text-xs text-muted-foreground">Loading executions...</p>
-                              ) : executions[job.id]?.length === 0 ? (
-                                <p className="text-xs text-muted-foreground">No executions yet.</p>
-                              ) : (
-                                <div className="overflow-x-auto">
-                                  <table className="w-full text-xs">
-                                    <thead>
-                                      <tr className="text-muted-foreground">
-                                        <th className="px-2 py-1 text-left font-medium">Time</th>
-                                        <th className="px-2 py-1 text-left font-medium">Status</th>
-                                        <th className="px-2 py-1 text-left font-medium">HTTP</th>
-                                        <th className="px-2 py-1 text-left font-medium">Duration</th>
-                                        <th className="px-2 py-1 text-left font-medium">Error</th>
-                                      </tr>
-                                    </thead>
-                                    <tbody>
-                                      {executions[job.id]?.map((exec) => (
-                                        <tr key={exec.id} className="border-t border-border/50">
-                                          <td className="px-2 py-1.5 font-mono text-muted-foreground">
-                                            {new Date(exec.executed_at).toLocaleString()}
-                                          </td>
-                                          <td className="px-2 py-1.5">
-                                            <span className={`inline-flex items-center gap-1 ${exec.status === "success" ? "text-emerald-600" : exec.status === "failed" ? "text-destructive" : "text-muted-foreground"}`}>
-                                              <span className={`h-1.5 w-1.5 rounded-full ${exec.status === "success" ? "bg-emerald-500" : exec.status === "failed" ? "bg-destructive" : "bg-muted-foreground/50"}`} />
-                                              {exec.status}
-                                            </span>
-                                          </td>
-                                          <td className="px-2 py-1.5 font-mono text-muted-foreground">
-                                            {exec.http_status ?? "—"}
-                                          </td>
-                                          <td className="px-2 py-1.5 font-mono text-muted-foreground">
-                                            {exec.duration_ms != null ? `${exec.duration_ms}ms` : "—"}
-                                          </td>
-                                          <td className="max-w-[200px] truncate px-2 py-1.5 text-muted-foreground">
-                                            {exec.error_message ?? "—"}
-                                          </td>
-                                        </tr>
-                                      ))}
-                                    </tbody>
-                                  </table>
-                                </div>
+                                <ChevronRight className="h-4 w-4 text-muted-foreground" />
                               )}
                             </td>
+                            <td className="max-w-[140px] truncate px-4 py-3.5 font-medium text-foreground">
+                              {job.name}
+                            </td>
+                            <td className="px-4 py-3.5">
+                              <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                                {job.type === "webhook" ? (
+                                  <Webhook className="h-3.5 w-3.5" />
+                                ) : (
+                                  <Mail className="h-3.5 w-3.5" />
+                                )}
+                                <span className="capitalize">{job.type}</span>
+                              </span>
+                            </td>
+                            <td className="px-4 py-3.5 font-mono text-muted-foreground">
+                              {job.schedule_type === "cron"
+                                ? job.cron_expression
+                                : job.run_at
+                                  ? new Date(job.run_at).toLocaleDateString()
+                                  : "—"}
+                            </td>
+                            <td className="px-4 py-3.5">
+                              <span
+                                className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium capitalize ${
+                                  isActive
+                                    ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                                    : isCompleted
+                                      ? "border-sky-500/20 bg-sky-500/10 text-sky-600 dark:text-sky-400"
+                                      : isFailed
+                                        ? "border-red-500/20 bg-red-500/10 text-red-600 dark:text-red-400"
+                                        : "border-border bg-muted text-muted-foreground"
+                                }`}
+                              >
+                                <span
+                                  className={`h-1.5 w-1.5 rounded-full ${
+                                    isActive
+                                      ? "bg-emerald-500"
+                                      : isCompleted
+                                        ? "bg-sky-500"
+                                        : isFailed
+                                          ? "bg-red-500"
+                                          : "bg-muted-foreground/50"
+                                  }`}
+                                />
+                                {job.status}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3.5 text-right">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleDelete(job.id)
+                                }}
+                                disabled={deleting === job.id}
+                                className="h-7 w-7 text-muted-foreground hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400"
+                              >
+                                {deleting === job.id ? (
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                ) : (
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                )}
+                              </Button>
+                            </td>
                           </tr>
-                        )}
-                     </React.Fragment>
-                    ))}
+
+                          {/* Executions Sub-table */}
+                          {isExpanded && (
+                            <tr key={`${job.id}-executions`}>
+                              <td colSpan={6} className="bg-muted/20 px-6 py-4">
+                                <div className="space-y-2">
+                                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                    Recent Executions
+                                  </span>
+                                  {loadingExecutions === job.id ? (
+                                    <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
+                                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                      Loading history...
+                                    </div>
+                                  ) : executions[job.id]?.length === 0 ? (
+                                    <p className="text-xs text-muted-foreground py-1">No executions logged yet.</p>
+                                  ) : (
+                                    <div className="overflow-x-auto rounded border border-border bg-card">
+                                      <table className="w-full text-left text-[11px]">
+                                        <thead>
+                                          <tr className="border-b border-border bg-muted/40 font-medium text-muted-foreground">
+                                            <th className="px-3 py-2 font-medium">Timestamp</th>
+                                            <th className="px-3 py-2 font-medium">Status</th>
+                                            <th className="px-3 py-2 font-medium">HTTP Status</th>
+                                            <th className="px-3 py-2 font-medium">Duration</th>
+                                            <th className="px-3 py-2 font-medium">Error Details</th>
+                                          </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-border">
+                                          {executions[job.id]?.map((exec) => {
+                                            const execSuccess = exec.status === "success"
+                                            const execFailed = exec.status === "failed"
+
+                                            return (
+                                              <tr key={exec.id}>
+                                                <td className="whitespace-nowrap px-3 py-2 font-mono text-muted-foreground">
+                                                  {new Date(exec.executed_at).toLocaleString()}
+                                                </td>
+                                                <td className="px-3 py-2">
+                                                  <span
+                                                    className={`inline-flex items-center gap-1 font-medium ${
+                                                      execSuccess
+                                                        ? "text-emerald-600 dark:text-emerald-400"
+                                                        : execFailed
+                                                          ? "text-red-600 dark:text-red-400"
+                                                          : "text-muted-foreground"
+                                                    }`}
+                                                  >
+                                                    {execSuccess ? (
+                                                      <CheckCircle2 className="h-3 w-3" />
+                                                    ) : execFailed ? (
+                                                      <XCircle className="h-3 w-3" />
+                                                    ) : null}
+                                                    {exec.status}
+                                                  </span>
+                                                </td>
+                                                <td className="px-3 py-2 font-mono text-muted-foreground">
+                                                  {exec.http_status ?? "—"}
+                                                </td>
+                                                <td className="px-3 py-2 font-mono text-muted-foreground">
+                                                  {exec.duration_ms != null ? `${exec.duration_ms}ms` : "—"}
+                                                </td>
+                                                <td className="max-w-[180px] truncate px-3 py-2 font-mono text-muted-foreground">
+                                                  {exec.error_message ?? "—"}
+                                                </td>
+                                              </tr>
+                                            )
+                                          })}
+                                        </tbody>
+                                      </table>
+                                    </div>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>

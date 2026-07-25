@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 
+	"github.com/lifygo/lifygo/apps/api/internal/middleware"
 	"github.com/lifygo/lifygo/apps/api/internal/service"
 )
 
@@ -54,4 +55,25 @@ func (h *AuthHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Set-Cookie", "lifygo_token="+resp.Token+"; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800")
 	respond(w, http.StatusOK, resp)
+}
+
+func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
+	if h.svc == nil {
+		respondError(w, http.StatusNotFound, "local auth is not enabled")
+		return
+	}
+
+	userID := middleware.UserIDFromContext(r.Context())
+	user, err := h.svc.GetUser(r.Context(), userID)
+	if err != nil {
+		respondError(w, http.StatusUnauthorized, "invalid session")
+		return
+	}
+
+	respond(w, http.StatusOK, user)
+}
+
+func (h *AuthHandler) SignOut(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Set-Cookie", "lifygo_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0")
+	w.WriteHeader(http.StatusNoContent)
 }

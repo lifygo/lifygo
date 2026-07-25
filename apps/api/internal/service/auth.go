@@ -160,6 +160,11 @@ func (s *AuthService) ValidateToken(ctx context.Context, tokenString string) (*m
 	return user, nil
 }
 
+// GetUser returns a local-authenticated user by ID for the session endpoint.
+func (s *AuthService) GetUser(ctx context.Context, id string) (*model.User, error) {
+	return s.repo.GetByID(ctx, id)
+}
+
 func (s *AuthService) issueToken(user *model.User) (string, error) {
 	now := time.Now()
 	claims := jwt.MapClaims{

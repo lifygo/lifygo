@@ -348,3 +348,47 @@ func (r *JobRepository) ListExecutionsByJobID(ctx context.Context, jobID string,
 
 	return execs, nil
 }
+
+// ListRecentExecutionsByUserID returns the latest execution attempts across
+// all jobs owned by a user for the dashboard activity feed.
+func (r *JobRepository) ListRecentExecutionsByUserID(ctx context.Context, userID string, limit int) ([]model.JobExecution, error) {
+	const query = `
+		SELECT e.id, e.job_id, e.user_id, e.status, e.http_status,
+		       e.error_message, e.duration_ms, e.executed_at
+		FROM job_executions e
+		JOIN jobs j ON j.id = e.job_id
+		WHERE e.user_id = $1 AND j.user_id = $1
+		ORDER BY e.seq DESC
+		LIMIT $2
+	`
+
+	rows, err := r.db.Query(ctx, query, userID, limit)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list recent job executions: %w", err)
+	}
+	defer rows.Close()
+
+	executions := make([]model.JobExecution, 0)
+	for rows.Next() {
+		var execution model.JobExecution
+		if err := rows.Scan(
+			&execution.ID,
+			&execution.JobID,
+			&execution.UserID,
+			&execution.Status,
+			&execution.HTTPStatus,
+			&execution.ErrorMessage,
+			&execution.DurationMs,
+			&execution.ExecutedAt,
+		); err != nil {
+			return nil, fmt.Errorf("failed to scan recent job execution: %w", err)
+		}
+		executions = append(executions, execution)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error reading recent job executions: %w", err)
+	}
+
+	return executions, nil
+}

@@ -12,15 +12,20 @@ import (
 // it just queries the other repositories and combines the results.
 type DashboardService struct {
 	emailLogs EmailLogRepository
-	jobs      JobRepository
+	jobs      dashboardJobRepository
 	apiKeys   APIKeyRepository
 	smtp      SMTPConfigRepository
+}
+
+type dashboardJobRepository interface {
+	ListByUserID(ctx context.Context, userID string) ([]model.Job, error)
+	ListRecentExecutionsByUserID(ctx context.Context, userID string, limit int) ([]model.JobExecution, error)
 }
 
 // NewDashboardService creates a new DashboardService.
 func NewDashboardService(
 	emailLogs EmailLogRepository,
-	jobs JobRepository,
+	jobs dashboardJobRepository,
 	apiKeys APIKeyRepository,
 	smtp SMTPConfigRepository,
 ) *DashboardService {
@@ -132,14 +137,20 @@ func (s *DashboardService) GetDashboardStats(ctx context.Context, userID string)
 		recentJobs = recentJobs[:5]
 	}
 
+	recentExecutions, err := s.jobs.ListRecentExecutionsByUserID(ctx, userID, 5)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get recent job executions: %w", err)
+	}
+
 	return &model.DashboardStats{
-		TotalEmailsSent:   sentCount,
-		TotalEmailsFailed: failedCount,
-		SuccessRate:       successRate,
-		ActiveJobs:        activeJobs,
-		TotalAPIKeys:      apiKeyCount,
-		HasSMTPConfig:     hasSMTP,
-		RecentEmailLogs:   recentLogs,
-		RecentJobs:        recentJobs,
+		TotalEmailsSent:     sentCount,
+		TotalEmailsFailed:   failedCount,
+		SuccessRate:         successRate,
+		ActiveJobs:          activeJobs,
+		TotalAPIKeys:        apiKeyCount,
+		HasSMTPConfig:       hasSMTP,
+		RecentEmailLogs:     recentLogs,
+		RecentJobs:          recentJobs,
+		RecentJobExecutions: recentExecutions,
 	}, nil
 }

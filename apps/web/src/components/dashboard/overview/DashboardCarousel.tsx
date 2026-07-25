@@ -1,39 +1,32 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { Zap, ShieldCheck, Sparkles, ChevronLeft, ChevronRight } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react"
 
 const slides = [
   {
     tag: "Performance",
-    icon: Zap,
     title: "Faster batch delivery",
     description:
       "Concurrent email sends now route across worker pools, cutting average gateway latency to under 15ms.",
     actionText: "Read the docs",
     actionHref: "#",
-    color: "text-brand",
   },
   {
     tag: "Security",
-    icon: ShieldCheck,
     title: "Automatic key rotation",
     description:
       "Turn on monthly API key rotation from your settings to keep long-lived integrations secure by default.",
     actionText: "Review security settings",
     actionHref: "/dashboard/api-keys",
-    color: "text-amber-500",
   },
   {
     tag: "New",
-    icon: Sparkles,
     title: "Cron engine v2",
     description:
       "Scheduled jobs now support millisecond-precision intervals and smarter retry behavior on failure.",
     actionText: "View changelog",
     actionHref: "#",
-    color: "text-emerald-500",
   },
 ]
 
@@ -51,84 +44,72 @@ export function DashboardCarousel() {
 
   useEffect(() => {
     if (isHovered) return
-    const interval = setInterval(nextSlide, 5000)
+    const interval = setInterval(nextSlide, 6000)
     return () => clearInterval(interval)
   }, [isHovered, nextSlide])
 
-  const SlideIcon = slides[current].icon
-
   return (
     <div
-      className="group/carousel relative w-full max-w-2xl overflow-hidden rounded-lg border border-border bg-card p-5 text-foreground"
+      className="group relative w-full overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Header */}
-      <div className="mb-4 flex items-center justify-between">
-        <span className="text-xs font-medium text-muted-foreground">What&apos;s new</span>
-
-        <div className="flex items-center gap-1 opacity-0 transition-opacity duration-200 group-hover/carousel:opacity-100">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={prevSlide}
-            aria-label="Previous update"
-            className="h-6 w-6 rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={nextSlide}
-            aria-label="Next update"
-            className="h-6 w-6 rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="flex min-h-[96px] flex-col justify-between">
-        <div>
-          <div className="mb-2 flex items-center gap-2">
-            <SlideIcon className={`h-4 w-4 shrink-0 ${slides[current].color}`} aria-hidden="true" />
-            <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+      <div className="flex flex-col p-6 sm:p-8">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              What's New
+            </span>
+            <span className="h-4 w-[1px] bg-border" />
+            <span className="text-xs font-medium text-foreground">
               {slides[current].tag}
             </span>
           </div>
 
-          <h4 className="text-sm font-semibold tracking-tight text-foreground">
-            {slides[current].title}
-          </h4>
+          <div className="flex items-center gap-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+            <button
+              onClick={prevSlide}
+              className="flex h-7 w-7 items-center justify-center rounded-md border border-transparent text-muted-foreground transition-colors hover:border-border hover:bg-muted hover:text-foreground"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              onClick={nextSlide}
+              className="flex h-7 w-7 items-center justify-center rounded-md border border-transparent text-muted-foreground transition-colors hover:border-border hover:bg-muted hover:text-foreground"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
 
-          <p className="mt-1.5 max-w-xl text-xs leading-relaxed text-muted-foreground">
+        <div className="mt-8 min-h-[80px]">
+          <h3 className="text-lg font-medium tracking-tight text-foreground">
+            {slides[current].title}
+          </h3>
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
             {slides[current].description}
           </p>
         </div>
 
-        {/* Footer */}
-        <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
+        <div className="mt-8 flex items-center justify-between">
           <a
             href={slides[current].actionHref}
-            className="text-xs font-medium text-brand transition-opacity hover:opacity-80"
+            className="group/link inline-flex items-center gap-1.5 text-sm font-medium text-foreground transition-colors hover:text-muted-foreground"
           >
-            {slides[current].actionText} →
+            {slides[current].actionText}
+            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover/link:translate-x-0.5" />
           </a>
 
-          <div className="flex items-center gap-1.5">
-            {slides.map((slide, index) => (
+          <div className="flex items-center gap-2">
+            {slides.map((_, index) => (
               <button
-                key={slide.title}
+                key={index}
                 onClick={() => setCurrent(index)}
-                className={`h-1.5 rounded-full transition-all duration-300 ${
+                className={`h-1 rounded-full transition-all duration-300 ${
                   index === current
-                    ? "w-4 bg-brand"
-                    : "w-1.5 bg-muted-foreground/30 hover:bg-muted-foreground/60"
+                    ? "w-6 bg-foreground"
+                    : "w-2 bg-muted hover:bg-muted-foreground/40"
                 }`}
-                aria-label={`Show update ${index + 1} of ${slides.length}: ${slide.title}`}
-                aria-current={index === current}
               />
             ))}
           </div>

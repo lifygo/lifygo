@@ -45,6 +45,10 @@ func FlexibleAuth(apiAuth APIKeyAuthenticator, clerkUsers ClerkUserResolver, loc
 					next.ServeHTTP(w, r.WithContext(ctx))
 					return
 				}
+				// The browser may still hold a token signed with an old
+				// development JWT_SECRET. Expire it so the next navigation
+				// is redirected to sign-in instead of retrying forever.
+				clearLocalSessionCookie(w)
 			}
 
 			if clerkUsers != nil {
@@ -68,6 +72,10 @@ func FlexibleAuth(apiAuth APIKeyAuthenticator, clerkUsers ClerkUserResolver, loc
 			writeError(w, http.StatusUnauthorized, "invalid session")
 		})
 	}
+}
+
+func clearLocalSessionCookie(w http.ResponseWriter) {
+	w.Header().Set("Set-Cookie", "lifygo_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0")
 }
 
 func extractToken(r *http.Request) string {

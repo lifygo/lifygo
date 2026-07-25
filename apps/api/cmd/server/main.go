@@ -138,6 +138,7 @@ func main() {
 	if cfg.AuthProvider == "local" {
 		r.Post("/auth/signup", authHandler.SignUp)
 		r.Post("/auth/signin", authHandler.SignIn)
+		r.Post("/auth/signout", authHandler.SignOut)
 	}
 
 	r.Group(func(r chi.Router) {
@@ -156,6 +157,9 @@ func main() {
 		r.Use(middleware.RateLimit(redis, 10000))
 
 		r.Delete("/account", userHandler.DeleteAccount)
+		if cfg.AuthProvider == "local" {
+			r.Get("/auth/me", authHandler.Me)
+		}
 
 		r.Post("/api-keys", apiKeyHandler.Create)
 		r.Get("/api-keys", apiKeyHandler.List)

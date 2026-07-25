@@ -18,6 +18,12 @@ export async function apiFetch<T>(
   const data = await res.json();
 
   if (!res.ok) {
+    if (
+      res.status === 401 &&
+      (data.error === "invalid session" || data.error === "missing credentials")
+    ) {
+      window.location.assign("/sign-in");
+    }
     throw new Error(data.error || "Request failed");
   }
 
