@@ -2,7 +2,9 @@ package config
 
 import (
 	"errors"
+	"log"
 	"os"
+	"strconv"
 
 	"github.com/joho/godotenv"
 )
@@ -27,6 +29,10 @@ type Config struct {
 	SQSQueueURL        string
 	SchedulerRoleARN   string
 	SQSQueueARN        string
+
+	MaxJobsPerUser    int
+	MaxAPIKeysPerUser int
+	RateLimitPerHour  int64
 }
 
 func Load() (*Config, error) {
@@ -48,6 +54,10 @@ func Load() (*Config, error) {
 		SQSQueueURL:        os.Getenv("SQS_QUEUE_URL"),
 		SchedulerRoleARN:   os.Getenv("SCHEDULER_ROLE_ARN"),
 		SQSQueueARN:        os.Getenv("SQS_QUEUE_ARN"),
+
+		MaxJobsPerUser:    getEnvInt("MAX_JOBS_PER_USER", 0),
+		MaxAPIKeysPerUser: getEnvInt("MAX_API_KEYS_PER_USER", 0),
+		RateLimitPerHour:  int64(getEnvInt("RATE_LIMIT_PER_HOUR", 10000)),
 	}
 
 	if err := cfg.validate(); err != nil {
@@ -88,4 +98,17 @@ func getEnv(key, fallback string) string {
 		return value
 	}
 	return fallback
+}
+
+func getEnvInt(key string, fallback int) int {
+	value := os.Getenv(key)
+	if value == "" {
+		return fallback
+	}
+	parsed, err := strconv.Atoi(value)
+	if err != nil {
+		log.Printf("config: invalid integer for %s (%q), using default %d", key, value, fallback)
+		return fallback
+	}
+	return parsed
 }

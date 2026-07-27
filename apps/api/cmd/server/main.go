@@ -70,7 +70,7 @@ func main() {
 	jobRepo := repository.NewJobRepository(db)
 
 	userSvc := service.NewUserService(userRepo)
-	apiKeySvc := service.NewAPIKeyService(apiKeyRepo)
+	apiKeySvc := service.NewAPIKeyService(apiKeyRepo, cfg.MaxAPIKeysPerUser)
 	smtpSvc := service.NewSMTPConfigService(smtpRepo, cryptoClient, mailerPool)
 	emailSvc := service.NewEmailService(
 		emailLogRepo,
@@ -97,7 +97,7 @@ func main() {
 		authSvc = service.NewAuthService(userRepo, cfg.JWTSecret)
 	}
 
-	jobSvc := service.NewJobService(jobRepo, eventbridgeSvc)
+	jobSvc := service.NewJobService(jobRepo, eventbridgeSvc, cfg.MaxJobsPerUser)
 	scheduler := service.NewScheduler(jobRepo, smtpSvc)
 	dashboardSvc := service.NewDashboardService(emailLogRepo, jobRepo, apiKeyRepo, smtpRepo)
 
@@ -154,7 +154,7 @@ func main() {
 
 		r.Use(middleware.FlexibleAuth(apiKeySvc, clerkUsers, localUsers))
 
-		r.Use(middleware.RateLimit(redis, 10000))
+		r.Use(middleware.RateLimit(redis, cfg.RateLimitPerHour))
 
 		r.Delete("/account", userHandler.DeleteAccount)
 		if cfg.AuthProvider == "local" {

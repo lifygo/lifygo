@@ -8,11 +8,6 @@ import (
 	"github.com/lifygo/lifygo/apps/api/pkg/crypto"
 )
 
-// maxAPIKeysPerUser is the maximum number of API keys a single user
-// can have at any one time. Enforced on every Create call.
-// This limit applies to all users on the free tier.
-const maxAPIKeysPerUser = 5
-
 // APIKeyRepository defines the database operations the APIKeyService needs.
 type APIKeyRepository interface {
 	Create(ctx context.Context, userID, keyHash, name string) (*model.APIKey, error)
@@ -25,12 +20,18 @@ type APIKeyRepository interface {
 
 // APIKeyService handles all business logic related to API keys.
 type APIKeyService struct {
-	keys APIKeyRepository
+	keys              APIKeyRepository
+	maxAPIKeysPerUser int
 }
 
 // NewAPIKeyService creates a new APIKeyService.
-func NewAPIKeyService(keys APIKeyRepository) *APIKeyService {
-	return &APIKeyService{keys: keys}
+//
+// maxAPIKeysPerUser caps how many API keys a single user may hold at once.
+// Pass 0 (or a negative number) for no limit — this is the default for
+// self-hosted instances via MAX_API_KEYS_PER_USER. The hosted lifygo.com
+// instance sets this explicitly to enforce its free-tier plan.
+func NewAPIKeyService(keys APIKeyRepository, maxAPIKeysPerUser int) *APIKeyService {
+	return &APIKeyService{keys: keys, maxAPIKeysPerUser: maxAPIKeysPerUser}
 }
 
 // Create generates a new API key for the given user.
@@ -50,13 +51,16 @@ func (s *APIKeyService) Create(ctx context.Context, input model.CreateAPIKeyInpu
 		return nil, fmt.Errorf("invalid input: %w", err)
 	}
 
-	// Enforce the per-user key limit before creating a new key.
-	count, err := s.keys.CountByUserID(ctx, input.UserID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to count api keys: %w", err)
-	}
-	if count >= maxAPIKeysPerUser {
-		return nil, model.ErrAPIKeyLimitReached
+	// Enforce the per-user key limit, if one is configured.
+	// maxAPIKeysPerUser <= 0 means unlimited (the self-hosted default).
+	if s.maxAPIKeysPerUser > 0 {
+		count, err := s.keys.CountByUserID(ctx, input.UserID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to count api keys: %w", err)
+		}
+		if count >= s.maxAPIKeysPerUser {
+			return nil, model.ErrAPIKeyLimitReached
+		}
 	}
 
 	// Generate a secure random raw key.

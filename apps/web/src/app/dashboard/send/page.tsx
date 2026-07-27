@@ -193,8 +193,8 @@ export default function SendPage() {
                   <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
                   <div className="space-y-1">
                     <p className="text-xs font-medium">Email sent successfully</p>
-                    <p className="font-mono text-xs text-emerald-700/80 dark:text-emerald-300/80">
-                      log_id: {emailResult.log_id}
+                    <p className="text-xs text-emerald-700/80 dark:text-emerald-300/80">
+                      Your test email was accepted for delivery.
                     </p>
                   </div>
                 </div>

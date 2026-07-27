@@ -10,10 +10,6 @@ import (
 	"github.com/lifygo/lifygo/apps/api/internal/model"
 )
 
-// maxJobsPerUser is the maximum number of active jobs a single user
-// can have at any one time on the free tier.
-const maxJobsPerUser = 3
-
 // JobRepository defines the database operations the JobService needs.
 type JobRepository interface {
 	Create(ctx context.Context, input model.CreateJobInput) (*model.Job, error)
@@ -28,18 +24,26 @@ type JobRepository interface {
 
 // JobService handles all business logic related to scheduled jobs.
 type JobService struct {
-	jobs        JobRepository
-	eventbridge *EventBridgeService
+	jobs           JobRepository
+	eventbridge    *EventBridgeService
+	maxJobsPerUser int
 }
 
 // NewJobService creates a new JobService.
+//
 // eventbridge is optional — pass nil to use the self-hosted scheduler only.
 // When eventbridge is non-nil, job creation and deletion also create/delete
 // EventBridge Scheduler rules in AWS for production-grade execution.
-func NewJobService(jobs JobRepository, eventbridge *EventBridgeService) *JobService {
+//
+// maxJobsPerUser caps how many active jobs a single user may have at once.
+// Pass 0 (or a negative number) for no limit — this is the default for
+// self-hosted instances via MAX_JOBS_PER_USER. The hosted lifygo.com
+// instance sets this explicitly to enforce its free-tier plan.
+func NewJobService(jobs JobRepository, eventbridge *EventBridgeService, maxJobsPerUser int) *JobService {
 	return &JobService{
-		jobs:        jobs,
-		eventbridge: eventbridge,
+		jobs:           jobs,
+		eventbridge:    eventbridge,
+		maxJobsPerUser: maxJobsPerUser,
 	}
 }
 
@@ -72,21 +76,24 @@ func (s *JobService) Create(ctx context.Context, input model.CreateJobInput) (*m
 		}
 	}
 
-	// Enforce the per-user job limit.
-	jobs, err := s.jobs.ListByUserID(ctx, input.UserID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to count jobs: %w", err)
-	}
-
-	activeCount := 0
-	for _, j := range jobs {
-		if j.Status == model.JobStatusActive {
-			activeCount++
+	// Enforce the per-user job limit, if one is configured.
+	// maxJobsPerUser <= 0 means unlimited (the self-hosted default).
+	if s.maxJobsPerUser > 0 {
+		jobs, err := s.jobs.ListByUserID(ctx, input.UserID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to count jobs: %w", err)
 		}
-	}
 
-	if activeCount >= maxJobsPerUser {
-		return nil, model.ErrJobLimitReached
+		activeCount := 0
+		for _, j := range jobs {
+			if j.Status == model.JobStatusActive {
+				activeCount++
+			}
+		}
+
+		if activeCount >= s.maxJobsPerUser {
+			return nil, model.ErrJobLimitReached
+		}
 	}
 
 	job, err := s.jobs.Create(ctx, input)
