@@ -226,7 +226,9 @@ export function Navbar() {
 
             {/* Try Demo CTA */}
             <Link
-              href="/sign-up"
+              href="https://dashboard.lifygo.com"
+              target="_blank"
+              rel="noopener noreferrer"
               className="group relative hidden sm:inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-brand px-4 text-xs sm:text-sm font-semibold text-white shadow-md shadow-brand/20 transition-all duration-200 hover:bg-brand/90 hover:shadow-lg hover:shadow-brand/30 active:scale-[0.98]"
             >
               <span>Try demo</span>
@@ -324,7 +326,9 @@ export function Navbar() {
               {/* Mobile CTAs */}
               <div className="mt-3 flex flex-col gap-2 border-t border-white/[0.08] pt-4">
                 <Link
-                  href="/sign-up"
+                  href="https://dashboard.lifygo.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   onClick={() => setMobileMenuOpen(false)}
                   className="flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-brand text-sm font-semibold text-white shadow-md shadow-brand/20"
                 >

@@ -1,6 +1,8 @@
 "use client";
 
 import React, { createContext, useContext } from "react";
+import { ClerkAuthProvider } from "./auth-provider-clerk";
+import { LocalAuthProvider } from "./auth-provider-local";
 
 interface User {
   id: string;
@@ -30,9 +32,7 @@ const AUTH_PROVIDER = process.env.NEXT_PUBLIC_AUTH_PROVIDER || "clerk";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   if (AUTH_PROVIDER === "local") {
-    const { LocalAuthProvider } = require("./auth-provider-local");
     return <LocalAuthProvider>{children}</LocalAuthProvider>;
   }
-  const { ClerkAuthProvider } = require("./auth-provider-clerk");
   return <ClerkAuthProvider>{children}</ClerkAuthProvider>;
 }
