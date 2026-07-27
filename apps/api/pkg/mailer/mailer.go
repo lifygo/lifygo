@@ -58,11 +58,6 @@ func (m *Mailer) Send(msg Message) error {
 		return err
 	}
 
-	if !msg.IsHTML {
-		msg.Body = WrapInHTMLTemplate(msg.Subject, msg.Body)
-		msg.IsHTML = true
-	}
-
 	addr := fmt.Sprintf("%s:%d", m.host, m.port)
 	raw := m.buildRaw(msg)
 	key := ""
