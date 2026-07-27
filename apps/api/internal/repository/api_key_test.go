@@ -11,10 +11,6 @@ import (
 	"github.com/lifygo/lifygo/apps/api/internal/repository"
 )
 
-// -----------------------------------------------------------------------
-// Create
-// -----------------------------------------------------------------------
-
 func TestAPIKeyRepository_Create(t *testing.T) {
 	pool := newTestPool(t)
 

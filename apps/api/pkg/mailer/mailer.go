@@ -58,11 +58,6 @@ func (m *Mailer) Send(msg Message) error {
 		return err
 	}
 
-	if !msg.IsHTML {
-		msg.Body = WrapInHTMLTemplate(msg.Subject, msg.Body)
-		msg.IsHTML = true
-	}
-
 	addr := fmt.Sprintf("%s:%d", m.host, m.port)
 	raw := m.buildRaw(msg)
 	key := ""
@@ -144,38 +139,38 @@ func WrapInHTMLTemplate(title, body string) string {
 	formattedBody := strings.ReplaceAll(body, "\n", "<br>")
 
 	return fmt.Sprintf(`<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>%s</title>
-</head>
-<body style="margin: 0; padding: 0; background-color: #f4f6f8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
-    <table role="presentation" width="100%%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f4f6f8; padding: 48px 16px;">
-        <tr>
-            <td align="center">
-                <table role="presentation" width="100%%" border="0" cellspacing="0" cellpadding="0" style="max-width: 560px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
-                    <tr>
-                        <td style="padding: 40px 40px 24px;">
-                            <h2 style="margin: 0 0 8px; font-size: 20px; font-weight: 600; color: #111827; line-height: 1.3;">%s</h2>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 0 40px 40px; font-size: 15px; line-height: 1.7; color: #374151;">
-                            %s
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 20px 40px; background-color: #fafafa; border-top: 1px solid #f0f0f0; border-radius: 0 0 8px 8px;">
-                            <p style="margin: 0; font-size: 12px; color: #9ca3af;">This is an automated message. Please do not reply to this email.</p>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
-</body>
-</html>`, title, title, formattedBody)
+			<html lang="en">
+			<head>
+				<meta charset="UTF-8">
+				<meta name="viewport" content="width=device-width, initial-scale=1.0">
+				<title>%s</title>
+			</head>
+			<body style="margin: 0; padding: 0; background-color: #f4f6f8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+				<table role="presentation" width="100%%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f4f6f8; padding: 48px 16px;">
+					<tr>
+						<td align="center">
+							<table role="presentation" width="100%%" border="0" cellspacing="0" cellpadding="0" style="max-width: 560px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+								<tr>
+									<td style="padding: 40px 40px 24px;">
+										<h2 style="margin: 0 0 8px; font-size: 20px; font-weight: 600; color: #111827; line-height: 1.3;">%s</h2>
+									</td>
+								</tr>
+								<tr>
+									<td style="padding: 0 40px 40px; font-size: 15px; line-height: 1.7; color: #374151;">
+										%s
+									</td>
+								</tr>
+								<tr>
+									<td style="padding: 20px 40px; background-color: #fafafa; border-top: 1px solid #f0f0f0; border-radius: 0 0 8px 8px;">
+										<p style="margin: 0; font-size: 12px; color: #9ca3af;">This is an automated message. Please do not reply to this email.</p>
+									</td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+				</table>
+			</body>
+			</html>`, title, title, formattedBody)
 }
 
 func dialSTARTTLS(addr, host string, tlsConfig *tls.Config, auth smtp.Auth) (*smtp.Client, error) {
