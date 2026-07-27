@@ -22,6 +22,4 @@ CREATE TABLE smtp_configs (
     CONSTRAINT chk_smtp_configs_port CHECK (port > 0 AND port <= 65535)
 );
 
--- Index for fast lookup when sending an email — every send operation
--- fetches the user's SMTP config by user_id.
 CREATE INDEX idx_smtp_configs_user_id ON smtp_configs (user_id);
