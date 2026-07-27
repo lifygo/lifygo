@@ -23,6 +23,7 @@ export default function SmtpPage() {
   const [config, setConfig] = useState<SmtpConfig | null>(null)
   const [loading, setLoading] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [isDirty, setIsDirty] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
 
@@ -37,6 +38,7 @@ export default function SmtpPage() {
         username: data.username,
         from_address: data.from_address,
       }))
+      setIsDirty(false)
     } catch {
       
     }
@@ -52,6 +54,7 @@ export default function SmtpPage() {
       ...prev,
       [name]: name === "port" ? Number(value) : value,
     }))
+    setIsDirty(true)
   }
 
   async function handleSave() {
@@ -66,6 +69,7 @@ export default function SmtpPage() {
       setConfig(data)
       setSuccess("SMTP configuration saved successfully.")
       setForm((prev) => ({ ...prev, password: "" }))
+      setIsDirty(false)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save configuration")
     } finally {
@@ -81,6 +85,7 @@ export default function SmtpPage() {
       await call(ENDPOINTS.SMTP.DELETE, { method: "DELETE" })
       setConfig(null)
       setForm(emptyForm)
+      setIsDirty(false)
       setSuccess("SMTP configuration removed.")
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete configuration")
@@ -225,7 +230,7 @@ export default function SmtpPage() {
 
             <Button
               onClick={handleSave}
-              disabled={loading || deleting}
+              disabled={loading || deleting || (!!config && !isDirty)}
               className="h-9 px-4 text-xs font-medium"
             >
               {loading && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}

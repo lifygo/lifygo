@@ -115,7 +115,7 @@ func TestAPIKeyService_Create(t *testing.T) {
 	t.Run("creates a key successfully", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeAPIKeyRepository()
-		svc := service.NewAPIKeyService(repo)
+		svc := service.NewAPIKeyService(repo, 0)
 
 		resp, err := svc.Create(context.Background(), model.CreateAPIKeyInput{
 			UserID: "user_1",
@@ -145,7 +145,7 @@ func TestAPIKeyService_Create(t *testing.T) {
 	t.Run("raw key is not stored — only the hash is", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeAPIKeyRepository()
-		svc := service.NewAPIKeyService(repo)
+		svc := service.NewAPIKeyService(repo, 0)
 
 		resp, err := svc.Create(context.Background(), model.CreateAPIKeyInput{
 			UserID: "user_1",
@@ -172,10 +172,10 @@ func TestAPIKeyService_Create(t *testing.T) {
 		}
 	})
 
-	t.Run("enforces maximum key limit of 5", func(t *testing.T) {
+	t.Run("enforces configured key limit", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeAPIKeyRepository()
-		svc := service.NewAPIKeyService(repo)
+		svc := service.NewAPIKeyService(repo, 5)
 
 		// Create 5 keys — all should succeed.
 		for i := 0; i < 5; i++ {
@@ -198,10 +198,26 @@ func TestAPIKeyService_Create(t *testing.T) {
 		}
 	})
 
+	t.Run("maxAPIKeysPerUser=0 means unlimited", func(t *testing.T) {
+		t.Parallel()
+		repo := newFakeAPIKeyRepository()
+		svc := service.NewAPIKeyService(repo, 0)
+
+		for i := 0; i < 10; i++ {
+			_, err := svc.Create(context.Background(), model.CreateAPIKeyInput{
+				UserID: "user_1",
+				Name:   "unlimited-key",
+			})
+			if err != nil {
+				t.Fatalf("key %d creation failed unexpectedly with limit disabled: %v", i+1, err)
+			}
+		}
+	})
+
 	t.Run("returns error for missing user id", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeAPIKeyRepository()
-		svc := service.NewAPIKeyService(repo)
+		svc := service.NewAPIKeyService(repo, 0)
 
 		_, err := svc.Create(context.Background(), model.CreateAPIKeyInput{
 			Name: "production",
@@ -214,7 +230,7 @@ func TestAPIKeyService_Create(t *testing.T) {
 	t.Run("returns error for missing key name", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeAPIKeyRepository()
-		svc := service.NewAPIKeyService(repo)
+		svc := service.NewAPIKeyService(repo, 0)
 
 		_, err := svc.Create(context.Background(), model.CreateAPIKeyInput{
 			UserID: "user_1",
@@ -227,7 +243,7 @@ func TestAPIKeyService_Create(t *testing.T) {
 	t.Run("different users have separate key limits", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeAPIKeyRepository()
-		svc := service.NewAPIKeyService(repo)
+		svc := service.NewAPIKeyService(repo, 0)
 
 		// Fill userA to the limit.
 		for i := 0; i < 5; i++ {
@@ -261,7 +277,7 @@ func TestAPIKeyService_Authenticate(t *testing.T) {
 	t.Run("authenticates a valid key", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeAPIKeyRepository()
-		svc := service.NewAPIKeyService(repo)
+		svc := service.NewAPIKeyService(repo, 0)
 
 		// Create a key through the service so we have a real raw key.
 		resp, err := svc.Create(context.Background(), model.CreateAPIKeyInput{
@@ -285,7 +301,7 @@ func TestAPIKeyService_Authenticate(t *testing.T) {
 	t.Run("returns ErrUnauthorized for an unknown key", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeAPIKeyRepository()
-		svc := service.NewAPIKeyService(repo)
+		svc := service.NewAPIKeyService(repo, 0)
 
 		_, err := svc.Authenticate(context.Background(), "lfy_doesnotexist")
 		if !errors.Is(err, model.ErrUnauthorized) {
@@ -296,7 +312,7 @@ func TestAPIKeyService_Authenticate(t *testing.T) {
 	t.Run("returns ErrUnauthorized for an empty key", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeAPIKeyRepository()
-		svc := service.NewAPIKeyService(repo)
+		svc := service.NewAPIKeyService(repo, 0)
 
 		_, err := svc.Authenticate(context.Background(), "")
 		if !errors.Is(err, model.ErrUnauthorized) {
@@ -307,7 +323,7 @@ func TestAPIKeyService_Authenticate(t *testing.T) {
 	t.Run("does not authenticate with a wrong key that looks similar", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeAPIKeyRepository()
-		svc := service.NewAPIKeyService(repo)
+		svc := service.NewAPIKeyService(repo, 0)
 
 		resp, err := svc.Create(context.Background(), model.CreateAPIKeyInput{
 			UserID: "user_1",
@@ -337,7 +353,7 @@ func TestAPIKeyService_List(t *testing.T) {
 	t.Run("returns all keys for a user", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeAPIKeyRepository()
-		svc := service.NewAPIKeyService(repo)
+		svc := service.NewAPIKeyService(repo, 0)
 
 		svc.Create(context.Background(), model.CreateAPIKeyInput{UserID: "user_1", Name: "key-one"})
 		svc.Create(context.Background(), model.CreateAPIKeyInput{UserID: "user_1", Name: "key-two"})
@@ -354,7 +370,7 @@ func TestAPIKeyService_List(t *testing.T) {
 	t.Run("returns empty list for user with no keys", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeAPIKeyRepository()
-		svc := service.NewAPIKeyService(repo)
+		svc := service.NewAPIKeyService(repo, 0)
 
 		keys, err := svc.List(context.Background(), "user_1")
 		if err != nil {
@@ -368,7 +384,7 @@ func TestAPIKeyService_List(t *testing.T) {
 	t.Run("returns ErrUnauthorized for empty user id", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeAPIKeyRepository()
-		svc := service.NewAPIKeyService(repo)
+		svc := service.NewAPIKeyService(repo, 0)
 
 		_, err := svc.List(context.Background(), "")
 		if !errors.Is(err, model.ErrUnauthorized) {
@@ -387,7 +403,7 @@ func TestAPIKeyService_Delete(t *testing.T) {
 	t.Run("deletes a key owned by the user", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeAPIKeyRepository()
-		svc := service.NewAPIKeyService(repo)
+		svc := service.NewAPIKeyService(repo, 0)
 
 		resp, err := svc.Create(context.Background(), model.CreateAPIKeyInput{
 			UserID: "user_1",
@@ -411,7 +427,7 @@ func TestAPIKeyService_Delete(t *testing.T) {
 	t.Run("returns ErrNotFound when deleting a key that belongs to another user", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeAPIKeyRepository()
-		svc := service.NewAPIKeyService(repo)
+		svc := service.NewAPIKeyService(repo, 0)
 
 		resp, err := svc.Create(context.Background(), model.CreateAPIKeyInput{
 			UserID: "user_1",
@@ -430,7 +446,7 @@ func TestAPIKeyService_Delete(t *testing.T) {
 	t.Run("returns ErrNotFound for empty id or user id", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeAPIKeyRepository()
-		svc := service.NewAPIKeyService(repo)
+		svc := service.NewAPIKeyService(repo, 0)
 
 		if err := svc.Delete(context.Background(), "", "user_1"); !errors.Is(err, model.ErrNotFound) {
 			t.Errorf("empty id: got %v, want %v", err, model.ErrNotFound)

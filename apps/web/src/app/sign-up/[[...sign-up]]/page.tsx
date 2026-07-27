@@ -2,19 +2,18 @@
 
 import { SignUp } from "@clerk/nextjs";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Loader2, Lock } from "lucide-react";
+import { ArrowRight, Loader2 } from "lucide-react";
 
 
 import logoPic from "@/assets/logos/lifygo-officiel.png";
 
 const AUTH_PROVIDER = process.env.NEXT_PUBLIC_AUTH_PROVIDER || "clerk";
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+const DASHBOARD_URL = process.env.NODE_ENV === "production" ? "https://dashboard.lifygo.com" : "/dashboard";
 
 function LocalSignUpForm() {
-  const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -39,7 +38,7 @@ function LocalSignUpForm() {
         throw new Error(data.error || "Sign up failed");
       }
 
-      router.push("/dashboard");
+      window.location.assign(DASHBOARD_URL);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign up failed");
     } finally {
@@ -186,6 +185,7 @@ export default function SignUpPage() {
               />
             </Link>
             <SignUp
+              forceRedirectUrl={DASHBOARD_URL}
               appearance={{
                 elements: {
                   rootBox: "w-full shadow-2xl rounded-md border border-neutral-800 overflow-hidden",
