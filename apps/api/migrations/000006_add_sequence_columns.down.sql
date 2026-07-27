@@ -1,4 +1,3 @@
--- Reverses 000006_add_sequence_columns.up.sql
 
 DROP INDEX IF EXISTS idx_email_logs_user_id_seq;
 DROP INDEX IF EXISTS idx_api_keys_user_id_seq;

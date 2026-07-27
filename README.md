@@ -1,8 +1,12 @@
 # LifyGo
 
+![alt text](apps/web/src/assets/logos/lifygo-officiel.png)
+
 Transactional email, OTP verification, and job scheduling in one API.
 
 Start free on our hosted version, or self-host on your own server. Use your SMTP or ours. Either way, no per-email fees and no vendor lock-in.
+
+![alt text](apps/web/src/assets/logos/banner.png)
 
 ---
 

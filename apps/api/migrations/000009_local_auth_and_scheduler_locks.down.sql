@@ -1,4 +1,4 @@
--- 000009_local_auth_and_scheduler_locks.down.sql
+
 
 BEGIN;
 

@@ -3,9 +3,6 @@ package model
 import "errors"
 
 // Domain errors used across all models.
-// These are the canonical error values that services and handlers
-// check against. Never return raw database errors to callers —
-// always map them to one of these.
 var (
 	// General
 	ErrNotFound      = errors.New("record not found")

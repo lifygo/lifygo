@@ -2,29 +2,20 @@ package model
 
 import "time"
 
-// JobType represents what a job does when it fires.
 type JobType string
 
 const (
-	// JobTypeWebhook means LifyGo hits a URL when the job fires.
 	JobTypeWebhook JobType = "webhook"
-
-	// JobTypeEmail means LifyGo sends an email when the job fires.
-	JobTypeEmail JobType = "email"
+	JobTypeEmail   JobType = "email"
 )
 
-// JobScheduleType represents how a job is scheduled.
 type JobScheduleType string
 
 const (
-	// JobScheduleTypeCron means the job fires on a recurring cron schedule.
-	JobScheduleTypeCron JobScheduleType = "cron"
-
-	// JobScheduleTypeOneTime means the job fires once at a specific time.
+	JobScheduleTypeCron    JobScheduleType = "cron"
 	JobScheduleTypeOneTime JobScheduleType = "one_time"
 )
 
-// JobStatus represents the current state of a job.
 type JobStatus string
 
 const (
@@ -34,7 +25,6 @@ const (
 	JobStatusFailed    JobStatus = "failed"
 )
 
-// Job represents a scheduled job created by a developer.
 type Job struct {
 	ID             string          `json:"id"              db:"id"`
 	UserID         string          `json:"user_id"         db:"user_id"`
@@ -55,7 +45,6 @@ type Job struct {
 	UpdatedAt      time.Time       `json:"updated_at"      db:"updated_at"`
 }
 
-// JobExecution represents a single execution attempt of a job.
 type JobExecution struct {
 	ID           string    `json:"id"            db:"id"`
 	JobID        string    `json:"job_id"        db:"job_id"`
@@ -67,7 +56,6 @@ type JobExecution struct {
 	ExecutedAt   time.Time `json:"executed_at"   db:"executed_at"`
 }
 
-// CreateJobInput holds the data required to create a new job.
 type CreateJobInput struct {
 	UserID         string
 	Name           string
@@ -82,7 +70,6 @@ type CreateJobInput struct {
 	EmailBody      *string
 }
 
-// Validate checks that all required fields are present and consistent.
 func (i *CreateJobInput) Validate() error {
 	if i.UserID == "" {
 		return ErrUnauthorized

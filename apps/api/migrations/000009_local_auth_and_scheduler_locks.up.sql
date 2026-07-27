@@ -1,5 +1,4 @@
--- 000009_local_auth_and_scheduler_locks.up.sql
--- Adds scheduler concurrency control and prepares schema for local authentication.
+
 
 BEGIN;
 
