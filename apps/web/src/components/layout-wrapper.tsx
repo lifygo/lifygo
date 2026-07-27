@@ -4,9 +4,15 @@ import { usePathname } from "next/navigation";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 
-export function LayoutWrapper({ children }: { children: React.ReactNode }) {
+export function LayoutWrapper({
+  children,
+  isDashboardHost = false,
+}: {
+  children: React.ReactNode;
+  isDashboardHost?: boolean;
+}) {
   const pathname = usePathname();
-  const isDashboard = pathname.startsWith("/dashboard");
+  const isDashboard = isDashboardHost || pathname.startsWith("/dashboard");
 
   return (
     <>

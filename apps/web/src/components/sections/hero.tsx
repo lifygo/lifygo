@@ -119,7 +119,9 @@ export function Hero() {
         {/* CTA Buttons */}
         <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
           <Link
-            href="/sign-up"
+            href="https://dashboard.lifygo.com"
+            target="_blank"
+            rel="noopener noreferrer"
             className="group inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-brand px-6 text-sm font-semibold text-white shadow-md shadow-brand/20 transition-all duration-200 hover:bg-brand/90 hover:shadow-lg hover:shadow-brand/30 sm:w-auto active:scale-[0.98]"
           >
             <span>Try the demo</span>

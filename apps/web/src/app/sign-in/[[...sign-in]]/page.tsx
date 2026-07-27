@@ -10,7 +10,9 @@ import logoPic from "@/assets/logos/lifygo-officiel.png";
 
 const AUTH_PROVIDER = process.env.NEXT_PUBLIC_AUTH_PROVIDER || "clerk";
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
-const DASHBOARD_URL = process.env.NODE_ENV === "production" ? "https://dashboard.lifygo.com" : "/dashboard";
+const DASHBOARD_URL =
+  process.env.NEXT_PUBLIC_CLERK_SIGN_IN_FORCE_REDIRECT_URL ||
+  (process.env.NODE_ENV === "production" ? "https://dashboard.lifygo.com" : "/dashboard");
 
 function LocalSignInForm() {
   const [email, setEmail] = useState("");
@@ -48,7 +50,7 @@ function LocalSignInForm() {
     <div className="w-full max-w-sm sm:max-w-md rounded-md border border-neutral-800 bg-neutral-950 p-5 sm:p-6 shadow-2xl">
       {/* Header & Logo */}
       <div className="flex flex-col items-center text-center mb-5">
-        <Link href="/" className="inline-block mb-3 hover:opacity-90 transition-opacity">
+        <Link href="https://lifygo.com" className="inline-block mb-3 hover:opacity-90 transition-opacity">
           <Image
             src={logoPic}
             alt="LifyGo Logo"
@@ -161,7 +163,7 @@ export default function SignInPage() {
       <div className="relative z-10 w-full max-w-sm sm:max-w-md">
         {AUTH_PROVIDER === "clerk" ? (
           <div className="flex flex-col items-center">
-            <Link href="/" className="mb-3 hover:opacity-90 transition-opacity">
+            <Link href="https://lifygo.com" className="mb-3 hover:opacity-90 transition-opacity">
               <Image
                 src={logoPic}
                 alt="LifyGo Logo"
