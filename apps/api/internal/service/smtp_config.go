@@ -109,6 +109,10 @@ func (s *SMTPConfigService) GetMailer(ctx context.Context, userID string) (*mail
 		return nil, fmt.Errorf("failed to get smtp config: %w", err)
 	}
 
+	if cfg.Host == "" {
+		return nil, model.ErrNotFound
+	}
+
 	plainPassword, err := s.crypto.Decrypt(cfg.PasswordEncrypted)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decrypt smtp password: %w", err)
@@ -154,8 +158,8 @@ func (s *SMTPConfigService) GetDefaultMailer(ctx context.Context, userID string)
 }
 
 func (s *SMTPConfigService) HasSMTPConfig(ctx context.Context, userID string) bool {
-	_, err := s.configs.GetByUserID(ctx, userID)
-	return err == nil
+	cfg, err := s.configs.GetByUserID(ctx, userID)
+	return err == nil && cfg.Host != ""
 }
 
 func (s *SMTPConfigService) Delete(ctx context.Context, userID string) error {
