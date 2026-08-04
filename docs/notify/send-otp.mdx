@@ -7,7 +7,7 @@ description: "POST /send/otp — Generate and send a one-time passcode"
 
 `POST /send/otp`
 
-Generates a cryptographically secure 6-digit one-time passcode (OTP) and sends it to the specified email address.
+Generates a cryptographically secure 6-digit passcode and sends it to the specified email address. No branding, just the code.
 
 ---
 
@@ -19,17 +19,19 @@ POST /send/otp
 
 ---
 
-## Request
+## What recipients see
 
-Example request:
+<img src="/images/otp.png" alt="OTP email example" width="480" />
+
+---
+
+## Request
 
 ```bash
 curl -X POST http://localhost:8080/send/otp \
   -H "X-API-Key: lfy_your_key" \
   -H "Content-Type: application/json" \
-  -d '{
-    "to":"hello@example.com"
-  }'
+  -d '{"to":"hello@example.com"}'
 ```
 
 ---
@@ -38,38 +40,36 @@ curl -X POST http://localhost:8080/send/otp \
 
 | Field | Type | Required | Description |
 |------|------|:--------:|-------------|
-| `to` | `string` | ✅ | Recipient email address |
+| `to` | `string` | Yes | Recipient email address |
 
 ---
 
-## Successful Response
+## Response
 
 **HTTP 200 OK**
 
 ```json
 {
-  "message": "OTP sent",
-  "expires_at": "2026-07-22T09:40:00Z"
+  "email": "hello@example.com",
+  "expires_at": "2026-08-04T09:40:00Z"
 }
 ```
 
 ---
 
-## OTP Behavior
+## Behavior
 
-LifyGo OTPs follow these security rules:
-
-- OTPs are **6-digit** numeric codes.
-- Generated using Go's `crypto/rand` package.
-- Stored in Redis with a **10-minute TTL**.
-- Only **one active OTP per email** is allowed at any time.
-- Sending a new OTP automatically invalidates the previous one.
-- OTPs are **single-use** and are deleted immediately after successful verification.
+- 6-digit numeric codes generated with `crypto/rand`
+- Stored in Redis with 10 minute TTL
+- One active OTP per email at a time
+- Single use — deleted immediately after verification
 
 ---
 
-## Expiration
+## Errors
 
-- OTPs expire after **10 minutes**.
-- Expired OTPs cannot be verified.
-- Once an OTP has been successfully verified, it is permanently removed from storage.
+| Status | Description |
+|:------:|-------------|
+| 400 | Missing required field |
+| 401 | Invalid or missing API key |
+| 500 | Delivery failed |
