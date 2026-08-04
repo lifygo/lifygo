@@ -8,23 +8,27 @@
   "logoHeight": 32,
   "favicon": "/favicon.ico",
   "colors": {
-    "primary": "#4f46e5",
-    "light": "#818cf8",
-    "dark": "#3730a3"
+    "primary": "#ff5722",
+    "light": "#ff8a50",
+    "dark": "#c41c00"
   },
   "topbarLinks": [
+    {
+      "name": "Dashboard",
+      "url": "https://dashboard.lifygo.com"
+    },
     {
       "name": "GitHub",
       "url": "https://github.com/lifygo/lifygo"
     },
     {
       "name": "LinkedIn",
-      "url": "https://linkedin.com/company/lifygo"
+      "url": "https://www.linkedin.com/company/lifygo"
     }
   ],
   "topbarCtaButton": {
-    "name": "Try the demo",
-    "url": "https://lifygo.com/sign-up"
+    "name": "Get started",
+    "url": "https://lifygo.com"
   },
   "anchors": [
     {
@@ -35,7 +39,7 @@
     {
       "name": "LinkedIn",
       "icon": "linkedin",
-      "url": "https://linkedin.com/company/lifygo"
+      "url": "https://www.linkedin.com/company/lifygo"
     }
   ],
   "navigation": {
@@ -43,20 +47,35 @@
       "docs/introduction",
       "docs/quickstart",
       "docs/authentication",
-      "docs/notify/send-email",
-      "docs/notify/send-otp",
-      "docs/notify/verify-otp",
-      "docs/notify/logs",
-      "docs/schedule/create-job",
-      "docs/schedule/manage-jobs",
-      "docs/schedule/executions",
-      "docs/guides/gmail-smtp",
-      "docs/guides/self-hosting",
-      "docs/guides/errors"
+      {
+        "group": "Email",
+        "pages": [
+          "docs/notify/send-email",
+          "docs/notify/send-otp",
+          "docs/notify/verify-otp",
+          "docs/notify/logs"
+        ]
+      },
+      {
+        "group": "Jobs",
+        "pages": [
+          "docs/schedule/create-job",
+          "docs/schedule/manage-jobs",
+          "docs/schedule/executions"
+        ]
+      },
+      {
+        "group": "Guides",
+        "pages": [
+          "docs/guides/gmail-smtp",
+          "docs/guides/self-hosting",
+          "docs/guides/errors"
+        ]
+      }
     ]
   },
   "footerSocials": {
     "github": "https://github.com/lifygo/lifygo",
-    "linkedin": "https://www.linkedin.com/company/lifygo/about/?viewAsMember=true"
+    "linkedin": "https://www.linkedin.com/company/lifygo"
   }
 }

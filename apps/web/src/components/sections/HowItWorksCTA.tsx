@@ -8,13 +8,13 @@ const steps = [
     number: "1",
     title: "Set your from address",
     description:
-      "Sign in with Google or GitHub, then set the address your recipients will see. No SMTP credentials needed — we provide the relay. Or bring your own SMTP for unlimited sending.",
+      "Sign in with Google or GitHub, then set the address your recipients will see. No SMTP credentials needed we provide the relay. Or bring your own SMTP for unlimited sending.",
   },
   {
     number: "2",
     title: "Create an API key",
     description:
-      "One key covers everything — email, OTP, and cron jobs. Drop it in your environment variables. No SDKs, no client libraries. Just a header.",
+      "One key covers everything email, OTP, and cron jobs. Drop it in your environment variables. No SDKs, no client libraries. Just a header.",
   },
   {
     number: "3",

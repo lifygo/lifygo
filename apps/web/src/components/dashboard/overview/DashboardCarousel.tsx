@@ -5,28 +5,28 @@ import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react"
 
 const slides = [
   {
-    tag: "Performance",
-    title: "Faster batch delivery",
+    tag: "Email",
+    title: "Your emails go through Resend",
     description:
-      "Concurrent email sends now route across worker pools, cutting average gateway latency to under 15ms.",
-    actionText: "Read the docs",
-    actionHref: "#",
+      "Free tier emails are delivered via the LifyGo Resend relay. Set your from address and you are done. No SMTP config, no DNS records, no domain verification.",
+    actionText: "Configure from address",
+    actionHref: "/dashboard/smtp",
   },
   {
     tag: "Security",
-    title: "Automatic key rotation",
+    title: "API keys should never leave your server",
     description:
-      "Turn on monthly API key rotation from your settings to keep long-lived integrations secure by default.",
-    actionText: "Review security settings",
+      "Make all LifyGo calls from your backend. Never expose your API key in client side code or mobile apps. A leaked key can send emails as you.",
+    actionText: "Manage API keys",
     actionHref: "/dashboard/api-keys",
   },
   {
-    tag: "New",
-    title: "Cron engine v2",
+    tag: "Jobs",
+    title: "Schedule anything with a cron expression",
     description:
-      "Scheduled jobs now support millisecond-precision intervals and smarter retry behavior on failure.",
-    actionText: "View changelog",
-    actionHref: "#",
+      "Create recurring webhooks or email jobs. Every execution is logged with status, duration, and response code. One time jobs mark themselves complete after first run.",
+    actionText: "View your jobs",
+    actionHref: "/dashboard/jobs",
   },
 ]
 
@@ -58,7 +58,7 @@ export function DashboardCarousel() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              What's New
+              Did you know
             </span>
             <span className="h-4 w-[1px] bg-border" />
             <span className="text-xs font-medium text-foreground">
