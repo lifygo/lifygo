@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/lifygo/lifygo/apps/api/internal/model"
 	"github.com/lifygo/lifygo/apps/api/pkg/crypto"
@@ -144,17 +145,17 @@ func (s *SMTPConfigService) GetDefaultMailer(ctx context.Context, userID string)
 		return nil, fmt.Errorf("no default smtp relay configured")
 	}
 
-	replyTo := ""
+	fromAddress := s.defaultSMTPFrom
 
 	cfg, err := s.configs.GetByUserID(ctx, userID)
-	if err == nil && cfg.FromAddress != "" {
-		replyTo = cfg.FromAddress
+	if err == nil && cfg.FromAddress != "" && strings.HasSuffix(cfg.FromAddress, "@lifygo.com") {
+		fromAddress = cfg.FromAddress
 	} else if err != nil && !errors.Is(err, model.ErrNotFound) {
 		return nil, fmt.Errorf("failed to get smtp config: %w", err)
 	}
 
-	log.Printf("smtp.GetDefaultMailer: sending via Resend (from=%s, reply_to=%s)", s.defaultSMTPFrom, replyTo)
-	return newResendMailer(s.defaultSMTPPass, s.defaultSMTPFrom, replyTo), nil
+	log.Printf("smtp.GetDefaultMailer: sending via Resend (from=%s)", fromAddress)
+	return newResendMailer(s.defaultSMTPPass, fromAddress), nil
 }
 
 func (s *SMTPConfigService) HasSMTPConfig(ctx context.Context, userID string) bool {
