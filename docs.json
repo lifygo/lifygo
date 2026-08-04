@@ -5,6 +5,7 @@
     "dark": "/logo/dark.svg",
     "light": "/logo/light.svg"
   },
+  "logoHeight": 32,
   "favicon": "/favicon.ico",
   "colors": {
     "primary": "#4f46e5",
@@ -15,6 +16,10 @@
     {
       "name": "GitHub",
       "url": "https://github.com/lifygo/lifygo"
+    },
+    {
+      "name": "LinkedIn",
+      "url": "https://linkedin.com/company/lifygo"
     }
   ],
   "topbarCtaButton": {
@@ -26,6 +31,11 @@
       "name": "GitHub",
       "icon": "github",
       "url": "https://github.com/lifygo/lifygo"
+    },
+    {
+      "name": "LinkedIn",
+      "icon": "linkedin",
+      "url": "https://linkedin.com/company/lifygo"
     }
   ],
   "navigation": {
@@ -46,6 +56,7 @@
     ]
   },
   "footerSocials": {
-    "github": "https://github.com/lifygo/lifygo"
+    "github": "https://github.com/lifygo/lifygo",
+    "linkedin": "https://www.linkedin.com/company/lifygo/about/?viewAsMember=true"
   }
 }

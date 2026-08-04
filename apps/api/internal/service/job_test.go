@@ -174,7 +174,7 @@ func TestJobService_Create(t *testing.T) {
 	t.Run("creates a webhook cron job successfully", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeJobRepository()
-		svc := service.NewJobService(repo, nil, 0)
+		svc := service.NewJobService(repo, nil, 0, nil)
 
 		job, err := svc.Create(context.Background(), validWebhookCronInput("user_1"))
 		if err != nil {
@@ -191,7 +191,7 @@ func TestJobService_Create(t *testing.T) {
 	t.Run("creates a one-time email job successfully", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeJobRepository()
-		svc := service.NewJobService(repo, nil, 0)
+		svc := service.NewJobService(repo, nil, 0, nil)
 
 		job, err := svc.Create(context.Background(), validEmailOneTimeInput("user_1"))
 		if err != nil {
@@ -205,7 +205,7 @@ func TestJobService_Create(t *testing.T) {
 	t.Run("enforces configured job limit", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeJobRepository()
-		svc := service.NewJobService(repo, nil, 3)
+		svc := service.NewJobService(repo, nil, 3, nil)
 
 		for i := 0; i < 3; i++ {
 			input := validWebhookCronInput("user_1")
@@ -227,7 +227,7 @@ func TestJobService_Create(t *testing.T) {
 	t.Run("maxJobsPerUser=0 means unlimited", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeJobRepository()
-		svc := service.NewJobService(repo, nil, 0)
+		svc := service.NewJobService(repo, nil, 0, nil)
 
 		// Create well past what any configured free-tier limit would allow.
 		// None of these should fail with ErrJobLimitReached.
@@ -243,7 +243,7 @@ func TestJobService_Create(t *testing.T) {
 	t.Run("rejects invalid cron expression", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeJobRepository()
-		svc := service.NewJobService(repo, nil, 0)
+		svc := service.NewJobService(repo, nil, 0, nil)
 
 		input := validWebhookCronInput("user_1")
 		badCron := "not-a-cron"
@@ -258,7 +258,7 @@ func TestJobService_Create(t *testing.T) {
 	t.Run("rejects one-time job with run_at in the past", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeJobRepository()
-		svc := service.NewJobService(repo, nil, 0)
+		svc := service.NewJobService(repo, nil, 0, nil)
 
 		input := validEmailOneTimeInput("user_1")
 		pastTime := time.Now().Add(-1 * time.Hour)
@@ -273,7 +273,7 @@ func TestJobService_Create(t *testing.T) {
 	t.Run("rejects invalid webhook url", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeJobRepository()
-		svc := service.NewJobService(repo, nil, 0)
+		svc := service.NewJobService(repo, nil, 0, nil)
 
 		input := validWebhookCronInput("user_1")
 		badURL := "not-a-url"
@@ -288,7 +288,7 @@ func TestJobService_Create(t *testing.T) {
 	t.Run("returns error for missing user id", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeJobRepository()
-		svc := service.NewJobService(repo, nil, 0)
+		svc := service.NewJobService(repo, nil, 0, nil)
 
 		input := validWebhookCronInput("")
 		_, err := svc.Create(context.Background(), input)
@@ -300,7 +300,7 @@ func TestJobService_Create(t *testing.T) {
 	t.Run("different users have separate job limits", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeJobRepository()
-		svc := service.NewJobService(repo, nil, 0)
+		svc := service.NewJobService(repo, nil, 0, nil)
 
 		for i := 0; i < 3; i++ {
 			input := validWebhookCronInput("user_a")
@@ -330,7 +330,7 @@ func TestJobService_Get(t *testing.T) {
 	t.Run("returns job for owner", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeJobRepository()
-		svc := service.NewJobService(repo, nil, 0)
+		svc := service.NewJobService(repo, nil, 0, nil)
 
 		created, _ := svc.Create(context.Background(), validWebhookCronInput("user_1"))
 
@@ -346,7 +346,7 @@ func TestJobService_Get(t *testing.T) {
 	t.Run("returns ErrNotFound for another user's job", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeJobRepository()
-		svc := service.NewJobService(repo, nil, 0)
+		svc := service.NewJobService(repo, nil, 0, nil)
 
 		created, _ := svc.Create(context.Background(), validWebhookCronInput("user_1"))
 
@@ -367,7 +367,7 @@ func TestJobService_Delete(t *testing.T) {
 	t.Run("deletes own job successfully", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeJobRepository()
-		svc := service.NewJobService(repo, nil, 0)
+		svc := service.NewJobService(repo, nil, 0, nil)
 
 		created, _ := svc.Create(context.Background(), validWebhookCronInput("user_1"))
 
@@ -385,7 +385,7 @@ func TestJobService_Delete(t *testing.T) {
 	t.Run("returns ErrNotFound for another user's job", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeJobRepository()
-		svc := service.NewJobService(repo, nil, 0)
+		svc := service.NewJobService(repo, nil, 0, nil)
 
 		created, _ := svc.Create(context.Background(), validWebhookCronInput("user_1"))
 

@@ -22,11 +22,19 @@ type JobRepository interface {
 	ListExecutionsByJobID(ctx context.Context, jobID string, limit, offset int) ([]model.JobExecution, error)
 }
 
+// SMTPChecker is a minimal interface for checking whether a user
+// has a full SMTP configuration. Free tier users (no SMTP) have
+// job limits; self-hosted users (with SMTP) do not.
+type SMTPChecker interface {
+	HasSMTPConfig(ctx context.Context, userID string) bool
+}
+
 // JobService handles all business logic related to scheduled jobs.
 type JobService struct {
 	jobs           JobRepository
 	eventbridge    *EventBridgeService
 	maxJobsPerUser int
+	smtp           SMTPChecker
 }
 
 // NewJobService creates a new JobService.
@@ -37,13 +45,16 @@ type JobService struct {
 //
 // maxJobsPerUser caps how many active jobs a single user may have at once.
 // Pass 0 (or a negative number) for no limit — this is the default for
-// self-hosted instances via MAX_JOBS_PER_USER. The hosted lifygo.com
-// instance sets this explicitly to enforce its free-tier plan.
-func NewJobService(jobs JobRepository, eventbridge *EventBridgeService, maxJobsPerUser int) *JobService {
+// self-hosted instances via MAX_JOBS_PER_USER.
+//
+// smtp is optional — pass nil to skip the free tier job limit check.
+// When non-nil, free tier users (no SMTP) are limited to 3 active jobs.
+func NewJobService(jobs JobRepository, eventbridge *EventBridgeService, maxJobsPerUser int, smtp SMTPChecker) *JobService {
 	return &JobService{
 		jobs:           jobs,
 		eventbridge:    eventbridge,
 		maxJobsPerUser: maxJobsPerUser,
+		smtp:           smtp,
 	}
 }
 
@@ -93,6 +104,27 @@ func (s *JobService) Create(ctx context.Context, input model.CreateJobInput) (*m
 
 		if activeCount >= s.maxJobsPerUser {
 			return nil, model.ErrJobLimitReached
+		}
+	}
+
+	// Enforce free tier job limit for users without their own SMTP.
+	// Self-hosted users (with SMTP) have no per-user job limit unless
+	// maxJobsPerUser is explicitly set above.
+	if s.smtp != nil && !s.smtp.HasSMTPConfig(ctx, input.UserID) {
+		jobs, err := s.jobs.ListByUserID(ctx, input.UserID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to count jobs: %w", err)
+		}
+
+		activeCount := 0
+		for _, j := range jobs {
+			if j.Status == model.JobStatusActive {
+				activeCount++
+			}
+		}
+
+		if activeCount >= FreeTierJobLimit {
+			return nil, fmt.Errorf("free tier limit reached: %d active jobs. Self-host for unlimited jobs.", FreeTierJobLimit)
 		}
 	}
 

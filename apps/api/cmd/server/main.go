@@ -71,11 +71,23 @@ func main() {
 
 	userSvc := service.NewUserService(userRepo)
 	apiKeySvc := service.NewAPIKeyService(apiKeyRepo, cfg.MaxAPIKeysPerUser)
-	smtpSvc := service.NewSMTPConfigService(smtpRepo, cryptoClient, mailerPool)
+	smtpSvc := service.NewSMTPConfigService(
+		smtpRepo,
+		cryptoClient,
+		mailerPool,
+		cfg.DefaultSMTPHost,
+		cfg.DefaultSMTPPort,
+		cfg.DefaultSMTPUsername,
+		cfg.DefaultSMTPPassword,
+		cfg.DefaultSMTPFrom,
+	)
+	usageSvc := service.NewUsageService(redis)
 	emailSvc := service.NewEmailService(
 		emailLogRepo,
 		redis,
 		smtpSvc.GetMailer,
+		smtpSvc,
+		usageSvc,
 	)
 
 	eventbridgeSvc := service.NewEventBridgeService(service.EventBridgeConfig{
@@ -97,7 +109,7 @@ func main() {
 		authSvc = service.NewAuthService(userRepo, cfg.JWTSecret)
 	}
 
-	jobSvc := service.NewJobService(jobRepo, eventbridgeSvc, cfg.MaxJobsPerUser)
+	jobSvc := service.NewJobService(jobRepo, eventbridgeSvc, cfg.MaxJobsPerUser, smtpSvc)
 	scheduler := service.NewScheduler(jobRepo, smtpSvc)
 	dashboardSvc := service.NewDashboardService(emailLogRepo, jobRepo, apiKeyRepo, smtpRepo)
 

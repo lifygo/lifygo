@@ -165,7 +165,7 @@ func TestEmailService_Send(t *testing.T) {
 		t.Parallel()
 		logs := newFakeEmailLogRepository()
 		otp := newFakeOTPStore()
-		svc := service.NewEmailService(logs, otp, fakeMailerFactory(true))
+		svc := service.NewEmailService(logs, otp, fakeMailerFactory(true), nil, nil)
 
 		_, err := svc.Send(context.Background(), model.SendEmailInput{
 			UserID:  "user_1",
@@ -182,7 +182,7 @@ func TestEmailService_Send(t *testing.T) {
 		t.Parallel()
 		logs := newFakeEmailLogRepository()
 		otp := newFakeOTPStore()
-		svc := service.NewEmailService(logs, otp, noopMailerFactory())
+		svc := service.NewEmailService(logs, otp, noopMailerFactory(), nil, nil)
 
 		_, err := svc.Send(context.Background(), model.SendEmailInput{
 			UserID:  "user_1",
@@ -208,7 +208,7 @@ func TestEmailService_Send(t *testing.T) {
 		t.Parallel()
 		logs := newFakeEmailLogRepository()
 		otp := newFakeOTPStore()
-		svc := service.NewEmailService(logs, otp, noopMailerFactory())
+		svc := service.NewEmailService(logs, otp, noopMailerFactory(), nil, nil)
 
 		_, err := svc.Send(context.Background(), model.SendEmailInput{
 			To:      "recipient@example.com",
@@ -224,7 +224,7 @@ func TestEmailService_Send(t *testing.T) {
 		t.Parallel()
 		logs := newFakeEmailLogRepository()
 		otp := newFakeOTPStore()
-		svc := service.NewEmailService(logs, otp, noopMailerFactory())
+		svc := service.NewEmailService(logs, otp, noopMailerFactory(), nil, nil)
 
 		_, err := svc.Send(context.Background(), model.SendEmailInput{
 			UserID:  "user_1",
@@ -240,7 +240,7 @@ func TestEmailService_Send(t *testing.T) {
 		t.Parallel()
 		logs := newFakeEmailLogRepository()
 		otp := newFakeOTPStore()
-		svc := service.NewEmailService(logs, otp, noopMailerFactory())
+		svc := service.NewEmailService(logs, otp, noopMailerFactory(), nil, nil)
 
 		_, err := svc.Send(context.Background(), model.SendEmailInput{
 			UserID:  "user_1",
@@ -257,7 +257,7 @@ func TestEmailService_Send(t *testing.T) {
 		t.Parallel()
 		logs := newFakeEmailLogRepository()
 		otp := newFakeOTPStore()
-		svc := service.NewEmailService(logs, otp, noopMailerFactory())
+		svc := service.NewEmailService(logs, otp, noopMailerFactory(), nil, nil)
 
 		_, err := svc.Send(context.Background(), model.SendEmailInput{
 			UserID: "user_1",
@@ -273,7 +273,7 @@ func TestEmailService_Send(t *testing.T) {
 		t.Parallel()
 		logs := newFakeEmailLogRepository()
 		otp := newFakeOTPStore()
-		svc := service.NewEmailService(logs, otp, noopMailerFactory())
+		svc := service.NewEmailService(logs, otp, noopMailerFactory(), nil, nil)
 
 		_, err := svc.Send(context.Background(), model.SendEmailInput{
 			UserID:  "user_1",
@@ -297,7 +297,7 @@ func TestEmailService_SendOTP(t *testing.T) {
 		t.Parallel()
 		logs := newFakeEmailLogRepository()
 		otpStore := newFakeOTPStore()
-		svc := service.NewEmailService(logs, otpStore, noopMailerFactory())
+		svc := service.NewEmailService(logs, otpStore, noopMailerFactory(), nil, nil)
 
 		svc.SendOTP(context.Background(), model.SendOTPInput{
 			UserID: "user_1",
@@ -319,7 +319,7 @@ func TestEmailService_SendOTP(t *testing.T) {
 		t.Parallel()
 		logs := newFakeEmailLogRepository()
 		otp := newFakeOTPStore()
-		svc := service.NewEmailService(logs, otp, noopMailerFactory())
+		svc := service.NewEmailService(logs, otp, noopMailerFactory(), nil, nil)
 
 		_, err := svc.SendOTP(context.Background(), model.SendOTPInput{
 			To: "recipient@example.com",
@@ -333,7 +333,7 @@ func TestEmailService_SendOTP(t *testing.T) {
 		t.Parallel()
 		logs := newFakeEmailLogRepository()
 		otp := newFakeOTPStore()
-		svc := service.NewEmailService(logs, otp, noopMailerFactory())
+		svc := service.NewEmailService(logs, otp, noopMailerFactory(), nil, nil)
 
 		_, err := svc.SendOTP(context.Background(), model.SendOTPInput{
 			UserID: "user_1",
@@ -347,7 +347,7 @@ func TestEmailService_SendOTP(t *testing.T) {
 		t.Parallel()
 		logs := newFakeEmailLogRepository()
 		otp := newFakeOTPStore()
-		svc := service.NewEmailService(logs, otp, noopMailerFactory())
+		svc := service.NewEmailService(logs, otp, noopMailerFactory(), nil, nil)
 
 		_, err := svc.SendOTP(context.Background(), model.SendOTPInput{
 			UserID: "user_1",
@@ -363,7 +363,7 @@ func TestEmailService_SendOTP(t *testing.T) {
 		logs := newFakeEmailLogRepository()
 		otpStore := newFakeOTPStore()
 		otpStore.setErr = errors.New("redis: connection refused")
-		svc := service.NewEmailService(logs, otpStore, noopMailerFactory())
+		svc := service.NewEmailService(logs, otpStore, noopMailerFactory(), nil, nil)
 
 		_, err := svc.SendOTP(context.Background(), model.SendOTPInput{
 			UserID: "user_1",
@@ -386,7 +386,7 @@ func TestEmailService_VerifyOTP(t *testing.T) {
 		t.Parallel()
 		logs := newFakeEmailLogRepository()
 		otpStore := newFakeOTPStore()
-		svc := service.NewEmailService(logs, otpStore, noopMailerFactory())
+		svc := service.NewEmailService(logs, otpStore, noopMailerFactory(), nil, nil)
 
 		// Manually seed a known OTP code in the fake store.
 		key := model.OTPRedisKey("user_1", "recipient@example.com")
@@ -415,7 +415,7 @@ func TestEmailService_VerifyOTP(t *testing.T) {
 		t.Parallel()
 		logs := newFakeEmailLogRepository()
 		otpStore := newFakeOTPStore()
-		svc := service.NewEmailService(logs, otpStore, noopMailerFactory())
+		svc := service.NewEmailService(logs, otpStore, noopMailerFactory(), nil, nil)
 
 		key := model.OTPRedisKey("user_1", "recipient@example.com")
 		otpStore.data[key] = "123456"
@@ -434,7 +434,7 @@ func TestEmailService_VerifyOTP(t *testing.T) {
 		t.Parallel()
 		logs := newFakeEmailLogRepository()
 		otpStore := newFakeOTPStore()
-		svc := service.NewEmailService(logs, otpStore, noopMailerFactory())
+		svc := service.NewEmailService(logs, otpStore, noopMailerFactory(), nil, nil)
 
 		// No OTP seeded — simulates expiry or never-generated.
 		_, err := svc.VerifyOTP(context.Background(), model.VerifyOTPInput{
@@ -451,7 +451,7 @@ func TestEmailService_VerifyOTP(t *testing.T) {
 		t.Parallel()
 		logs := newFakeEmailLogRepository()
 		otpStore := newFakeOTPStore()
-		svc := service.NewEmailService(logs, otpStore, noopMailerFactory())
+		svc := service.NewEmailService(logs, otpStore, noopMailerFactory(), nil, nil)
 
 		key := model.OTPRedisKey("user_1", "recipient@example.com")
 		otpStore.data[key] = "123456"
@@ -482,7 +482,7 @@ func TestEmailService_VerifyOTP(t *testing.T) {
 		t.Parallel()
 		logs := newFakeEmailLogRepository()
 		otpStore := newFakeOTPStore()
-		svc := service.NewEmailService(logs, otpStore, noopMailerFactory())
+		svc := service.NewEmailService(logs, otpStore, noopMailerFactory(), nil, nil)
 
 		// Seed OTP for user_1.
 		keyA := model.OTPRedisKey("user_1", "recipient@example.com")
@@ -504,7 +504,7 @@ func TestEmailService_VerifyOTP(t *testing.T) {
 		t.Parallel()
 		logs := newFakeEmailLogRepository()
 		otp := newFakeOTPStore()
-		svc := service.NewEmailService(logs, otp, noopMailerFactory())
+		svc := service.NewEmailService(logs, otp, noopMailerFactory(), nil, nil)
 
 		_, err := svc.VerifyOTP(context.Background(), model.VerifyOTPInput{
 			Email: "recipient@example.com",
@@ -519,7 +519,7 @@ func TestEmailService_VerifyOTP(t *testing.T) {
 		t.Parallel()
 		logs := newFakeEmailLogRepository()
 		otp := newFakeOTPStore()
-		svc := service.NewEmailService(logs, otp, noopMailerFactory())
+		svc := service.NewEmailService(logs, otp, noopMailerFactory(), nil, nil)
 
 		_, err := svc.VerifyOTP(context.Background(), model.VerifyOTPInput{
 			UserID: "user_1",
@@ -543,7 +543,7 @@ func TestEmailService_ListLogs(t *testing.T) {
 		t.Parallel()
 		logs := newFakeEmailLogRepository()
 		otp := newFakeOTPStore()
-		svc := service.NewEmailService(logs, otp, noopMailerFactory())
+		svc := service.NewEmailService(logs, otp, noopMailerFactory(), nil, nil)
 
 		// Seed logs directly.
 		logs.logs = append(logs.logs,
@@ -571,7 +571,7 @@ func TestEmailService_ListLogs(t *testing.T) {
 		t.Parallel()
 		logs := newFakeEmailLogRepository()
 		otp := newFakeOTPStore()
-		svc := service.NewEmailService(logs, otp, noopMailerFactory())
+		svc := service.NewEmailService(logs, otp, noopMailerFactory(), nil, nil)
 
 		// This just verifies no error is returned when limit is 0.
 		_, _, err := svc.ListLogs(context.Background(), model.ListEmailLogsInput{
@@ -587,7 +587,7 @@ func TestEmailService_ListLogs(t *testing.T) {
 		t.Parallel()
 		logs := newFakeEmailLogRepository()
 		otp := newFakeOTPStore()
-		svc := service.NewEmailService(logs, otp, noopMailerFactory())
+		svc := service.NewEmailService(logs, otp, noopMailerFactory(), nil, nil)
 
 		_, _, err := svc.ListLogs(context.Background(), model.ListEmailLogsInput{
 			UserID: "user_1",
@@ -602,7 +602,7 @@ func TestEmailService_ListLogs(t *testing.T) {
 		t.Parallel()
 		logs := newFakeEmailLogRepository()
 		otp := newFakeOTPStore()
-		svc := service.NewEmailService(logs, otp, noopMailerFactory())
+		svc := service.NewEmailService(logs, otp, noopMailerFactory(), nil, nil)
 
 		_, _, err := svc.ListLogs(context.Background(), model.ListEmailLogsInput{
 			Limit: 10,
