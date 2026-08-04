@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/lifygo/lifygo/apps/api/internal/model"
@@ -60,6 +61,14 @@ func NewEmailService(
 	}
 }
 
+func wrapEmailBody(body string, isHTML bool) (string, bool) {
+	if isHTML {
+		return body, true
+	}
+	escaped := strings.ReplaceAll(body, "\n", "<br>")
+	return fmt.Sprintf(emailTemplate, escaped), true
+}
+
 func (s *EmailService) Send(ctx context.Context, input model.SendEmailInput) (*model.SendEmailResponse, error) {
 	if err := input.Validate(); err != nil {
 		return nil, fmt.Errorf("invalid input: %w", err)
@@ -90,11 +99,12 @@ func (s *EmailService) Send(ctx context.Context, input model.SendEmailInput) (*m
 				log.Printf("email.Send: default mailer failed for user %s: %v", input.UserID, ferr)
 				return nil, fmt.Errorf("failed to get default mailer: %w", ferr)
 			}
+			wrapped, isHTML := wrapEmailBody(input.Body, input.IsHTML)
 			sendErr := fallback.Send(mailer.Message{
 				To:      input.To,
 				Subject: input.Subject,
-				Body:    input.Body,
-				IsHTML:  input.IsHTML,
+				Body:    wrapped,
+				IsHTML:  isHTML,
 			})
 			if sendErr != nil {
 				log.Printf("email.Send: fallback send failed: %v", sendErr)
@@ -123,11 +133,12 @@ func (s *EmailService) Send(ctx context.Context, input model.SendEmailInput) (*m
 		}
 	}
 
+	wrapped, isHTML := wrapEmailBody(input.Body, input.IsHTML)
 	sendErr := m.Send(mailer.Message{
 		To:      input.To,
 		Subject: input.Subject,
-		Body:    input.Body,
-		IsHTML:  input.IsHTML,
+		Body:    wrapped,
+		IsHTML:  isHTML,
 	})
 
 	status := model.EmailStatusSent
@@ -317,6 +328,25 @@ func (s *EmailService) ListLogs(ctx context.Context, input model.ListEmailLogsIn
 
 	return logs, total, nil
 }
+
+const emailTemplate = `<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:0;background-color:#f5f5f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <table role="presentation" width="100%%" cellpadding="0" cellspacing="0" style="padding:48px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="520" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.06),0 4px 16px rgba(0,0,0,0.04);">
+          <tr>
+            <td style="padding:40px 44px 32px;font-size:15px;line-height:1.7;color:#374151;">
+              %s
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
 
 const otpEmailTemplate = `<!DOCTYPE html>
 <html>
