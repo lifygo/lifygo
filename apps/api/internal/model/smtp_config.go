@@ -15,11 +15,11 @@ type SMTPConfig struct {
 }
 
 type SMTPConfigResponse struct {
-	ID          string    `json:"id"`
-	Host        string    `json:"host"`
-	Port        int       `json:"port"`
-	Username    string    `json:"username"`
-	FromAddress string    `json:"from_address"`
+	ID          string `json:"id"`
+	Host        string `json:"host"`
+	Port        int    `json:"port"`
+	Username    string `json:"username"`
+	FromAddress string `json:"from_address"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }

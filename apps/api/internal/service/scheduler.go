@@ -21,7 +21,7 @@ import (
 // the SMTP config service to send email jobs.
 type SchedulerSMTPConfigService interface {
 	GetMailer(ctx context.Context, userID string) (*mailer.Mailer, error)
-	GetDefaultMailer(ctx context.Context, userID string) (*mailer.Mailer, error)
+	GetDefaultMailer(ctx context.Context, userID string) (Sender, error)
 }
 
 // Scheduler is a background worker that runs inside the Go API process.
@@ -240,10 +240,19 @@ func (s *Scheduler) executeEmail(job model.Job) error {
 	m, err := s.smtp.GetMailer(ctx, job.UserID)
 	if err != nil {
 		if errors.Is(err, model.ErrNotFound) {
-			m, err = s.smtp.GetDefaultMailer(ctx, job.UserID)
-			if err != nil {
-				return fmt.Errorf("failed to get default mailer for user %s: %w", job.UserID, err)
+			fallback, ferr := s.smtp.GetDefaultMailer(ctx, job.UserID)
+			if ferr != nil {
+				return fmt.Errorf("failed to get default mailer for user %s: %w", job.UserID, ferr)
 			}
+			if serr := fallback.Send(mailer.Message{
+				To:      *job.EmailTo,
+				Subject: *job.EmailSubject,
+				Body:    *job.EmailBody,
+				IsHTML:  false,
+			}); serr != nil {
+				return fmt.Errorf("failed to send email: %w", serr)
+			}
+			return nil
 		} else {
 			return fmt.Errorf("failed to get mailer for user %s: %w", job.UserID, err)
 		}

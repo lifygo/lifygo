@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
+	"strings"
 
 	"github.com/lifygo/lifygo/apps/api/internal/model"
 	"github.com/lifygo/lifygo/apps/api/pkg/crypto"
@@ -67,6 +69,8 @@ func (s *SMTPConfigService) Upsert(ctx context.Context, input model.CreateSMTPCo
 		if err := validator.ValidateSMTPPort(input.Port); err != nil {
 			return nil, fmt.Errorf("invalid smtp port: %w", err)
 		}
+	} else if input.Port == 0 {
+		input.Port = 587
 	}
 
 	var encryptedPassword string
@@ -93,6 +97,9 @@ func (s *SMTPConfigService) Get(ctx context.Context, userID string) (*model.SMTP
 
 	cfg, err := s.configs.GetByUserID(ctx, userID)
 	if err != nil {
+		if errors.Is(err, model.ErrNotFound) {
+			return nil, nil
+		}
 		return nil, fmt.Errorf("failed to get smtp config: %w", err)
 	}
 
@@ -133,28 +140,22 @@ func (s *SMTPConfigService) GetMailer(ctx context.Context, userID string) (*mail
 	return m, nil
 }
 
-func (s *SMTPConfigService) GetDefaultMailer(ctx context.Context, userID string) (*mailer.Mailer, error) {
-	if s.defaultSMTPHost == "" {
+func (s *SMTPConfigService) GetDefaultMailer(ctx context.Context, userID string) (Sender, error) {
+	if s.defaultSMTPPass == "" {
 		return nil, fmt.Errorf("no default smtp relay configured")
 	}
 
 	fromAddress := s.defaultSMTPFrom
 
 	cfg, err := s.configs.GetByUserID(ctx, userID)
-	if err == nil && cfg.FromAddress != "" {
+	if err == nil && cfg.FromAddress != "" && strings.HasSuffix(cfg.FromAddress, "@lifygo.com") {
 		fromAddress = cfg.FromAddress
 	} else if err != nil && !errors.Is(err, model.ErrNotFound) {
 		return nil, fmt.Errorf("failed to get smtp config: %w", err)
 	}
 
-	return mailer.New(mailer.Config{
-		Host:        s.defaultSMTPHost,
-		Port:        s.defaultSMTPPort,
-		Username:    s.defaultSMTPUser,
-		Password:    s.defaultSMTPPass,
-		FromAddress: fromAddress,
-		Pool:        s.pool,
-	})
+	log.Printf("smtp.GetDefaultMailer: sending via Resend (from=%s)", fromAddress)
+	return newResendMailer(s.defaultSMTPPass, fromAddress), nil
 }
 
 func (s *SMTPConfigService) HasSMTPConfig(ctx context.Context, userID string) bool {
