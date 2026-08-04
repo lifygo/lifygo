@@ -96,6 +96,9 @@ func (s *EmailService) Send(ctx context.Context, input model.SendEmailInput) (*m
 				Body:    input.Body,
 				IsHTML:  input.IsHTML,
 			})
+			if sendErr != nil {
+				log.Printf("email.Send: fallback send failed: %v", sendErr)
+			}
 			status := model.EmailStatusSent
 			var errMsg *string
 			if sendErr != nil {

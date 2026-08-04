@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"time"
 
@@ -42,6 +43,8 @@ func (r *resendMailer) Send(msg mailer.Message) error {
 		return fmt.Errorf("failed to marshal resend request: %w", err)
 	}
 
+	log.Printf("resend: sending to %s from %s", msg.To, r.fromAddress)
+
 	httpReq, err := http.NewRequest("POST", "https://api.resend.com/emails", bytes.NewReader(payload))
 	if err != nil {
 		return fmt.Errorf("failed to create resend request: %w", err)
@@ -51,14 +54,18 @@ func (r *resendMailer) Send(msg mailer.Message) error {
 
 	resp, err := r.client.Do(httpReq)
 	if err != nil {
+		log.Printf("resend: HTTP request failed: %v", err)
 		return fmt.Errorf("resend request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
+	body, _ := io.ReadAll(resp.Body)
+
 	if resp.StatusCode >= 400 {
-		body, _ := io.ReadAll(resp.Body)
+		log.Printf("resend: API error %d: %s", resp.StatusCode, string(body))
 		return fmt.Errorf("resend returned %d: %s", resp.StatusCode, string(body))
 	}
 
+	log.Printf("resend: email sent successfully (status %d)", resp.StatusCode)
 	return nil
 }
