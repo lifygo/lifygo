@@ -146,7 +146,14 @@ func (s *SMTPConfigService) GetDefaultMailer(ctx context.Context, userID string)
 
 	fromAddress := s.defaultSMTPFrom
 
-	log.Printf("smtp.GetDefaultMailer: sending via Resend HTTP API for user %s (from=%s)", userID, fromAddress)
+	cfg, err := s.configs.GetByUserID(ctx, userID)
+	if err == nil && cfg.FromAddress != "" {
+		fromAddress = cfg.FromAddress
+	} else if err != nil && !errors.Is(err, model.ErrNotFound) {
+		return nil, fmt.Errorf("failed to get smtp config: %w", err)
+	}
+
+	log.Printf("smtp.GetDefaultMailer: sending via Resend for user %s (from=%s)", userID, fromAddress)
 	return newResendMailer(s.defaultSMTPPass, fromAddress), nil
 }
 
