@@ -24,9 +24,13 @@ type OTPStore interface {
 	GetAndDelete(ctx context.Context, key string) (string, error)
 }
 
+type Sender interface {
+	Send(msg mailer.Message) error
+}
+
 type MailerProvider interface {
 	GetMailer(ctx context.Context, userID string) (*mailer.Mailer, error)
-	GetDefaultMailer(ctx context.Context, userID string) (*mailer.Mailer, error)
+	GetDefaultMailer(ctx context.Context, userID string) (Sender, error)
 	HasSMTPConfig(ctx context.Context, userID string) bool
 }
 
@@ -81,11 +85,36 @@ func (s *EmailService) Send(ctx context.Context, input model.SendEmailInput) (*m
 	if err != nil {
 		if errors.Is(err, model.ErrNotFound) {
 			log.Printf("email.Send: no SMTP config for user %s, falling back to default relay", input.UserID)
-			m, err = s.smtpService.GetDefaultMailer(ctx, input.UserID)
-			if err != nil {
-				log.Printf("email.Send: default mailer failed for user %s: %v", input.UserID, err)
-				return nil, fmt.Errorf("failed to get default mailer: %w", err)
+			fallback, ferr := s.smtpService.GetDefaultMailer(ctx, input.UserID)
+			if ferr != nil {
+				log.Printf("email.Send: default mailer failed for user %s: %v", input.UserID, ferr)
+				return nil, fmt.Errorf("failed to get default mailer: %w", ferr)
 			}
+			sendErr := fallback.Send(mailer.Message{
+				To:      input.To,
+				Subject: input.Subject,
+				Body:    input.Body,
+				IsHTML:  input.IsHTML,
+			})
+			status := model.EmailStatusSent
+			var errMsg *string
+			if sendErr != nil {
+				status = model.EmailStatusFailed
+				msg := sendErr.Error()
+				errMsg = &msg
+			}
+			log, logErr := s.logs.Create(ctx, input.UserID, input.To, input.Subject, status, errMsg)
+			if logErr != nil {
+				return nil, fmt.Errorf("send status: %v, log error: %w", sendErr, logErr)
+			}
+			if sendErr != nil {
+				return nil, fmt.Errorf("failed to send email: %w", sendErr)
+			}
+			return &model.SendEmailResponse{
+				LogID:  log.ID,
+				Status: model.EmailStatusSent,
+				SentAt: log.SentAt,
+			}, nil
 		} else {
 			return nil, fmt.Errorf("failed to get mailer: %w", err)
 		}
@@ -159,11 +188,41 @@ func (s *EmailService) SendOTP(ctx context.Context, input model.SendOTPInput) (*
 	if err != nil {
 		if errors.Is(err, model.ErrNotFound) {
 			log.Printf("email.SendOTP: no SMTP config for user %s, falling back to default relay", input.UserID)
-			m, err = s.smtpService.GetDefaultMailer(ctx, input.UserID)
-			if err != nil {
-				log.Printf("email.SendOTP: default mailer failed for user %s: %v", input.UserID, err)
-				return nil, fmt.Errorf("failed to get default mailer: %w", err)
+			fallback, ferr := s.smtpService.GetDefaultMailer(ctx, input.UserID)
+			if ferr != nil {
+				log.Printf("email.SendOTP: default mailer failed for user %s: %v", input.UserID, ferr)
+				return nil, fmt.Errorf("failed to get default mailer: %w", ferr)
 			}
+			subject := "Your verification code"
+			body := fmt.Sprintf(otpEmailTemplate, int(model.OTPTTl.Minutes()), code)
+
+			sendErr := fallback.Send(mailer.Message{
+				To:      input.To,
+				Subject: subject,
+				Body:    body,
+				IsHTML:  true,
+			})
+
+			status := model.EmailStatusSent
+			var errMsg *string
+			if sendErr != nil {
+				status = model.EmailStatusFailed
+				msg := sendErr.Error()
+				errMsg = &msg
+			}
+
+			if _, logErr := s.logs.Create(ctx, input.UserID, input.To, subject, status, errMsg); logErr != nil {
+				return nil, fmt.Errorf("send status: %v, log error: %w", sendErr, logErr)
+			}
+
+			if sendErr != nil {
+				return nil, fmt.Errorf("failed to send otp email: %w", sendErr)
+			}
+
+			return &model.SendOTPResponse{
+				Email:     input.To,
+				ExpiresAt: expiresAt,
+			}, nil
 		} else {
 			return nil, fmt.Errorf("failed to get mailer: %w", err)
 		}

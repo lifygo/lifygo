@@ -139,8 +139,8 @@ func (s *SMTPConfigService) GetMailer(ctx context.Context, userID string) (*mail
 	return m, nil
 }
 
-func (s *SMTPConfigService) GetDefaultMailer(ctx context.Context, userID string) (*mailer.Mailer, error) {
-	if s.defaultSMTPHost == "" {
+func (s *SMTPConfigService) GetDefaultMailer(ctx context.Context, userID string) (Sender, error) {
+	if s.defaultSMTPPass == "" {
 		return nil, fmt.Errorf("no default smtp relay configured")
 	}
 
@@ -153,23 +153,8 @@ func (s *SMTPConfigService) GetDefaultMailer(ctx context.Context, userID string)
 		return nil, fmt.Errorf("failed to get smtp config: %w", err)
 	}
 
-	log.Printf("smtp.GetDefaultMailer: using relay %s:%d for user %s (from=%s)",
-		s.defaultSMTPHost, s.defaultSMTPPort, userID, fromAddress)
-
-	m, err := mailer.New(mailer.Config{
-		Host:        s.defaultSMTPHost,
-		Port:        s.defaultSMTPPort,
-		Username:    s.defaultSMTPUser,
-		Password:    s.defaultSMTPPass,
-		FromAddress: fromAddress,
-		Pool:        s.pool,
-	})
-	if err != nil {
-		log.Printf("smtp.GetDefaultMailer: failed to create mailer: %v", err)
-		return nil, fmt.Errorf("failed to create default mailer: %w", err)
-	}
-
-	return m, nil
+	log.Printf("smtp.GetDefaultMailer: sending via Resend HTTP API for user %s (from=%s)", userID, fromAddress)
+	return newResendMailer(s.defaultSMTPPass, fromAddress), nil
 }
 
 func (s *SMTPConfigService) HasSMTPConfig(ctx context.Context, userID string) bool {
