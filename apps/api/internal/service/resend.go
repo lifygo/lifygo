@@ -13,15 +13,17 @@ import (
 )
 
 type resendMailer struct {
-	apiKey      string
-	fromAddress string
-	client      *http.Client
+	apiKey       string
+	fromAddress  string
+	replyTo      string
+	client       *http.Client
 }
 
-func newResendMailer(apiKey, fromAddress string) *resendMailer {
+func newResendMailer(apiKey, fromAddress, replyTo string) *resendMailer {
 	return &resendMailer{
 		apiKey:      apiKey,
 		fromAddress: fromAddress,
+		replyTo:     replyTo,
 		client:      &http.Client{Timeout: 15 * time.Second},
 	}
 }
@@ -31,6 +33,9 @@ func (r *resendMailer) Send(msg mailer.Message) error {
 		"from":    r.fromAddress,
 		"to":      msg.To,
 		"subject": msg.Subject,
+	}
+	if r.replyTo != "" {
+		req["reply_to"] = r.replyTo
 	}
 	if msg.IsHTML {
 		req["html"] = msg.Body

@@ -144,17 +144,17 @@ func (s *SMTPConfigService) GetDefaultMailer(ctx context.Context, userID string)
 		return nil, fmt.Errorf("no default smtp relay configured")
 	}
 
-	fromAddress := s.defaultSMTPFrom
+	replyTo := ""
 
 	cfg, err := s.configs.GetByUserID(ctx, userID)
 	if err == nil && cfg.FromAddress != "" {
-		fromAddress = cfg.FromAddress
+		replyTo = cfg.FromAddress
 	} else if err != nil && !errors.Is(err, model.ErrNotFound) {
 		return nil, fmt.Errorf("failed to get smtp config: %w", err)
 	}
 
-	log.Printf("smtp.GetDefaultMailer: sending via Resend for user %s (from=%s)", userID, fromAddress)
-	return newResendMailer(s.defaultSMTPPass, fromAddress), nil
+	log.Printf("smtp.GetDefaultMailer: sending via Resend (from=%s, reply_to=%s)", s.defaultSMTPFrom, replyTo)
+	return newResendMailer(s.defaultSMTPPass, s.defaultSMTPFrom, replyTo), nil
 }
 
 func (s *SMTPConfigService) HasSMTPConfig(ctx context.Context, userID string) bool {
