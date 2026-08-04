@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/lifygo/lifygo/apps/api/internal/model"
 	"github.com/lifygo/lifygo/apps/api/pkg/crypto"
@@ -152,7 +153,10 @@ func (s *SMTPConfigService) GetDefaultMailer(ctx context.Context, userID string)
 		return nil, fmt.Errorf("failed to get smtp config: %w", err)
 	}
 
-	return mailer.New(mailer.Config{
+	log.Printf("smtp.GetDefaultMailer: using relay %s:%d for user %s (from=%s)",
+		s.defaultSMTPHost, s.defaultSMTPPort, userID, fromAddress)
+
+	m, err := mailer.New(mailer.Config{
 		Host:        s.defaultSMTPHost,
 		Port:        s.defaultSMTPPort,
 		Username:    s.defaultSMTPUser,
@@ -160,6 +164,12 @@ func (s *SMTPConfigService) GetDefaultMailer(ctx context.Context, userID string)
 		FromAddress: fromAddress,
 		Pool:        s.pool,
 	})
+	if err != nil {
+		log.Printf("smtp.GetDefaultMailer: failed to create mailer: %v", err)
+		return nil, fmt.Errorf("failed to create default mailer: %w", err)
+	}
+
+	return m, nil
 }
 
 func (s *SMTPConfigService) HasSMTPConfig(ctx context.Context, userID string) bool {

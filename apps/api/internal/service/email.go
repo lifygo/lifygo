@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/lifygo/lifygo/apps/api/internal/model"
@@ -79,8 +80,10 @@ func (s *EmailService) Send(ctx context.Context, input model.SendEmailInput) (*m
 	m, err := s.getMailer(ctx, input.UserID)
 	if err != nil {
 		if errors.Is(err, model.ErrNotFound) {
+			log.Printf("email.Send: no SMTP config for user %s, falling back to default relay", input.UserID)
 			m, err = s.smtpService.GetDefaultMailer(ctx, input.UserID)
 			if err != nil {
+				log.Printf("email.Send: default mailer failed for user %s: %v", input.UserID, err)
 				return nil, fmt.Errorf("failed to get default mailer: %w", err)
 			}
 		} else {
@@ -155,8 +158,10 @@ func (s *EmailService) SendOTP(ctx context.Context, input model.SendOTPInput) (*
 	m, err := s.getMailer(ctx, input.UserID)
 	if err != nil {
 		if errors.Is(err, model.ErrNotFound) {
+			log.Printf("email.SendOTP: no SMTP config for user %s, falling back to default relay", input.UserID)
 			m, err = s.smtpService.GetDefaultMailer(ctx, input.UserID)
 			if err != nil {
+				log.Printf("email.SendOTP: default mailer failed for user %s: %v", input.UserID, err)
 				return nil, fmt.Errorf("failed to get default mailer: %w", err)
 			}
 		} else {
