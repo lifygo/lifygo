@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/lifygo/lifygo/apps/api/internal/model"
@@ -60,6 +61,14 @@ func NewEmailService(
 	}
 }
 
+func wrapEmailBody(body string, isHTML bool) (string, bool) {
+	if isHTML {
+		return body, true
+	}
+	escaped := strings.ReplaceAll(body, "\n", "<br>")
+	return fmt.Sprintf(emailTemplate, escaped), true
+}
+
 func (s *EmailService) Send(ctx context.Context, input model.SendEmailInput) (*model.SendEmailResponse, error) {
 	if err := input.Validate(); err != nil {
 		return nil, fmt.Errorf("invalid input: %w", err)
@@ -90,11 +99,12 @@ func (s *EmailService) Send(ctx context.Context, input model.SendEmailInput) (*m
 				log.Printf("email.Send: default mailer failed for user %s: %v", input.UserID, ferr)
 				return nil, fmt.Errorf("failed to get default mailer: %w", ferr)
 			}
+			wrapped, isHTML := wrapEmailBody(input.Body, input.IsHTML)
 			sendErr := fallback.Send(mailer.Message{
 				To:      input.To,
 				Subject: input.Subject,
-				Body:    input.Body,
-				IsHTML:  input.IsHTML,
+				Body:    wrapped,
+				IsHTML:  isHTML,
 			})
 			if sendErr != nil {
 				log.Printf("email.Send: fallback send failed: %v", sendErr)
@@ -123,11 +133,12 @@ func (s *EmailService) Send(ctx context.Context, input model.SendEmailInput) (*m
 		}
 	}
 
+	wrapped, isHTML := wrapEmailBody(input.Body, input.IsHTML)
 	sendErr := m.Send(mailer.Message{
 		To:      input.To,
 		Subject: input.Subject,
-		Body:    input.Body,
-		IsHTML:  input.IsHTML,
+		Body:    wrapped,
+		IsHTML:  isHTML,
 	})
 
 	status := model.EmailStatusSent
@@ -318,31 +329,59 @@ func (s *EmailService) ListLogs(ctx context.Context, input model.ListEmailLogsIn
 	return logs, total, nil
 }
 
-const otpEmailTemplate = `<!DOCTYPE html>
+const emailTemplate = `<!DOCTYPE html>
 <html>
-<body style="margin:0;padding:0;background-color:#f4f4f7;font-family:Helvetica,Arial,sans-serif;">
-  <table role="presentation" width="100%%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f7;padding:40px 0;">
+<body style="margin:0;padding:0;background-color:#f5f5f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <table role="presentation" width="100%%" cellpadding="0" cellspacing="0" style="padding:48px 16px;">
     <tr>
       <td align="center">
-        <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+        <table role="presentation" width="520" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.06),0 4px 16px rgba(0,0,0,0.04);">
           <tr>
-            <td style="padding:40px 40px 24px 40px;text-align:center;">
-              <h1 style="margin:0;font-size:20px;color:#1a1a1a;">Verify your email</h1>
+            <td style="padding:40px 44px 32px;font-size:15px;line-height:1.7;color:#374151;">
+              %s
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
+
+const otpEmailTemplate = `<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:0;background-color:#f5f5f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <table role="presentation" width="100%%" cellpadding="0" cellspacing="0" style="padding:48px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="420" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.06),0 4px 16px rgba(0,0,0,0.04);">
+          <tr>
+            <td style="padding:36px 40px 16px;text-align:center;">
+              <div style="display:inline-block;width:48px;height:48px;background-color:#f0f2f5;border-radius:50%%;line-height:48px;font-size:22px;">🔐</div>
             </td>
           </tr>
           <tr>
-            <td style="padding:0 40px 24px 40px;text-align:center;color:#555555;font-size:15px;line-height:1.5;">
-              Use the code below to verify your identity. This code will expire in %d minutes.
+            <td style="padding:0 40px 8px;text-align:center;">
+              <h1 style="margin:0;font-size:22px;font-weight:600;color:#111827;letter-spacing:-0.3px;">Verification code</h1>
             </td>
           </tr>
           <tr>
-            <td style="padding:0 40px 32px 40px;text-align:center;">
-              <span style="display:inline-block;background-color:#f0f2f5;color:#1a1a1a;font-size:32px;font-weight:bold;letter-spacing:8px;padding:16px 24px;border-radius:6px;">%s</span>
+            <td style="padding:0 40px 24px;text-align:center;color:#6b7280;font-size:14px;line-height:1.6;">
+              Enter this code to verify your identity. It expires in %d minutes.
             </td>
           </tr>
           <tr>
-            <td style="padding:0 40px 40px 40px;text-align:center;color:#999999;font-size:13px;">
-              If you didn't request this code, you can safely ignore this email.
+            <td align="center" style="padding:0 40px 28px;">
+              <table role="presentation" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="background-color:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:18px 32px;font-family:'SF Mono',SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:36px;font-weight:700;color:#111827;letter-spacing:12px;text-align:center;">%s</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 40px 36px;text-align:center;color:#9ca3af;font-size:12px;line-height:1.5;">
+              If you did not request this code, you can ignore this email.
             </td>
           </tr>
         </table>

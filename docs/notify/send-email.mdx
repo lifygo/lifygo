@@ -7,7 +7,7 @@ description: "POST /send — Send a transactional email"
 
 `POST /send`
 
-Sends a transactional email using your configured SMTP server.
+Sends a transactional email. Plain text is automatically wrapped in a clean HTML template. No branding, just your message.
 
 ---
 
@@ -19,9 +19,13 @@ POST /send
 
 ---
 
-## Request
+## What recipients see
 
-Example request:
+<img src="/images/email.png" alt="Email example" width="480" />
+
+---
+
+## Request
 
 ```bash
 curl -X POST http://localhost:8080/send \
@@ -29,8 +33,8 @@ curl -X POST http://localhost:8080/send \
   -H "Content-Type: application/json" \
   -d '{
     "to":"hello@example.com",
-    "subject":"Welcome to Acme",
-    "body":"Thanks for signing up."
+    "subject":"Welcome aboard",
+    "body":"Thanks for signing up. Your account is ready."
   }'
 ```
 
@@ -40,16 +44,14 @@ curl -X POST http://localhost:8080/send \
 
 | Field | Type | Required | Description |
 |------|------|:--------:|-------------|
-| `to` | `string` | ✅ | Recipient email address |
-| `subject` | `string` | ✅ | Email subject |
-| `body` | `string` | ✅ | Email body (plain text or HTML) |
-| `is_html` | `boolean` | No | Send the body as HTML |
+| `to` | `string` | Yes | Recipient email address |
+| `subject` | `string` | Yes | Email subject |
+| `body` | `string` | Yes | Email body (plain text or HTML) |
+| `is_html` | `boolean` | No | Set to `true` if body is HTML |
 
 ---
 
-## Sending HTML Email
-
-To send an HTML email, set `is_html` to `true`.
+## Sending HTML
 
 ```json
 {
@@ -62,27 +64,24 @@ To send an HTML email, set `is_html` to `true`.
 
 ---
 
-## Successful Response
+## Response
 
 **HTTP 200 OK**
 
 ```json
 {
-  "id": "log_abc123",
-  "to": "hello@example.com",
-  "subject": "Welcome to Acme",
+  "log_id": "c3be8e9f-8608-4d18-bb4e-e97a86be74d6",
   "status": "sent",
-  "sent_at": "2026-07-22T09:30:00Z"
+  "sent_at": "2026-08-04T09:19:47Z"
 }
 ```
 
 ---
 
-## Error Responses
+## Errors
 
 | Status | Description |
 |:------:|-------------|
-| **400** | Missing required field (`to`, `subject`, or `body`) |
-| **401** | Invalid or missing API key |
-| **422** | No SMTP configuration has been set up |
-| **500** | SMTP server unreachable or authentication failed |
+| 400 | Missing required field |
+| 401 | Invalid or missing API key |
+| 500 | Delivery failed |
