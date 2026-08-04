@@ -67,6 +67,8 @@ func (s *SMTPConfigService) Upsert(ctx context.Context, input model.CreateSMTPCo
 		if err := validator.ValidateSMTPPort(input.Port); err != nil {
 			return nil, fmt.Errorf("invalid smtp port: %w", err)
 		}
+	} else if input.Port == 0 {
+		input.Port = 587
 	}
 
 	var encryptedPassword string
