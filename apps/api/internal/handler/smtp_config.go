@@ -80,7 +80,8 @@ func (h *SMTPConfigHandler) Upsert(w http.ResponseWriter, r *http.Request) {
 
 // Get handles GET /smtp-config.
 // Returns the SMTP config for the authenticated user.
-// The encrypted password is never included in the response.
+// If no config exists, returns 200 with a default (empty) config
+// rather than 404 — the dashboard uses this to detect setup state.
 func (h *SMTPConfigHandler) Get(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.UserIDFromContext(r.Context())
 	if userID == "" {
@@ -91,7 +92,7 @@ func (h *SMTPConfigHandler) Get(w http.ResponseWriter, r *http.Request) {
 	resp, err := h.configs.Get(r.Context(), userID)
 	if err != nil {
 		if err == model.ErrNotFound {
-			respondError(w, http.StatusNotFound, "smtp config not found")
+			respond(w, http.StatusOK, &model.SMTPConfigResponse{})
 			return
 		}
 		respondError(w, http.StatusInternalServerError, "failed to get smtp config")
