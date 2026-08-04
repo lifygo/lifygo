@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
 	"github.com/lifygo/lifygo/apps/api/internal/middleware"
@@ -58,18 +59,17 @@ func (h *SMTPConfigHandler) Upsert(w http.ResponseWriter, r *http.Request) {
 		FromAddress: req.FromAddress,
 	})
 	if err != nil {
-		switch err {
-		case model.ErrSMTPHostRequired:
+		if errors.Is(err, model.ErrSMTPHostRequired) {
 			respondError(w, http.StatusBadRequest, "smtp host is required")
-		case model.ErrSMTPPortRequired:
+		} else if errors.Is(err, model.ErrSMTPPortRequired) {
 			respondError(w, http.StatusBadRequest, "smtp port is required")
-		case model.ErrSMTPUsernameRequired:
+		} else if errors.Is(err, model.ErrSMTPUsernameRequired) {
 			respondError(w, http.StatusBadRequest, "smtp username is required")
-		case model.ErrSMTPPasswordRequired:
+		} else if errors.Is(err, model.ErrSMTPPasswordRequired) {
 			respondError(w, http.StatusBadRequest, "smtp password is required")
-		case model.ErrSMTPFromRequired:
+		} else if errors.Is(err, model.ErrSMTPFromRequired) {
 			respondError(w, http.StatusBadRequest, "smtp from address is required")
-		default:
+		} else {
 			respondError(w, http.StatusInternalServerError, "failed to save smtp config")
 		}
 		return
@@ -91,7 +91,7 @@ func (h *SMTPConfigHandler) Get(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.configs.Get(r.Context(), userID)
 	if err != nil {
-		if err == model.ErrNotFound {
+		if errors.Is(err, model.ErrNotFound) {
 			respond(w, http.StatusOK, &model.SMTPConfigResponse{})
 			return
 		}
@@ -112,7 +112,7 @@ func (h *SMTPConfigHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.configs.Delete(r.Context(), userID); err != nil {
-		if err == model.ErrNotFound {
+		if errors.Is(err, model.ErrNotFound) {
 			respondError(w, http.StatusNotFound, "smtp config not found")
 			return
 		}
