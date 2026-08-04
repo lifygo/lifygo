@@ -49,7 +49,8 @@ export default function SmtpPage() {
 
   useEffect(() => {
     fetchConfig()
-  }, [fetchConfig])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   async function handleSaveFrom() {
     setError("")
