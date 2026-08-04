@@ -159,10 +159,12 @@ func main() {
 
 		if cfg.AuthProvider == "local" {
 			localUsers = authSvc
-		}
-		if cfg.AuthProvider == "clerk" {
+		} else {
 			clerkUsers = userSvc
 		}
+
+		log.Printf("auth provider: %s (clerk resolver: %v, local resolver: %v)",
+			cfg.AuthProvider, clerkUsers != nil, localUsers != nil)
 
 		r.Use(middleware.FlexibleAuth(apiKeySvc, clerkUsers, localUsers))
 

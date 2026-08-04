@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"strings"
 
@@ -51,25 +52,28 @@ func FlexibleAuth(apiAuth APIKeyAuthenticator, clerkUsers ClerkUserResolver, loc
 				clearLocalSessionCookie(w)
 			}
 
-			if clerkUsers != nil {
-				claims, err := jwt.Verify(r.Context(), &jwt.VerifyParams{Token: token})
-				if err != nil {
-					writeError(w, http.StatusUnauthorized, "invalid session")
-					return
-				}
-
-				user, err := clerkUsers.GetByClerkUserID(r.Context(), claims.Subject)
-				if err != nil {
-					writeError(w, http.StatusUnauthorized, "user not found")
-					return
-				}
-
-				ctx := context.WithValue(r.Context(), userIDKey, user.ID)
-				next.ServeHTTP(w, r.WithContext(ctx))
+		if clerkUsers != nil {
+			claims, err := jwt.Verify(r.Context(), &jwt.VerifyParams{Token: token})
+			if err != nil {
+				log.Printf("clerk jwt verify failed: %v (token len: %d)", err, len(token))
+				writeError(w, http.StatusUnauthorized, "invalid session")
 				return
 			}
 
-			writeError(w, http.StatusUnauthorized, "invalid session")
+			user, err := clerkUsers.GetByClerkUserID(r.Context(), claims.Subject)
+			if err != nil {
+				log.Printf("clerk user lookup failed for sub %s: %v", claims.Subject, err)
+				writeError(w, http.StatusUnauthorized, "user not found")
+				return
+			}
+
+			ctx := context.WithValue(r.Context(), userIDKey, user.ID)
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
+
+		log.Printf("auth: no valid resolver for token (clerkUsers=%v, localUsers=%v)", clerkUsers != nil, localUsers != nil)
+		writeError(w, http.StatusUnauthorized, "invalid session")
 		})
 	}
 }
