@@ -93,6 +93,9 @@ func (s *SMTPConfigService) Get(ctx context.Context, userID string) (*model.SMTP
 
 	cfg, err := s.configs.GetByUserID(ctx, userID)
 	if err != nil {
+		if errors.Is(err, model.ErrNotFound) {
+			return nil, nil
+		}
 		return nil, fmt.Errorf("failed to get smtp config: %w", err)
 	}
 

@@ -368,7 +368,7 @@ func TestSMTPConfigService_Get(t *testing.T) {
 		}
 	})
 
-	t.Run("returns ErrNotFound for a user with no config", func(t *testing.T) {
+	t.Run("returns nil config when user has no config", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeSMTPConfigRepository()
 		c := newTestCrypto(t)
@@ -376,9 +376,12 @@ func TestSMTPConfigService_Get(t *testing.T) {
 		defer pool.Shutdown()
 		svc := service.NewSMTPConfigService(repo, c, pool, "", 587, "", "", "")
 
-		_, err := svc.Get(context.Background(), "user_1")
-		if !errors.Is(err, model.ErrNotFound) {
-			t.Errorf("got %v, want %v", err, model.ErrNotFound)
+		cfg, err := svc.Get(context.Background(), "user_1")
+		if err != nil {
+			t.Errorf("got error %v, want nil", err)
+		}
+		if cfg != nil {
+			t.Errorf("got config %+v, want nil", cfg)
 		}
 	})
 
@@ -492,9 +495,12 @@ func TestSMTPConfigService_Delete(t *testing.T) {
 			t.Fatalf("unexpected error: %v", err)
 		}
 
-		_, err := svc.Get(context.Background(), "user_1")
-		if !errors.Is(err, model.ErrNotFound) {
-			t.Errorf("got %v, want %v after deletion", err, model.ErrNotFound)
+		cfg, err := svc.Get(context.Background(), "user_1")
+		if err != nil {
+			t.Errorf("got error %v, want nil after deletion", err)
+		}
+		if cfg != nil {
+			t.Errorf("got config %+v, want nil after deletion", cfg)
 		}
 	})
 

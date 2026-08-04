@@ -89,17 +89,18 @@ func (h *SMTPConfigHandler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := h.configs.Get(r.Context(), userID)
+	cfg, err := h.configs.Get(r.Context(), userID)
 	if err != nil {
-		if errors.Is(err, model.ErrNotFound) {
-			respond(w, http.StatusOK, &model.SMTPConfigResponse{})
-			return
-		}
 		respondError(w, http.StatusInternalServerError, "failed to get smtp config")
 		return
 	}
 
-	respond(w, http.StatusOK, resp)
+	if cfg == nil {
+		respond(w, http.StatusOK, &model.SMTPConfigResponse{})
+		return
+	}
+
+	respond(w, http.StatusOK, cfg)
 }
 
 // Delete handles DELETE /smtp-config.
