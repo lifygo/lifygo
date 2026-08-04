@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -22,23 +23,35 @@ type OTPStore interface {
 	GetAndDelete(ctx context.Context, key string) (string, error)
 }
 
+type MailerProvider interface {
+	GetMailer(ctx context.Context, userID string) (*mailer.Mailer, error)
+	GetDefaultMailer(ctx context.Context, userID string) (*mailer.Mailer, error)
+	HasSMTPConfig(ctx context.Context, userID string) bool
+}
+
 type MailerFactory func(ctx context.Context, userID string) (*mailer.Mailer, error)
 
 type EmailService struct {
-	logs      EmailLogRepository
-	otp       OTPStore
-	getMailer MailerFactory
+	logs        EmailLogRepository
+	otp         OTPStore
+	getMailer   MailerFactory
+	smtpService MailerProvider
+	usage       *UsageService
 }
 
 func NewEmailService(
 	logs EmailLogRepository,
 	otp OTPStore,
 	getMailer MailerFactory,
+	smtpService MailerProvider,
+	usage *UsageService,
 ) *EmailService {
 	return &EmailService{
-		logs:      logs,
-		otp:       otp,
-		getMailer: getMailer,
+		logs:        logs,
+		otp:         otp,
+		getMailer:   getMailer,
+		smtpService: smtpService,
+		usage:       usage,
 	}
 }
 
@@ -51,9 +64,28 @@ func (s *EmailService) Send(ctx context.Context, input model.SendEmailInput) (*m
 		return nil, fmt.Errorf("invalid to address: %w", err)
 	}
 
+	if s.smtpService != nil && !s.smtpService.HasSMTPConfig(ctx, input.UserID) {
+		if s.usage != nil {
+			count, err := s.usage.IncrementEmailCount(ctx, input.UserID)
+			if err != nil {
+				return nil, fmt.Errorf("failed to check usage: %w", err)
+			}
+			if count >= FreeTierEmailLimit {
+				return nil, fmt.Errorf("free tier limit reached: %d emails per month. Self-host for unlimited sending.", FreeTierEmailLimit)
+			}
+		}
+	}
+
 	m, err := s.getMailer(ctx, input.UserID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get mailer: %w", err)
+		if errors.Is(err, model.ErrNotFound) {
+			m, err = s.smtpService.GetDefaultMailer(ctx, input.UserID)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get default mailer: %w", err)
+			}
+		} else {
+			return nil, fmt.Errorf("failed to get mailer: %w", err)
+		}
 	}
 
 	sendErr := m.Send(mailer.Message{
@@ -108,9 +140,28 @@ func (s *EmailService) SendOTP(ctx context.Context, input model.SendOTPInput) (*
 
 	expiresAt := time.Now().Add(model.OTPTTl)
 
+	if s.smtpService != nil && !s.smtpService.HasSMTPConfig(ctx, input.UserID) {
+		if s.usage != nil {
+			count, err := s.usage.IncrementOTPCount(ctx, input.UserID)
+			if err != nil {
+				return nil, fmt.Errorf("failed to check usage: %w", err)
+			}
+			if count >= FreeTierOTPLimit {
+				return nil, fmt.Errorf("free tier limit reached: %d OTPs per day. Self-host for unlimited sending.", FreeTierOTPLimit)
+			}
+		}
+	}
+
 	m, err := s.getMailer(ctx, input.UserID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get mailer: %w", err)
+		if errors.Is(err, model.ErrNotFound) {
+			m, err = s.smtpService.GetDefaultMailer(ctx, input.UserID)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get default mailer: %w", err)
+			}
+		} else {
+			return nil, fmt.Errorf("failed to get mailer: %w", err)
+		}
 	}
 
 	subject := "Your verification code"

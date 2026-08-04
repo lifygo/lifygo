@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/lifygo/lifygo/apps/api/internal/model"
@@ -49,7 +50,7 @@ func (s *UserService) CreateFromClerk(ctx context.Context, input model.CreateUse
 		// If the user already exists, look them up and return them.
 		// This handles the case where Clerk retries a webhook we
 		// already processed successfully.
-		if err == model.ErrAlreadyExists {
+		if errors.Is(err, model.ErrAlreadyExists) {
 			existing, lookupErr := s.users.GetByClerkUserID(ctx, input.ClerkUserID)
 			if lookupErr != nil {
 				return nil, fmt.Errorf("user already exists but lookup failed: %w", lookupErr)

@@ -9,20 +9,21 @@ Start free on our hosted version, or self-host on your own server. Use your SMTP
 
 ## What it does
 
-Three things every SaaS backend needs, in one API:
+LifyGo handles transactional email — OTPs, welcome messages, password resets, reminders, job alerts. Not bulk email. No lists. No campaigns.
 
-- **Send transactional emails** — use your own SMTP or our free hosted version
-- **Generate and verify OTP codes** — 6-digit codes, 10-minute TTL, single use
-- **Schedule recurring jobs** — cron or one-time, webhooks or emails
+### Free hosted
+Start in 2 minutes. Set your from address and go.
+- 1,000 emails/month
+- 50 OTPs/day
+- 3 active cron jobs
+- No credit card
 
-**Two ways to start:**
-
-| Free hosted | Self-hosted |
-|---|---|
-| Sign up at lifygo.com | Clone and run on your server |
-| Get an API key instantly | Connect your own SMTP |
-| Start sending in 2 minutes | Full control, zero external dependencies |
-| No credit card | AGPL-3.0, runs on any VPS |
+### Self-hosted
+Bring your own SMTP. Run on your own server.
+- Unlimited emails
+- Unlimited OTPs
+- Unlimited cron jobs
+- Full control
 
 ---
 

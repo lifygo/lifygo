@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/lifygo/lifygo/apps/api/internal/model"
@@ -17,16 +18,35 @@ type SMTPConfigRepository interface {
 }
 
 type SMTPConfigService struct {
-	configs SMTPConfigRepository
-	crypto  *crypto.Crypto
-	pool    *mailer.Pool
+	configs         SMTPConfigRepository
+	crypto          *crypto.Crypto
+	pool            *mailer.Pool
+	defaultSMTPHost string
+	defaultSMTPPort int
+	defaultSMTPUser string
+	defaultSMTPPass string
+	defaultSMTPFrom string
 }
 
-func NewSMTPConfigService(configs SMTPConfigRepository, c *crypto.Crypto, pool *mailer.Pool) *SMTPConfigService {
+func NewSMTPConfigService(
+	configs SMTPConfigRepository,
+	c *crypto.Crypto,
+	pool *mailer.Pool,
+	defaultHost string,
+	defaultPort int,
+	defaultUser string,
+	defaultPass string,
+	defaultFrom string,
+) *SMTPConfigService {
 	return &SMTPConfigService{
-		configs: configs,
-		crypto:  c,
-		pool:    pool,
+		configs:         configs,
+		crypto:          c,
+		pool:            pool,
+		defaultSMTPHost: defaultHost,
+		defaultSMTPPort: defaultPort,
+		defaultSMTPUser: defaultUser,
+		defaultSMTPPass: defaultPass,
+		defaultSMTPFrom: defaultFrom,
 	}
 }
 
@@ -39,17 +59,23 @@ func (s *SMTPConfigService) Upsert(ctx context.Context, input model.CreateSMTPCo
 		return nil, fmt.Errorf("invalid from address: %w", err)
 	}
 
-	if err := validator.ValidateHost(input.Host); err != nil {
-		return nil, fmt.Errorf("invalid smtp host: %w", err)
+	if input.IsFullConfig() {
+		if err := validator.ValidateHost(input.Host); err != nil {
+			return nil, fmt.Errorf("invalid smtp host: %w", err)
+		}
+
+		if err := validator.ValidateSMTPPort(input.Port); err != nil {
+			return nil, fmt.Errorf("invalid smtp port: %w", err)
+		}
 	}
 
-	if err := validator.ValidateSMTPPort(input.Port); err != nil {
-		return nil, fmt.Errorf("invalid smtp port: %w", err)
-	}
-
-	encryptedPassword, err := s.crypto.Encrypt(input.Password)
-	if err != nil {
-		return nil, fmt.Errorf("failed to encrypt smtp password: %w", err)
+	var encryptedPassword string
+	if input.Password != "" {
+		var err error
+		encryptedPassword, err = s.crypto.Encrypt(input.Password)
+		if err != nil {
+			return nil, fmt.Errorf("failed to encrypt smtp password: %w", err)
+		}
 	}
 
 	cfg, err := s.configs.Upsert(ctx, input, encryptedPassword)
@@ -101,6 +127,35 @@ func (s *SMTPConfigService) GetMailer(ctx context.Context, userID string) (*mail
 	}
 
 	return m, nil
+}
+
+func (s *SMTPConfigService) GetDefaultMailer(ctx context.Context, userID string) (*mailer.Mailer, error) {
+	if s.defaultSMTPHost == "" {
+		return nil, fmt.Errorf("no default smtp relay configured")
+	}
+
+	fromAddress := s.defaultSMTPFrom
+
+	cfg, err := s.configs.GetByUserID(ctx, userID)
+	if err == nil && cfg.FromAddress != "" {
+		fromAddress = cfg.FromAddress
+	} else if err != nil && !errors.Is(err, model.ErrNotFound) {
+		return nil, fmt.Errorf("failed to get smtp config: %w", err)
+	}
+
+	return mailer.New(mailer.Config{
+		Host:        s.defaultSMTPHost,
+		Port:        s.defaultSMTPPort,
+		Username:    s.defaultSMTPUser,
+		Password:    s.defaultSMTPPass,
+		FromAddress: fromAddress,
+		Pool:        s.pool,
+	})
+}
+
+func (s *SMTPConfigService) HasSMTPConfig(ctx context.Context, userID string) bool {
+	_, err := s.configs.GetByUserID(ctx, userID)
+	return err == nil
 }
 
 func (s *SMTPConfigService) Delete(ctx context.Context, userID string) error {

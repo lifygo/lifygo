@@ -7,7 +7,7 @@ import type { SmtpConfig, UpsertSmtpConfigInput } from "@/features/smtp"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react"
+import { AlertCircle, CheckCircle2, Loader2, Info } from "lucide-react"
 
 const emptyForm: UpsertSmtpConfigInput = {
   host: "",
@@ -27,20 +27,22 @@ export default function SmtpPage() {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
 
+  const hasFullSMTP = config !== null && config.host !== ""
+
   const fetchConfig = useCallback(async () => {
     try {
       const data = await call<SmtpConfig>(ENDPOINTS.SMTP.GET)
       setConfig(data)
-      setForm((prev) => ({
-        ...prev,
+      setForm({
         host: data.host,
         port: data.port,
         username: data.username,
+        password: "",
         from_address: data.from_address,
-      }))
+      })
       setIsDirty(false)
     } catch {
-      
+      // No config yet — that's fine.
     }
   }, [call])
 
@@ -62,9 +64,22 @@ export default function SmtpPage() {
     setSuccess("")
     setLoading(true)
     try {
+      const body: UpsertSmtpConfigInput = { ...form }
+      // When saving just the from address (partial config), clear SMTP fields
+      // so the backend knows it's a partial config.
+      const payload: Record<string, unknown> = {
+        from_address: form.from_address,
+      }
+      if (form.host) {
+        payload.host = form.host
+        payload.port = form.port
+        payload.username = form.username
+        payload.password = form.password
+      }
+
       const data = await call<SmtpConfig>(ENDPOINTS.SMTP.UPSERT, {
         method: "POST",
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       })
       setConfig(data)
       setSuccess("SMTP configuration saved successfully.")
@@ -117,99 +132,140 @@ export default function SmtpPage() {
         </div>
       )}
 
+      {/* Free tier / self-hosted status banner */}
+      <div className="flex items-start gap-3 rounded-lg border border-brand/20 bg-brand/5 p-4 text-sm">
+        <Info className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
+        <div>
+          {hasFullSMTP ? (
+            <>
+              <p className="font-medium text-foreground">
+                You&apos;re using your own SMTP server. Unlimited sending.
+              </p>
+              <p className="mt-1 text-muted-foreground">
+                All limits are lifted. You control the mail server, you set the rules.
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="font-medium text-foreground">
+                You&apos;re using the free relay. Set your from address below.
+              </p>
+              <p className="mt-1 text-muted-foreground">
+                Want unlimited sending and your own SMTP? Add your SMTP credentials below.
+              </p>
+            </>
+          )}
+        </div>
+      </div>
+
       <div className="max-w-2xl overflow-hidden rounded-lg border border-border bg-card shadow-sm">
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <span className="text-sm font-medium text-foreground">Mail Server Settings</span>
           <div className="flex items-center gap-2">
             <span className={`h-2 w-2 rounded-full ${config ? "bg-emerald-500" : "bg-amber-500"}`} />
             <span className="text-xs font-medium text-muted-foreground">
-              {config ? "Connected" : "Not connected"}
+              {hasFullSMTP ? "Custom SMTP" : config ? "Free Relay" : "Not Connected"}
             </span>
           </div>
         </div>
 
         <div className="space-y-4 p-6">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-12">
-            <div className="space-y-2 sm:col-span-8">
-              <Label htmlFor="host" className="text-xs font-medium text-muted-foreground">
-                Host
+          {/* From Address — always visible */}
+          <div className="rounded-md border border-border bg-muted/30 p-4">
+            <div className="space-y-2">
+              <Label htmlFor="from_address" className="text-xs font-medium text-muted-foreground">
+                From Address
               </Label>
               <Input
-                id="host"
-                name="host"
-                placeholder="smtp.gmail.com"
-                value={form.host}
+                id="from_address"
+                name="from_address"
+                placeholder="hello@yourdomain.com"
+                value={form.from_address}
                 onChange={handleChange}
                 className="h-9 bg-transparent"
               />
-            </div>
-
-            <div className="space-y-2 sm:col-span-4">
-              <Label htmlFor="port" className="text-xs font-medium text-muted-foreground">
-                Port
-              </Label>
-              <Input
-                id="port"
-                name="port"
-                type="number"
-                placeholder="587"
-                value={form.port}
-                onChange={handleChange}
-                className="h-9 font-mono text-sm bg-transparent"
-              />
+              <p className="text-[11px] text-muted-foreground">
+                This is the address your recipients will see as the sender.
+              </p>
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="username" className="text-xs font-medium text-muted-foreground">
-              Username
-            </Label>
-            <Input
-              id="username"
-              name="username"
-              placeholder="you@domain.com"
-              value={form.username}
-              onChange={handleChange}
-              className="h-9 bg-transparent"
-            />
-          </div>
+          {/* Full SMTP fields */}
+          {hasFullSMTP && (
+            <>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-12">
+                <div className="space-y-2 sm:col-span-8">
+                  <Label htmlFor="host" className="text-xs font-medium text-muted-foreground">
+                    Host
+                  </Label>
+                  <Input
+                    id="host"
+                    name="host"
+                    placeholder="smtp.gmail.com"
+                    value={form.host}
+                    onChange={handleChange}
+                    className="h-9 bg-transparent"
+                  />
+                </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password" className="text-xs font-medium text-muted-foreground">
-                Password
-              </Label>
-              {config && <span className="text-xs text-muted-foreground/60">Configured</span>}
-            </div>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              placeholder={config ? "••••••••••••••••" : "Enter password"}
-              value={form.password}
-              onChange={handleChange}
-              className="h-9 bg-transparent"
-            />
-          </div>
+                <div className="space-y-2 sm:col-span-4">
+                  <Label htmlFor="port" className="text-xs font-medium text-muted-foreground">
+                    Port
+                  </Label>
+                  <Input
+                    id="port"
+                    name="port"
+                    type="number"
+                    placeholder="587"
+                    value={form.port}
+                    onChange={handleChange}
+                    className="h-9 font-mono text-sm bg-transparent"
+                  />
+                </div>
+              </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="from_address" className="text-xs font-medium text-muted-foreground">
-              From Address
-            </Label>
-            <Input
-              id="from_address"
-              name="from_address"
-              placeholder="hello@yourdomain.com"
-              value={form.from_address}
-              onChange={handleChange}
-              className="h-9 bg-transparent"
-            />
-          </div>
+              <div className="space-y-2">
+                <Label htmlFor="username" className="text-xs font-medium text-muted-foreground">
+                  Username
+                </Label>
+                <Input
+                  id="username"
+                  name="username"
+                  placeholder="you@domain.com"
+                  value={form.username}
+                  onChange={handleChange}
+                  className="h-9 bg-transparent"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password" className="text-xs font-medium text-muted-foreground">
+                    Password
+                  </Label>
+                  <span className="text-xs text-muted-foreground/60">Configured</span>
+                </div>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  placeholder="Enter new password"
+                  value={form.password}
+                  onChange={handleChange}
+                  className="h-9 bg-transparent"
+                />
+              </div>
+            </>
+          )}
         </div>
 
         <div className="flex flex-col gap-4 border-t border-border px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-muted-foreground">
-            {config ? "Updates take effect for future dispatches." : "Fill in all fields to establish connection."}
+            {hasFullSMTP
+              ? "Updates take effect for future dispatches."
+              : config
+                ? "Your from address is set. Add SMTP credentials above for unlimited sending."
+                : "Set your from address to start sending through the free relay."}
           </p>
 
           <div className="flex items-center gap-2">

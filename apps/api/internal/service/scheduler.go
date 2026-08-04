@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -20,6 +21,7 @@ import (
 // the SMTP config service to send email jobs.
 type SchedulerSMTPConfigService interface {
 	GetMailer(ctx context.Context, userID string) (*mailer.Mailer, error)
+	GetDefaultMailer(ctx context.Context, userID string) (*mailer.Mailer, error)
 }
 
 // Scheduler is a background worker that runs inside the Go API process.
@@ -225,7 +227,8 @@ func (s *Scheduler) executeWebhook(job model.Job) (*int, error) {
 	return &status, nil
 }
 
-// executeEmail sends an email using the user's SMTP config.
+// executeEmail sends an email using the user's SMTP config
+// or the default relay as a fallback.
 func (s *Scheduler) executeEmail(job model.Job) error {
 	if job.EmailTo == nil || job.EmailSubject == nil || job.EmailBody == nil {
 		return fmt.Errorf("email job is missing required fields")
@@ -236,7 +239,14 @@ func (s *Scheduler) executeEmail(job model.Job) error {
 
 	m, err := s.smtp.GetMailer(ctx, job.UserID)
 	if err != nil {
-		return fmt.Errorf("failed to get mailer for user %s: %w", job.UserID, err)
+		if errors.Is(err, model.ErrNotFound) {
+			m, err = s.smtp.GetDefaultMailer(ctx, job.UserID)
+			if err != nil {
+				return fmt.Errorf("failed to get default mailer for user %s: %w", job.UserID, err)
+			}
+		} else {
+			return fmt.Errorf("failed to get mailer for user %s: %w", job.UserID, err)
+		}
 	}
 
 	if err := m.Send(mailer.Message{

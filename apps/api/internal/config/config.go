@@ -30,6 +30,12 @@ type Config struct {
 	SchedulerRoleARN   string
 	SQSQueueARN        string
 
+	DefaultSMTPHost     string
+	DefaultSMTPPort     int
+	DefaultSMTPUsername string
+	DefaultSMTPPassword string
+	DefaultSMTPFrom     string
+
 	MaxJobsPerUser    int
 	MaxAPIKeysPerUser int
 	RateLimitPerHour  int64
@@ -54,6 +60,12 @@ func Load() (*Config, error) {
 		SQSQueueURL:        os.Getenv("SQS_QUEUE_URL"),
 		SchedulerRoleARN:   os.Getenv("SCHEDULER_ROLE_ARN"),
 		SQSQueueARN:        os.Getenv("SQS_QUEUE_ARN"),
+
+		DefaultSMTPHost:     getEnv("DEFAULT_SMTP_HOST", ""),
+		DefaultSMTPPort:     getEnvInt("DEFAULT_SMTP_PORT", 587),
+		DefaultSMTPUsername: getEnv("DEFAULT_SMTP_USERNAME", ""),
+		DefaultSMTPPassword: os.Getenv("DEFAULT_SMTP_PASSWORD"),
+		DefaultSMTPFrom:     getEnv("DEFAULT_SMTP_FROM", "noreply@lifygo.com"),
 
 		MaxJobsPerUser:    getEnvInt("MAX_JOBS_PER_USER", 0),
 		MaxAPIKeysPerUser: getEnvInt("MAX_API_KEYS_PER_USER", 0),

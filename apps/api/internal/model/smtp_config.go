@@ -37,20 +37,23 @@ func (i *CreateSMTPConfigInput) Validate() error {
 	if i.UserID == "" {
 		return ErrUnauthorized
 	}
-	if i.Host == "" {
-		return ErrSMTPHostRequired
-	}
-	if i.Port == 0 {
-		return ErrSMTPPortRequired
-	}
-	if i.Username == "" {
-		return ErrSMTPUsernameRequired
-	}
-	if i.Password == "" {
-		return ErrSMTPPasswordRequired
-	}
 	if i.FromAddress == "" {
 		return ErrSMTPFromRequired
 	}
+	if i.Host != "" {
+		if i.Port == 0 {
+			return ErrSMTPPortRequired
+		}
+		if i.Username == "" {
+			return ErrSMTPUsernameRequired
+		}
+		if i.Password == "" {
+			return ErrSMTPPasswordRequired
+		}
+	}
 	return nil
+}
+
+func (i *CreateSMTPConfigInput) IsFullConfig() bool {
+	return i.Host != ""
 }

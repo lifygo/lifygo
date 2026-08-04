@@ -127,7 +127,7 @@ func TestSMTPConfigService_Upsert(t *testing.T) {
 		c := newTestCrypto(t)
 		pool := mailer.NewPool(5 * time.Minute)
 		defer pool.Shutdown()
-		svc := service.NewSMTPConfigService(repo, c, pool)
+		svc := service.NewSMTPConfigService(repo, c, pool, "", 587, "", "", "")
 
 		resp, err := svc.Upsert(context.Background(), validSMTPInput("user_1"))
 		if err != nil {
@@ -151,7 +151,7 @@ func TestSMTPConfigService_Upsert(t *testing.T) {
 		c := newTestCrypto(t)
 		pool := mailer.NewPool(5 * time.Minute)
 		defer pool.Shutdown()
-		svc := service.NewSMTPConfigService(repo, c, pool)
+		svc := service.NewSMTPConfigService(repo, c, pool, "", 587, "", "", "")
 
 		input := validSMTPInput("user_1")
 
@@ -187,7 +187,7 @@ func TestSMTPConfigService_Upsert(t *testing.T) {
 		c := newTestCrypto(t)
 		pool := mailer.NewPool(5 * time.Minute)
 		defer pool.Shutdown()
-		svc := service.NewSMTPConfigService(repo, c, pool)
+		svc := service.NewSMTPConfigService(repo, c, pool, "", 587, "", "", "")
 
 		// We cannot check resp.PasswordEncrypted directly because the
 		// field does not exist on SMTPConfigResponse — the struct simply
@@ -216,7 +216,7 @@ func TestSMTPConfigService_Upsert(t *testing.T) {
 		c := newTestCrypto(t)
 		pool := mailer.NewPool(5 * time.Minute)
 		defer pool.Shutdown()
-		svc := service.NewSMTPConfigService(repo, c, pool)
+		svc := service.NewSMTPConfigService(repo, c, pool, "", 587, "", "", "")
 
 		_, err := svc.Upsert(context.Background(), validSMTPInput("user_1"))
 		if err != nil {
@@ -246,7 +246,7 @@ func TestSMTPConfigService_Upsert(t *testing.T) {
 		c := newTestCrypto(t)
 		pool := mailer.NewPool(5 * time.Minute)
 		defer pool.Shutdown()
-		svc := service.NewSMTPConfigService(repo, c, pool)
+		svc := service.NewSMTPConfigService(repo, c, pool, "", 587, "", "", "")
 
 		input := validSMTPInput("")
 		_, err := svc.Upsert(context.Background(), input)
@@ -255,19 +255,25 @@ func TestSMTPConfigService_Upsert(t *testing.T) {
 		}
 	})
 
-	t.Run("returns error for missing host", func(t *testing.T) {
+	t.Run("allows partial config with from_address only", func(t *testing.T) {
 		t.Parallel()
 		repo := newFakeSMTPConfigRepository()
 		c := newTestCrypto(t)
 		pool := mailer.NewPool(5 * time.Minute)
 		defer pool.Shutdown()
-		svc := service.NewSMTPConfigService(repo, c, pool)
+		svc := service.NewSMTPConfigService(repo, c, pool, "", 587, "", "", "")
 
 		input := validSMTPInput("user_1")
 		input.Host = ""
-		_, err := svc.Upsert(context.Background(), input)
-		if !errors.Is(err, model.ErrSMTPHostRequired) {
-			t.Errorf("got %v, want %v", err, model.ErrSMTPHostRequired)
+		input.Port = 0
+		input.Username = ""
+		input.Password = ""
+		resp, err := svc.Upsert(context.Background(), input)
+		if err != nil {
+			t.Fatalf("unexpected error for partial config: %v", err)
+		}
+		if resp.FromAddress != "hello@gmail.com" {
+			t.Errorf("FromAddress: got %q want hello@gmail.com", resp.FromAddress)
 		}
 	})
 
@@ -277,7 +283,7 @@ func TestSMTPConfigService_Upsert(t *testing.T) {
 		c := newTestCrypto(t)
 		pool := mailer.NewPool(5 * time.Minute)
 		defer pool.Shutdown()
-		svc := service.NewSMTPConfigService(repo, c, pool)
+		svc := service.NewSMTPConfigService(repo, c, pool, "", 587, "", "", "")
 
 		input := validSMTPInput("user_1")
 		input.Host = "https://smtp.gmail.com"
@@ -293,7 +299,7 @@ func TestSMTPConfigService_Upsert(t *testing.T) {
 		c := newTestCrypto(t)
 		pool := mailer.NewPool(5 * time.Minute)
 		defer pool.Shutdown()
-		svc := service.NewSMTPConfigService(repo, c, pool)
+		svc := service.NewSMTPConfigService(repo, c, pool, "", 587, "", "", "")
 
 		input := validSMTPInput("user_1")
 		input.Port = 0
@@ -309,7 +315,7 @@ func TestSMTPConfigService_Upsert(t *testing.T) {
 		c := newTestCrypto(t)
 		pool := mailer.NewPool(5 * time.Minute)
 		defer pool.Shutdown()
-		svc := service.NewSMTPConfigService(repo, c, pool)
+		svc := service.NewSMTPConfigService(repo, c, pool, "", 587, "", "", "")
 
 		input := validSMTPInput("user_1")
 		input.FromAddress = "not-an-email"
@@ -325,7 +331,7 @@ func TestSMTPConfigService_Upsert(t *testing.T) {
 		c := newTestCrypto(t)
 		pool := mailer.NewPool(5 * time.Minute)
 		defer pool.Shutdown()
-		svc := service.NewSMTPConfigService(repo, c, pool)
+		svc := service.NewSMTPConfigService(repo, c, pool, "", 587, "", "", "")
 
 		input := validSMTPInput("user_1")
 		input.Password = ""
@@ -349,7 +355,7 @@ func TestSMTPConfigService_Get(t *testing.T) {
 		c := newTestCrypto(t)
 		pool := mailer.NewPool(5 * time.Minute)
 		defer pool.Shutdown()
-		svc := service.NewSMTPConfigService(repo, c, pool)
+		svc := service.NewSMTPConfigService(repo, c, pool, "", 587, "", "", "")
 
 		svc.Upsert(context.Background(), validSMTPInput("user_1"))
 
@@ -368,7 +374,7 @@ func TestSMTPConfigService_Get(t *testing.T) {
 		c := newTestCrypto(t)
 		pool := mailer.NewPool(5 * time.Minute)
 		defer pool.Shutdown()
-		svc := service.NewSMTPConfigService(repo, c, pool)
+		svc := service.NewSMTPConfigService(repo, c, pool, "", 587, "", "", "")
 
 		_, err := svc.Get(context.Background(), "user_1")
 		if !errors.Is(err, model.ErrNotFound) {
@@ -382,7 +388,7 @@ func TestSMTPConfigService_Get(t *testing.T) {
 		c := newTestCrypto(t)
 		pool := mailer.NewPool(5 * time.Minute)
 		defer pool.Shutdown()
-		svc := service.NewSMTPConfigService(repo, c, pool)
+		svc := service.NewSMTPConfigService(repo, c, pool, "", 587, "", "", "")
 
 		_, err := svc.Get(context.Background(), "")
 		if !errors.Is(err, model.ErrUnauthorized) {
@@ -404,7 +410,7 @@ func TestSMTPConfigService_GetMailer(t *testing.T) {
 		c := newTestCrypto(t)
 		pool := mailer.NewPool(5 * time.Minute)
 		defer pool.Shutdown()
-		svc := service.NewSMTPConfigService(repo, c, pool)
+		svc := service.NewSMTPConfigService(repo, c, pool, "", 587, "", "", "")
 
 		svc.Upsert(context.Background(), validSMTPInput("user_1"))
 
@@ -423,7 +429,7 @@ func TestSMTPConfigService_GetMailer(t *testing.T) {
 		c := newTestCrypto(t)
 		pool := mailer.NewPool(5 * time.Minute)
 		defer pool.Shutdown()
-		svc := service.NewSMTPConfigService(repo, c, pool)
+		svc := service.NewSMTPConfigService(repo, c, pool, "", 587, "", "", "")
 
 		_, err := svc.GetMailer(context.Background(), "user_1")
 		if !errors.Is(err, model.ErrNotFound) {
@@ -437,7 +443,7 @@ func TestSMTPConfigService_GetMailer(t *testing.T) {
 		c := newTestCrypto(t)
 		pool := mailer.NewPool(5 * time.Minute)
 		defer pool.Shutdown()
-		svc := service.NewSMTPConfigService(repo, c, pool)
+		svc := service.NewSMTPConfigService(repo, c, pool, "", 587, "", "", "")
 
 		svc.Upsert(context.Background(), validSMTPInput("user_1"))
 
@@ -456,7 +462,7 @@ func TestSMTPConfigService_GetMailer(t *testing.T) {
 		c := newTestCrypto(t)
 		pool := mailer.NewPool(5 * time.Minute)
 		defer pool.Shutdown()
-		svc := service.NewSMTPConfigService(repo, c, pool)
+		svc := service.NewSMTPConfigService(repo, c, pool, "", 587, "", "", "")
 
 		_, err := svc.GetMailer(context.Background(), "")
 		if !errors.Is(err, model.ErrUnauthorized) {
@@ -478,7 +484,7 @@ func TestSMTPConfigService_Delete(t *testing.T) {
 		c := newTestCrypto(t)
 		pool := mailer.NewPool(5 * time.Minute)
 		defer pool.Shutdown()
-		svc := service.NewSMTPConfigService(repo, c, pool)
+		svc := service.NewSMTPConfigService(repo, c, pool, "", 587, "", "", "")
 
 		svc.Upsert(context.Background(), validSMTPInput("user_1"))
 
@@ -498,7 +504,7 @@ func TestSMTPConfigService_Delete(t *testing.T) {
 		c := newTestCrypto(t)
 		pool := mailer.NewPool(5 * time.Minute)
 		defer pool.Shutdown()
-		svc := service.NewSMTPConfigService(repo, c, pool)
+		svc := service.NewSMTPConfigService(repo, c, pool, "", 587, "", "", "")
 
 		err := svc.Delete(context.Background(), "user_1")
 		if !errors.Is(err, model.ErrNotFound) {
@@ -512,7 +518,7 @@ func TestSMTPConfigService_Delete(t *testing.T) {
 		c := newTestCrypto(t)
 		pool := mailer.NewPool(5 * time.Minute)
 		defer pool.Shutdown()
-		svc := service.NewSMTPConfigService(repo, c, pool)
+		svc := service.NewSMTPConfigService(repo, c, pool, "", 587, "", "", "")
 
 		err := svc.Delete(context.Background(), "")
 		if !errors.Is(err, model.ErrUnauthorized) {
