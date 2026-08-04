@@ -3,8 +3,10 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
+	"strings"
 
 	svix "github.com/svix/svix-webhooks/go"
 
@@ -96,20 +98,37 @@ func (h *UserHandler) ClerkWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	name := payload.Data.FirstName + " " + payload.Data.LastName
+	name := strings.TrimSpace(payload.Data.FirstName + " " + payload.Data.LastName)
 	email := payload.Data.EmailAddresses[0].EmailAddress
 
-	_, err = h.users.CreateFromClerk(r.Context(), model.CreateUserInput{
+	// Some OAuth providers (Twitter, Apple) don't provide names.
+	// Fall back to the email prefix as a display name.
+	if name == "" {
+		name = email
+	}
+
+	user, err := h.users.CreateFromClerk(r.Context(), model.CreateUserInput{
 		ClerkUserID: payload.Data.ID,
 		Name:        name,
 		Email:       email,
 	})
 	if err != nil {
+		if errors.Is(err, model.ErrAlreadyExists) {
+			respond(w, http.StatusOK, map[string]string{"message": "user already exists"})
+			return
+		}
+		if errors.Is(err, model.ErrNameRequired) || errors.Is(err, model.ErrEmailRequired) || errors.Is(err, model.ErrClerkUserIDRequired) {
+			respondError(w, http.StatusBadRequest, err.Error())
+			return
+		}
 		respondError(w, http.StatusInternalServerError, "failed to create user")
 		return
 	}
 
-	respond(w, http.StatusOK, map[string]string{"message": "user created"})
+	respond(w, http.StatusOK, map[string]interface{}{
+		"message": "user created",
+		"user_id": user.ID,
+	})
 }
 
 // DeleteAccount handles DELETE /account.
