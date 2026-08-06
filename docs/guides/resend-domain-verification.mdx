@@ -1,0 +1,85 @@
+---
+title: "Resend Domain Verification"
+description: "Use Resend with a verified domain as your LifyGo SMTP provider"
+---
+
+# Resend Domain Verification
+
+Resend is a good SMTP provider for LifyGo when you want a branded `From` address without running your own mail server. After you verify a domain on Resend, LifyGo can send through Resend using your domain in the `From` address.
+
+---
+
+## 1. Add a domain to Resend
+
+Go to the [Resend Domains page](https://resend.com/domains) and add the domain you want to send from.
+
+For production mail, verify a subdomain such as `send.example.com` instead of the root domain. A dedicated subdomain keeps Resend's DNS records separate from your existing email infrastructure and avoids MX conflicts.
+
+---
+
+## 2. Add the DNS records from Resend
+
+Open the domain's **Records** tab in Resend. Resend generates the exact records for your domain, so copy and paste them instead of typing them by hand.
+
+The records normally include:
+
+| Type | Host | Purpose |
+|------|------|---------|
+| `TXT` | DKIM host shown by Resend | DKIM signing key for your domain |
+| `TXT` | SPF host shown by Resend | SPF policy that authorizes Resend to send |
+| `MX` | MX host shown by Resend | Inbound routing, only if you enable inbound email |
+
+If your DNS provider requires the host without the domain, use only the subdomain prefix shown by Resend. For `send.example.com`, that is usually `send`.
+
+---
+
+## 3. Verify the domain
+
+After the DNS records are in place, return to Resend and click **Verify DNS Records**.
+
+Most domains verify within 15 minutes. DNS propagation can occasionally take up to 72 hours.
+
+---
+
+## 4. Create a Resend API key
+
+Resend uses an API key as the SMTP password. Create one in **API Keys**, with sending access, and copy it.
+
+---
+
+## 5. Configure LifyGo
+
+Open the LifyGo dashboard and navigate to **SMTP Settings**.
+
+| Field | Value |
+|-------|-------|
+| Host | `smtp.resend.com` |
+| Port | `587` |
+| Username | `resend` |
+| Password | Your Resend API key |
+| From Address | `you@send.example.com` |
+
+> Use port `587` with STARTTLS. Resend also supports port `465` with implicit TLS.
+
+---
+
+## 6. Test your configuration
+
+```bash
+curl -X POST http://localhost:8080/send \
+  -H "X-API-Key: lfy_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "to":"yourself@example.com",
+    "subject":"Resend SMTP Test",
+    "body":"Resend is working with LifyGo."
+  }'
+```
+
+---
+
+## Alternative: self-host with any SMTP provider
+
+Resend is not required. LifyGo uses standard SMTP credentials, so the same dashboard fields work with Gmail, Zoho, Amazon SES, Mailgun, SendGrid, or your own mail server.
+
+See the [Gmail SMTP guide](/docs/guides/gmail-smtp) for one provider-specific walkthrough.
