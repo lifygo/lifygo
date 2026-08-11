@@ -57,6 +57,7 @@
       "group": "Guides",
       "pages": [
         "guides/gmail-smtp",
+        "guides/resend-domain-verification",
         "guides/self-hosting",
         "guides/errors"
       ]

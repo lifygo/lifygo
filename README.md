@@ -219,6 +219,8 @@ If using Clerk, add `CLERK_SECRET_KEY` and `CLERK_WEBHOOK_SECRET` instead of `JW
 
 See [`scripts/server-setup.md`](scripts/server-setup.md) for a step-by-step VPS deploy guide — nginx, Let's Encrypt, systemd.
 
+For a branded `From` address through Resend, see the [Resend domain verification guide](docs/guides/resend-domain-verification.mdx).
+
 ---
 
 ## Development
